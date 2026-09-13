@@ -33,7 +33,7 @@ export interface TargetRecord {
   rangeHigh: number
   /** Freeform manager notes (strengths, interests, goals) — informs the explanation and override reasoning, never the formula itself. */
   notes: string
-  /** Present only once a manager has overridden this record (M8). Absent = the model's number stands. */
+  /** Present only once a manager has overridden this record (M8, or M10's mass adjustment). Absent = the model's number stands. */
   override?: OverrideInfo
 }
 
@@ -69,6 +69,8 @@ export interface ApplyOverrideInput {
   type: OverrideType
   value: number
   reason: string
+  /** Distinguishes an individual manager override from a mass-adjustment batch in the audit log's action text. Defaults to 'individual'. */
+  source?: 'individual' | 'mass'
 }
 
 interface System1State {
@@ -84,8 +86,16 @@ interface System1State {
   applyOverride: (personId: string, input: ApplyOverrideInput) => void
   /** Clears the override and returns the record to Modelled. Proposed/Approved don't exist until M11 — nothing to preserve beyond that yet. */
   revertOverride: (personId: string, reason: string) => void
-  /** Personal notes are edited here (M8), separate from the override reason — notes describe the person, the reason describes this specific change. */
+  /** Personal notes are edited on the override screen, separate from the override reason — notes describe the person, the reason describes this specific change. */
   updateNotes: (personId: string, notes: string) => void
+  /**
+   * M10: applies the same percent-only override to every id in the list —
+   * a thin loop over applyOverride(), not a second implementation. The
+   * screen is responsible for deciding which ids to pass (e.g. excluding
+   * people who already have an individual override); this action doesn't
+   * second-guess that list.
+   */
+  applyMassAdjustment: (personIds: string[], input: { percent: number; reason: string }) => void
 }
 
 export const useSystem1Store = create<System1State>()(
@@ -104,7 +114,7 @@ export const useSystem1Store = create<System1State>()(
           ],
         })),
 
-      applyOverride: (personId, { type, value, reason }) => {
+      applyOverride: (personId, { type, value, reason, source = 'individual' }) => {
         const existing = get().targets[personId]
         if (!existing) return
         const finalValue =
@@ -124,7 +134,7 @@ export const useSystem1Store = create<System1State>()(
         get().addAuditEntry({
           personId,
           actor: 'Manager',
-          action: 'Override applied',
+          action: source === 'mass' ? 'Mass adjustment applied' : 'Override applied',
           detail:
             type === 'percent'
               ? `${value > 0 ? '+' : ''}${value}% → £${finalValue}k. Reason: ${reason}`
@@ -161,6 +171,12 @@ export const useSystem1Store = create<System1State>()(
           if (!existing) return state
           return { targets: { ...state.targets, [personId]: { ...existing, notes } } }
         }),
+
+      applyMassAdjustment: (personIds, { percent, reason }) => {
+        for (const personId of personIds) {
+          get().applyOverride(personId, { type: 'percent', value: percent, reason, source: 'mass' })
+        }
+      },
     }),
     { name: 'des-system1' },
   ),
