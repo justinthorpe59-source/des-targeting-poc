@@ -20,6 +20,8 @@ export function IndividualDetail() {
   const { id } = useParams<{ id: string }>()
   const targets = useSystem1Store((state) => state.targets)
   const auditLog = useSystem1Store((state) => state.auditLog)
+  const proposeRecord = useSystem1Store((state) => state.proposeRecord)
+  const approveRecord = useSystem1Store((state) => state.approveRecord)
 
   const person = SEED_PEOPLE.find((p) => p.id === id)
   const target = person ? targets[person.id] : undefined
@@ -72,9 +74,31 @@ export function IndividualDetail() {
           <h2 className="text-sm font-semibold text-slate-700">
             {target.override ? 'Current target' : 'Modelled target'}
           </h2>
-          <span data-testid="detail-status" className="text-xs font-medium text-slate-500">
-            {target.status}
-          </span>
+          <div className="flex items-center gap-2">
+            <span data-testid="detail-status" className="text-xs font-medium text-slate-500">
+              {target.status}
+            </span>
+            {(target.status === 'Modelled' || target.status === 'Adjusted') && (
+              <button
+                type="button"
+                data-testid="propose-button"
+                onClick={() => proposeRecord(person.id)}
+                className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100"
+              >
+                Propose
+              </button>
+            )}
+            {target.status === 'Proposed' && (
+              <button
+                type="button"
+                data-testid="approve-button"
+                onClick={() => approveRecord(person.id)}
+                className="rounded-md bg-slate-900 px-2 py-1 text-xs font-medium text-white hover:bg-slate-700"
+              >
+                Approve
+              </button>
+            )}
+          </div>
         </div>
         <div data-testid="detail-modelled" className="mt-1 text-3xl font-bold tabular-nums text-slate-900">
           £{finalTargetFor(target)}k
