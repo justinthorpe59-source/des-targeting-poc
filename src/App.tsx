@@ -4,6 +4,7 @@ import { System1Root } from './system1/System1Root'
 import { Overview } from './system1/screens/Overview'
 import { Population } from './system1/screens/Population'
 import { IndividualDetail } from './system1/screens/IndividualDetail'
+import { CohortComparison } from './system1/screens/CohortComparison'
 import { System2Root } from './system2/System2Root'
 
 export default function App() {
@@ -16,6 +17,8 @@ export default function App() {
           <Route path="overview" element={<Overview />} />
           <Route path="population" element={<Population />} />
           <Route path="person/:id" element={<IndividualDetail />} />
+          <Route path="cohort" element={<CohortComparison />} />
+          <Route path="cohort/:id" element={<CohortComparison />} />
         </Route>
         <Route path="/system2" element={<System2Root />} />
         <Route path="*" element={<Navigate to="/system1" replace />} />
