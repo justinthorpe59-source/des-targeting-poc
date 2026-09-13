@@ -2,12 +2,13 @@ import type { TargetRecord } from '../../store/system1Store'
 
 /**
  * "Final target" — the number every downstream calculation (exceptions,
- * cohort averages, mass adjustment previews) should treat as this person's
- * actual current target. Today that's always the modelled value, since no
- * override mechanism exists yet. When M8 adds overrides, this is the one
- * place that changes to prefer an override value when present — every
- * caller picks it up automatically rather than needing its own update.
+ * cohort averages, mass adjustment previews) treats as this person's actual
+ * current target. Now that M8 adds overrides, this prefers the override's
+ * final value when one exists, falling back to the modelled value
+ * otherwise — the one place that changed, so every caller (exceptions
+ * detection, cohort averaging, the What-if sandbox's "currently stored"
+ * panel) picks it up automatically.
  */
 export function finalTargetFor(target: TargetRecord): number {
-  return target.modelled
+  return target.override?.finalValue ?? target.modelled
 }

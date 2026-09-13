@@ -6,6 +6,7 @@ import { Population } from './system1/screens/Population'
 import { IndividualDetail } from './system1/screens/IndividualDetail'
 import { CohortComparison } from './system1/screens/CohortComparison'
 import { WhatIfSandbox } from './system1/screens/WhatIfSandbox'
+import { ManagerOverride } from './system1/screens/ManagerOverride'
 import { System2Root } from './system2/System2Root'
 
 export default function App() {
@@ -22,6 +23,8 @@ export default function App() {
           <Route path="cohort/:id" element={<CohortComparison />} />
           <Route path="whatif" element={<WhatIfSandbox />} />
           <Route path="whatif/:id" element={<WhatIfSandbox />} />
+          <Route path="override" element={<ManagerOverride />} />
+          <Route path="override/:id" element={<ManagerOverride />} />
         </Route>
         <Route path="/system2" element={<System2Root />} />
         <Route path="*" element={<Navigate to="/system1" replace />} />
