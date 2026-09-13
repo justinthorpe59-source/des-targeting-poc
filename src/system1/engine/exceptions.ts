@@ -1,5 +1,7 @@
 import type { Person } from '../data/types'
 import type { TargetRecord } from '../../store/system1Store'
+import { finalTargetFor } from './finalTarget'
+import { buildTeamAverageMap } from './cohortAverages'
 
 /**
  * Shared exceptions detector — the same function Overview's count and (at
@@ -40,32 +42,9 @@ function hasMissingData(person: Person, target: TargetRecord | undefined): strin
   return null
 }
 
-/** "Final target" = the override value once M8 exists; modelled target until then. */
-function finalTargetFor(target: TargetRecord): number {
-  return target.modelled
-}
-
-function teamAverages(people: Person[], targets: Record<string, TargetRecord>): Map<string, number> {
-  const sums = new Map<string, { total: number; count: number }>()
-  for (const person of people) {
-    const target = targets[person.id]
-    if (!target) continue
-    const key = `${person.division}::${person.team}`
-    const entry = sums.get(key) ?? { total: 0, count: 0 }
-    entry.total += finalTargetFor(target)
-    entry.count += 1
-    sums.set(key, entry)
-  }
-  const averages = new Map<string, number>()
-  for (const [key, { total, count }] of sums) {
-    averages.set(key, count > 0 ? total / count : 0)
-  }
-  return averages
-}
-
 export function detectExceptions({ people, targets }: DetectExceptionsInput): Map<string, ExceptionFlag[]> {
   const flagsByPerson = new Map<string, ExceptionFlag[]>()
-  const averages = teamAverages(people, targets)
+  const averages = buildTeamAverageMap(people, targets)
 
   for (const person of people) {
     const target = targets[person.id]
