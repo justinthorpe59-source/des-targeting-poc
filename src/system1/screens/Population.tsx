@@ -4,6 +4,7 @@ import { SEED_PEOPLE } from '../data/people'
 import { DIVISIONS, LOCATIONS } from '../data/types'
 import { ALL, ALL_TEAMS, DEFAULT_FILTER, filterPeople, type PopulationFilter } from '../engine/filterPeople'
 import { useSystem1Store } from '../../store/system1Store'
+import { finalTargetFor } from '../engine/finalTarget'
 
 const selectClass =
   'rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-700 focus:border-slate-500 focus:outline-none'
@@ -109,7 +110,7 @@ export function Population() {
               <th className="px-3 py-2">Location</th>
               <th className="px-3 py-2">Role</th>
               <th className="px-3 py-2">Status</th>
-              <th className="px-3 py-2 text-right">Modelled target</th>
+              <th className="px-3 py-2 text-right">Target</th>
             </tr>
           </thead>
           <tbody data-testid="population-rows" className="divide-y divide-slate-100">
@@ -138,7 +139,7 @@ export function Population() {
                   </td>
                   <td className="px-3 py-2 text-slate-600">{target?.status ?? '—'}</td>
                   <td className="px-3 py-2 text-right tabular-nums text-slate-900">
-                    {target ? `£${target.modelled}k` : '—'}
+                    {target ? `£${finalTargetFor(target)}k${target.override ? ' *' : ''}` : '—'}
                   </td>
                 </tr>
               )

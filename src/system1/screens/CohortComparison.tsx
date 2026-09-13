@@ -2,6 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { SEED_PEOPLE } from '../data/people'
 import { useSystem1Store } from '../../store/system1Store'
 import { computeCohortAverages } from '../engine/cohortAverages'
+import { finalTargetFor } from '../engine/finalTarget'
 
 function ComparisonBar({ label, value, max, testId }: { label: string; value: number; max: number; testId: string }) {
   const pct = max === 0 ? 0 : Math.round((value / max) * 100)
@@ -40,7 +41,8 @@ export function CohortComparison() {
   const target = person ? targets[person.id] : undefined
 
   const averages = person ? computeCohortAverages(person, SEED_PEOPLE, targets) : null
-  const max = averages && target ? Math.max(target.modelled, averages.teamAverage, averages.divisionAverage) : 0
+  const personValue = target ? finalTargetFor(target) : 0
+  const max = averages && target ? Math.max(personValue, averages.teamAverage, averages.divisionAverage) : 0
 
   return (
     <section className="max-w-2xl space-y-6">
@@ -76,7 +78,7 @@ export function CohortComparison() {
             {person.name} — {person.division} / {person.team}
           </h2>
           <div className="mt-4 space-y-4">
-            <ComparisonBar label={`${person.name} (this person)`} value={target.modelled} max={max} testId="cohort-person-value" />
+            <ComparisonBar label={`${person.name} (this person)`} value={personValue} max={max} testId="cohort-person-value" />
             <ComparisonBar label={`${person.team} team average`} value={averages.teamAverage} max={max} testId="cohort-team-value" />
             <ComparisonBar
               label={`${person.division} division average`}
@@ -86,8 +88,8 @@ export function CohortComparison() {
             />
           </div>
           <p className="mt-4 text-sm text-slate-600">
-            £{target.modelled}k is {deltaLabel(target.modelled, averages.teamAverage)} the {person.team} team average
-            (£{Math.round(averages.teamAverage)}k), and {deltaLabel(target.modelled, averages.divisionAverage)} the{' '}
+            £{personValue}k is {deltaLabel(personValue, averages.teamAverage)} the {person.team} team average (£
+            {Math.round(averages.teamAverage)}k), and {deltaLabel(personValue, averages.divisionAverage)} the{' '}
             {person.division} division average (£{Math.round(averages.divisionAverage)}k).
           </p>
         </div>
