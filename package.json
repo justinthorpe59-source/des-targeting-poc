@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "generate:data": "tsx scripts/generate-people.ts"
+    "generate:data": "tsx scripts/generate-people.ts",
+    "verify:engine": "tsx scripts/verify-targeting-engine.ts"
   },
   "dependencies": {
     "react": "^19.2.8",
