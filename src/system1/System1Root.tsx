@@ -25,6 +25,9 @@ export function System1Root() {
           <NavLink to="whatif" className={navLinkClass}>
             What-if sandbox
           </NavLink>
+          <NavLink to="override" className={navLinkClass}>
+            Manager override
+          </NavLink>
         </nav>
       </aside>
       <div className="flex-1">

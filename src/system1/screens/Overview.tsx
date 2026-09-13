@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { SEED_PEOPLE } from '../data/people'
 import { useSystem1Store, type TargetStatus } from '../../store/system1Store'
 import { detectExceptions } from '../engine/exceptions'
+import { finalTargetFor } from '../engine/finalTarget'
 
 const STATUS_ORDER: TargetStatus[] = ['Modelled', 'Adjusted', 'Proposed', 'Approved']
 
@@ -27,9 +28,11 @@ function StatCard({
   )
 }
 
-// M3: population summary. Every number here is derived live from the shared
-// store (SEED_PEOPLE + targets) — nothing is hardcoded, so an override or
-// approval anywhere else in the app changes these numbers immediately.
+// M3: population summary. M8 added overrides, so this now tracks two
+// distinct totals — the pure model output (aggregateModelled, unaffected by
+// any override) and the actual current total (aggregateCurrent, via
+// finalTargetFor — reflects overrides). Everything here is derived live
+// from the shared store — nothing is hardcoded.
 export function Overview() {
   const targets = useSystem1Store((state) => state.targets)
 
@@ -37,6 +40,7 @@ export function Overview() {
     const total = SEED_PEOPLE.length
     const statusCounts: Record<TargetStatus, number> = { Modelled: 0, Adjusted: 0, Proposed: 0, Approved: 0 }
     let aggregateModelled = 0
+    let aggregateCurrent = 0
     let aggregateBaseline = 0
 
     for (const person of SEED_PEOPLE) {
@@ -45,15 +49,24 @@ export function Overview() {
       if (target) {
         statusCounts[target.status] += 1
         aggregateModelled += target.modelled
+        aggregateCurrent += finalTargetFor(target)
       }
     }
 
     const exceptionsByPerson = detectExceptions({ people: SEED_PEOPLE, targets })
 
-    return { total, statusCounts, aggregateModelled, aggregateBaseline, openExceptions: exceptionsByPerson.size }
+    return {
+      total,
+      statusCounts,
+      aggregateModelled,
+      aggregateCurrent,
+      aggregateBaseline,
+      openExceptions: exceptionsByPerson.size,
+    }
   }, [targets])
 
   const pct = (n: number) => (stats.total === 0 ? 0 : Math.round((n / stats.total) * 100))
+  const hasOverrides = stats.aggregateCurrent !== stats.aggregateModelled
 
   return (
     <section className="space-y-6">
@@ -67,12 +80,25 @@ export function Overview() {
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <StatCard label="Population" value={stats.total} testId="stat-population" />
         <StatCard
-          label="Aggregate modelled target"
-          value={`£${stats.aggregateModelled.toLocaleString()}k`}
-          sub={`vs £${stats.aggregateBaseline.toLocaleString()}k combined baseline`}
-          testId="stat-aggregate-modelled"
+          label="Aggregate current target"
+          value={`£${stats.aggregateCurrent.toLocaleString()}k`}
+          sub={
+            hasOverrides
+              ? `£${stats.aggregateModelled.toLocaleString()}k modelled before overrides`
+              : `vs £${stats.aggregateBaseline.toLocaleString()}k combined baseline`
+          }
+          testId="stat-aggregate-current"
         />
         <StatCard label="Open exceptions" value={stats.openExceptions} testId="stat-open-exceptions" />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <StatCard
+          label="Aggregate modelled target"
+          value={`£${stats.aggregateModelled.toLocaleString()}k`}
+          sub={`vs £${stats.aggregateBaseline.toLocaleString()}k combined baseline — unaffected by overrides`}
+          testId="stat-aggregate-modelled"
+        />
       </div>
 
       <div>

@@ -4,6 +4,7 @@ import { SEED_PEOPLE } from '../data/people'
 import { GRADE_CODES, GRADE_TABLE, type GradeCode } from '../data/types'
 import { useSystem1Store } from '../../store/system1Store'
 import { calculateModelledTarget } from '../engine/targetingEngine'
+import { finalTargetFor } from '../engine/finalTarget'
 
 const CAPACITY_MIN = 0.3
 const CAPACITY_MAX = 1.3
@@ -177,10 +178,12 @@ export function WhatIfSandbox() {
                 Currently stored ({target.status})
               </div>
               <div data-testid="whatif-stored-modelled" className="mt-1 text-2xl font-bold tabular-nums text-slate-900">
-                £{target.modelled}k
+                £{finalTargetFor(target)}k
               </div>
               <div className="text-xs text-slate-500">
-                Range £{target.rangeLow}k – £{target.rangeHigh}k
+                {target.override
+                  ? `Modelled was £${target.modelled}k, range £${target.rangeLow}k – £${target.rangeHigh}k`
+                  : `Range £${target.rangeLow}k – £${target.rangeHigh}k`}
               </div>
             </div>
             <div className="rounded-lg border border-slate-300 bg-slate-50 p-4">

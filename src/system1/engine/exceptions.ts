@@ -12,11 +12,9 @@ import { buildTeamAverageMap } from './cohortAverages'
  *  - missing-data: any required field empty
  *  - extreme-value: capacity outside 0.5-1.0, or final target >25% from
  *    the team average
- *  - large-adjustment: manual change over +/-20% — NOT detected here yet.
- *    There's no override mechanism until M8, so a person's "final target"
- *    is always just their modelled target for now and this type can never
- *    fire. Left in the type union so M8/M9 extend this function rather
- *    than write a second one.
+ *  - large-adjustment: manual change over +/-20% — implemented at M8, since
+ *    it needs an actual override to exist. Never blocks; flagged for the
+ *    manager's own sense-check only, same as every other exception here.
  */
 
 export type ExceptionType = 'missing-data' | 'extreme-value' | 'large-adjustment'
@@ -73,6 +71,17 @@ export function detectExceptions({ people, targets }: DetectExceptionsInput): Ma
             personId: person.id,
             type: 'extreme-value',
             detail: `final target £${finalTarget}k is ${Math.round(deviation * 100)}% from team average £${Math.round(teamAverage)}k`,
+          })
+        }
+      }
+
+      if (target.override) {
+        const adjustmentPct = (target.override.finalValue - target.modelled) / target.modelled
+        if (Math.abs(adjustmentPct) > 0.2) {
+          flags.push({
+            personId: person.id,
+            type: 'large-adjustment',
+            detail: `override moved the target ${Math.round(adjustmentPct * 100)}% from modelled £${target.modelled}k to £${target.override.finalValue}k`,
           })
         }
       }

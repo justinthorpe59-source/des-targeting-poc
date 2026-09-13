@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router-dom'
 import { SEED_PEOPLE } from '../data/people'
 import { useSystem1Store } from '../../store/system1Store'
 import { explainTarget } from '../engine/explainTarget'
+import { finalTargetFor } from '../engine/finalTarget'
 
 function FactorRow({ label, value }: { label: string; value: string }) {
   return (
@@ -57,22 +58,36 @@ export function IndividualDetail() {
           <Link to={`/system1/whatif/${person.id}`} className="text-xs font-medium text-slate-500 hover:text-slate-700">
             Try what-if →
           </Link>
+          <Link
+            to={`/system1/override/${person.id}`}
+            className="text-xs font-medium text-slate-500 hover:text-slate-700"
+          >
+            Override →
+          </Link>
         </div>
       </div>
 
       <div className="rounded-lg border border-slate-200 bg-white p-4">
         <div className="flex items-baseline justify-between">
-          <h2 className="text-sm font-semibold text-slate-700">Modelled target</h2>
+          <h2 className="text-sm font-semibold text-slate-700">
+            {target.override ? 'Current target' : 'Modelled target'}
+          </h2>
           <span data-testid="detail-status" className="text-xs font-medium text-slate-500">
             {target.status}
           </span>
         </div>
         <div data-testid="detail-modelled" className="mt-1 text-3xl font-bold tabular-nums text-slate-900">
-          £{target.modelled}k
+          £{finalTargetFor(target)}k
         </div>
-        <div data-testid="detail-range" className="text-sm text-slate-500">
-          Range £{target.rangeLow}k – £{target.rangeHigh}k
-        </div>
+        {target.override ? (
+          <div data-testid="detail-override" className="text-sm text-slate-500">
+            Modelled was £{target.modelled}k ({target.override.type === 'percent' ? `${target.override.value > 0 ? '+' : ''}${target.override.value}%` : 'direct value'}). Reason: {target.override.reason}
+          </div>
+        ) : (
+          <div data-testid="detail-range" className="text-sm text-slate-500">
+            Range £{target.rangeLow}k – £{target.rangeHigh}k
+          </div>
+        )}
       </div>
 
       <div className="rounded-lg border border-slate-200 bg-white p-4">
