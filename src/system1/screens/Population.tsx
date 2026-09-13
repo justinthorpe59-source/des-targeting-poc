@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { SEED_PEOPLE } from '../data/people'
 import { DIVISIONS, LOCATIONS } from '../data/types'
 import { ALL, ALL_TEAMS, DEFAULT_FILTER, filterPeople, type PopulationFilter } from '../engine/filterPeople'
@@ -44,9 +45,11 @@ function FilterSelect({
 // logic; each defaults to "All". Filtering itself lives in filterPeople()
 // (src/system1/engine/filterPeople.ts) so M10's mass adjustment can reuse
 // the exact same logic rather than duplicating it.
+// M5: rows navigate to Individual Detail.
 export function Population() {
   const [filter, setFilter] = useState<PopulationFilter>(DEFAULT_FILTER)
   const targets = useSystem1Store((state) => state.targets)
+  const navigate = useNavigate()
 
   const filtered = useMemo(() => filterPeople(SEED_PEOPLE, filter), [filter])
 
@@ -113,7 +116,18 @@ export function Population() {
             {filtered.map((person) => {
               const target = targets[person.id]
               return (
-                <tr key={person.id} data-testid="population-row" data-person-id={person.id}>
+                <tr
+                  key={person.id}
+                  data-testid="population-row"
+                  data-person-id={person.id}
+                  tabIndex={0}
+                  role="link"
+                  onClick={() => navigate(`/system1/person/${person.id}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') navigate(`/system1/person/${person.id}`)
+                  }}
+                  className="cursor-pointer hover:bg-slate-50 focus:bg-slate-50 focus:outline-none"
+                >
                   <td className="px-3 py-2 font-mono text-xs text-slate-500">{person.id}</td>
                   <td className="px-3 py-2 font-medium text-slate-900">{person.name}</td>
                   <td className="px-3 py-2 text-slate-600">{person.division}</td>
