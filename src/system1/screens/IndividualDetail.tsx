@@ -47,12 +47,17 @@ export function IndividualDetail() {
           {person.id} · {person.division} · {person.team} · {person.location} · Grade {person.gradeCode}{' '}
           {person.roleTitle}
         </p>
-        <Link
-          to={`/system1/cohort/${person.id}`}
-          className="mt-1 inline-block text-xs font-medium text-slate-500 hover:text-slate-700"
-        >
-          Compare to team/division →
-        </Link>
+        <div className="mt-1 flex gap-3">
+          <Link
+            to={`/system1/cohort/${person.id}`}
+            className="text-xs font-medium text-slate-500 hover:text-slate-700"
+          >
+            Compare to team/division →
+          </Link>
+          <Link to={`/system1/whatif/${person.id}`} className="text-xs font-medium text-slate-500 hover:text-slate-700">
+            Try what-if →
+          </Link>
+        </div>
       </div>
 
       <div className="rounded-lg border border-slate-200 bg-white p-4">
