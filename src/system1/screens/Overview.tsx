@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { SEED_PEOPLE } from '../data/people'
 import { useSystem1Store, type TargetStatus } from '../../store/system1Store'
 import { detectExceptions } from '../engine/exceptions'
@@ -11,21 +12,31 @@ function StatCard({
   value,
   sub,
   testId,
+  to,
 }: {
   label: string
   value: string | number
   sub?: string
   testId: string
+  to?: string
 }) {
-  return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
+  const content = (
+    <>
       <div className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</div>
       <div data-testid={testId} className="mt-1 text-2xl font-bold tabular-nums text-slate-900">
         {value}
       </div>
       {sub && <div className="mt-0.5 text-xs text-slate-500">{sub}</div>}
-    </div>
+    </>
   )
+  if (to) {
+    return (
+      <Link to={to} className="block rounded-lg border border-slate-200 bg-white p-4 hover:bg-slate-50">
+        {content}
+      </Link>
+    )
+  }
+  return <div className="rounded-lg border border-slate-200 bg-white p-4">{content}</div>
 }
 
 // M3: population summary. M8 added overrides, so this now tracks two
@@ -89,7 +100,12 @@ export function Overview() {
           }
           testId="stat-aggregate-current"
         />
-        <StatCard label="Open exceptions" value={stats.openExceptions} testId="stat-open-exceptions" />
+        <StatCard
+          label="Open exceptions"
+          value={stats.openExceptions}
+          testId="stat-open-exceptions"
+          to="/system1/exceptions"
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">

@@ -28,6 +28,9 @@ export function System1Root() {
           <NavLink to="override" className={navLinkClass}>
             Manager override
           </NavLink>
+          <NavLink to="exceptions" className={navLinkClass}>
+            Exceptions queue
+          </NavLink>
         </nav>
       </aside>
       <div className="flex-1">

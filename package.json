@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "generate:data": "tsx scripts/generate-people.ts",
-    "verify:engine": "tsx scripts/verify-targeting-engine.ts"
+    "verify:engine": "tsx scripts/verify-targeting-engine.ts",
+    "verify:exceptions": "tsx scripts/verify-exceptions.ts"
   },
   "dependencies": {
     "react": "^19.2.8",
