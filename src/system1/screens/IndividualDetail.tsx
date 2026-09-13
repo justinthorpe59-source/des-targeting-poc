@@ -47,6 +47,12 @@ export function IndividualDetail() {
           {person.id} · {person.division} · {person.team} · {person.location} · Grade {person.gradeCode}{' '}
           {person.roleTitle}
         </p>
+        <Link
+          to={`/system1/cohort/${person.id}`}
+          className="mt-1 inline-block text-xs font-medium text-slate-500 hover:text-slate-700"
+        >
+          Compare to team/division →
+        </Link>
       </div>
 
       <div className="rounded-lg border border-slate-200 bg-white p-4">

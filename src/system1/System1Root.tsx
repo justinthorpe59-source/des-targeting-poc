@@ -19,6 +19,9 @@ export function System1Root() {
           <NavLink to="population" className={navLinkClass}>
             Population
           </NavLink>
+          <NavLink to="cohort" className={navLinkClass}>
+            Cohort comparison
+          </NavLink>
         </nav>
       </aside>
       <div className="flex-1">
