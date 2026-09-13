@@ -31,6 +31,9 @@ export function System1Root() {
           <NavLink to="exceptions" className={navLinkClass}>
             Exceptions queue
           </NavLink>
+          <NavLink to="mass-adjustment" className={navLinkClass}>
+            Mass adjustment
+          </NavLink>
         </nav>
       </aside>
       <div className="flex-1">

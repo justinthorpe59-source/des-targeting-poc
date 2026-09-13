@@ -8,6 +8,7 @@ import { CohortComparison } from './system1/screens/CohortComparison'
 import { WhatIfSandbox } from './system1/screens/WhatIfSandbox'
 import { ManagerOverride } from './system1/screens/ManagerOverride'
 import { ExceptionsQueue } from './system1/screens/ExceptionsQueue'
+import { MassAdjustment } from './system1/screens/MassAdjustment'
 import { System2Root } from './system2/System2Root'
 
 export default function App() {
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="override" element={<ManagerOverride />} />
           <Route path="override/:id" element={<ManagerOverride />} />
           <Route path="exceptions" element={<ExceptionsQueue />} />
+          <Route path="mass-adjustment" element={<MassAdjustment />} />
         </Route>
         <Route path="/system2" element={<System2Root />} />
         <Route path="*" element={<Navigate to="/system1" replace />} />
