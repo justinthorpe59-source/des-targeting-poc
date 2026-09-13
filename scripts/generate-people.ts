@@ -1,6 +1,6 @@
 /**
- * Regenerates src/data/people.seed.json from the deterministic generator.
- * Run with: npm run generate:data
+ * Regenerates src/system1/data/people.seed.json from the deterministic
+ * generator. Run with: npm run generate:data
  *
  * Same seed -> byte-identical output, every run. This script also validates
  * the result before writing, so a bad generator change fails loudly instead
@@ -9,11 +9,11 @@
 import { writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
-import { DATA_SEED, generatePeople } from '../src/data/generatePeople'
-import { validatePeople } from '../src/data/validatePeople'
+import { DATA_SEED, generatePeople } from '../src/system1/data/generatePeople'
+import { validatePeople } from '../src/system1/data/validatePeople'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const OUT_PATH = path.join(__dirname, '../src/data/people.seed.json')
+const OUT_PATH = path.join(__dirname, '../src/system1/data/people.seed.json')
 
 const people = generatePeople(DATA_SEED)
 
