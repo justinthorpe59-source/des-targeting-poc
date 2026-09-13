@@ -22,6 +22,9 @@ export function System1Root() {
           <NavLink to="cohort" className={navLinkClass}>
             Cohort comparison
           </NavLink>
+          <NavLink to="whatif" className={navLinkClass}>
+            What-if sandbox
+          </NavLink>
         </nav>
       </aside>
       <div className="flex-1">
