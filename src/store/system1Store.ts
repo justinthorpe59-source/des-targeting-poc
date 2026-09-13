@@ -96,6 +96,16 @@ interface System1State {
    * second-guess that list.
    */
   applyMassAdjustment: (personIds: string[], input: { percent: number; reason: string }) => void
+  /**
+   * M11: Modelled/Adjusted -> Proposed. No-ops (safely, silently) if the
+   * record is already Proposed or Approved — callers gate the button on
+   * status, this is the defensive backstop. No reason required — this is a
+   * procedural workflow advance, not a change to the target value (that
+   * justification, if any, was already captured on the override itself).
+   */
+  proposeRecord: (personId: string) => void
+  /** M11: Proposed -> Approved only. One-way for this POC — no revert. */
+  approveRecord: (personId: string) => void
 }
 
 export const useSystem1Store = create<System1State>()(
@@ -176,6 +186,38 @@ export const useSystem1Store = create<System1State>()(
         for (const personId of personIds) {
           get().applyOverride(personId, { type: 'percent', value: percent, reason, source: 'mass' })
         }
+      },
+
+      proposeRecord: (personId) => {
+        const existing = get().targets[personId]
+        if (!existing || existing.status === 'Proposed' || existing.status === 'Approved') return
+
+        set((state) => ({
+          targets: { ...state.targets, [personId]: { ...existing, status: 'Proposed' } },
+        }))
+
+        get().addAuditEntry({
+          personId,
+          actor: 'Manager',
+          action: 'Proposed',
+          detail: `Status changed to Proposed.`,
+        })
+      },
+
+      approveRecord: (personId) => {
+        const existing = get().targets[personId]
+        if (!existing || existing.status !== 'Proposed') return
+
+        set((state) => ({
+          targets: { ...state.targets, [personId]: { ...existing, status: 'Approved' } },
+        }))
+
+        get().addAuditEntry({
+          personId,
+          actor: 'Manager',
+          action: 'Approved',
+          detail: `Status changed to Approved.`,
+        })
       },
     }),
     { name: 'des-system1' },
