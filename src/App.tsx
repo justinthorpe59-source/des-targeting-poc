@@ -10,6 +10,7 @@ import { ManagerOverride } from './system1/screens/ManagerOverride'
 import { ExceptionsQueue } from './system1/screens/ExceptionsQueue'
 import { MassAdjustment } from './system1/screens/MassAdjustment'
 import { EmployeeView } from './system1/screens/EmployeeView'
+import { SnapshotExport } from './system1/screens/SnapshotExport'
 import { System2Root } from './system2/System2Root'
 
 export default function App() {
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="mass-adjustment" element={<MassAdjustment />} />
           <Route path="employee" element={<EmployeeView />} />
           <Route path="employee/:id" element={<EmployeeView />} />
+          <Route path="snapshot-export" element={<SnapshotExport />} />
         </Route>
         <Route path="/system2" element={<System2Root />} />
         <Route path="*" element={<Navigate to="/system1" replace />} />
