@@ -14,7 +14,7 @@ import { SnapshotExport } from './system1/screens/SnapshotExport'
 import { System2Root } from './system2/System2Root'
 import { ExecutiveSummary } from './system2/screens/ExecutiveSummary'
 import { DivisionComparison } from './system2/screens/DivisionComparison'
-import { ScreenB as System2ScreenB } from './system2/screens/ScreenB'
+import { TeamDrillDown } from './system2/screens/TeamDrillDown'
 
 export default function App() {
   return (
@@ -42,7 +42,7 @@ export default function App() {
           <Route index element={<Navigate to="executive-summary" replace />} />
           <Route path="executive-summary" element={<ExecutiveSummary />} />
           <Route path="division-comparison" element={<DivisionComparison />} />
-          <Route path="b" element={<System2ScreenB />} />
+          <Route path="team-drilldown" element={<TeamDrillDown />} />
         </Route>
         <Route path="*" element={<Navigate to="/system1" replace />} />
       </Routes>
