@@ -4,6 +4,7 @@ import { useSystem1Store } from '../../store/system1Store'
 import { explainTarget } from '../engine/explainTarget'
 import { finalTargetFor } from '../engine/finalTarget'
 import { computeCohortAverages } from '../engine/cohortAverages'
+import { StatusPipeline } from '../components/StatusPipeline'
 
 function FactorRow({ label, value }: { label: string; value: string }) {
   return (
@@ -82,7 +83,10 @@ export function EmployeeView() {
                 {target.status}
               </span>
             </div>
-            <div data-testid="employee-target" className="mt-1 text-3xl font-bold tabular-nums text-slate-900">
+            <div className="mt-3">
+              <StatusPipeline current={target.status} />
+            </div>
+            <div data-testid="employee-target" className="mt-3 text-3xl font-bold tabular-nums text-slate-900">
               £{finalTargetFor(target)}k
             </div>
             {!target.override && (
