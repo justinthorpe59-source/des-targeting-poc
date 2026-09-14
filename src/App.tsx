@@ -13,6 +13,7 @@ import { EmployeeView } from './system1/screens/EmployeeView'
 import { SnapshotExport } from './system1/screens/SnapshotExport'
 import { System2Root } from './system2/System2Root'
 import { ExecutiveSummary } from './system2/screens/ExecutiveSummary'
+import { DivisionComparison } from './system2/screens/DivisionComparison'
 import { ScreenB as System2ScreenB } from './system2/screens/ScreenB'
 
 export default function App() {
@@ -40,6 +41,7 @@ export default function App() {
         <Route path="/system2" element={<System2Root />}>
           <Route index element={<Navigate to="executive-summary" replace />} />
           <Route path="executive-summary" element={<ExecutiveSummary />} />
+          <Route path="division-comparison" element={<DivisionComparison />} />
           <Route path="b" element={<System2ScreenB />} />
         </Route>
         <Route path="*" element={<Navigate to="/system1" replace />} />
