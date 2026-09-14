@@ -13,7 +13,8 @@
     "verify:exceptions": "tsx scripts/verify-exceptions.ts",
     "verify:ingestion": "tsx scripts/verify-ingestion.ts",
     "verify:aggregation": "tsx scripts/verify-aggregation.ts",
-    "verify:risk-status": "tsx scripts/verify-risk-status.ts"
+    "verify:risk-status": "tsx scripts/verify-risk-status.ts",
+    "verify:scenario": "tsx scripts/verify-scenario.ts"
   },
   "dependencies": {
     "gsap": "^3.15.0",

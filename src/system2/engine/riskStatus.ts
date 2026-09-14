@@ -94,9 +94,16 @@ export interface RiskAssessment {
   status: RiskStatus
 }
 
-export function assessRisk(rollup: Rollup, records: OrgRecord[], seedKey: string, goal: number = rollup.target): RiskAssessment {
+export function assessRisk(
+  rollup: Rollup,
+  records: OrgRecord[],
+  seedKey: string,
+  goal: number = rollup.target,
+  /** S2-M7: lever 4 (group override) can substitute a confidence value directly instead of the simulated one — everything else (forecast ratio, concentration, max feasible, the status thresholds themselves) stays the same real computation. */
+  confidenceOverride?: Confidence,
+): RiskAssessment {
   const forecastRatio = goal > 0 ? rollup.expectedAchievement / goal : 0
-  const confidence = simulateConfidence(seedKey)
+  const confidence = confidenceOverride ?? simulateConfidence(seedKey)
   const concentrationFlagged = isConcentrationRisk(records)
   const maxFeasible = maxFeasibleExpectedAchievement(records)
 
