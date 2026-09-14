@@ -6,18 +6,17 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   }`
 
 // S2-M0: sidebar/tab nav layout for System 2's screens, mirroring
-// System1Root's structure exactly. Only Screen A / Screen B exist here —
-// the real 6 screens (Executive summary, Division comparison, Team
-// drill-down, Scenario workspace, Scenario library, Exceptions/risk flags)
-// replace these one milestone at a time starting S2-M4, same as System 1
-// deferred its real screens to M3 onward rather than naming them at M0.
+// System1Root's structure exactly. S2-M4 replaced Screen A with the real
+// Executive summary (which absorbed Screen A's import action into its own
+// empty state). Screen B remains as the S2-M2/M3 verification placeholder
+// until Division comparison (S2-M5) and Team drill-down (S2-M6) replace it.
 export function System2Root() {
   return (
     <div className="flex gap-8">
       <aside className="w-48 shrink-0">
         <nav className="flex flex-col gap-1">
-          <NavLink to="a" className={navLinkClass}>
-            Screen A
+          <NavLink to="executive-summary" className={navLinkClass}>
+            Executive summary
           </NavLink>
           <NavLink to="b" className={navLinkClass}>
             Screen B
