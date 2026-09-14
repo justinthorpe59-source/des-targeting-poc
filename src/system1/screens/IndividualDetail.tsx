@@ -3,6 +3,7 @@ import { SEED_PEOPLE } from '../data/people'
 import { useSystem1Store } from '../../store/system1Store'
 import { explainTarget } from '../engine/explainTarget'
 import { finalTargetFor } from '../engine/finalTarget'
+import { StatusPipeline } from '../components/StatusPipeline'
 
 function FactorRow({ label, value }: { label: string; value: string }) {
   return (
@@ -100,7 +101,10 @@ export function IndividualDetail() {
             )}
           </div>
         </div>
-        <div data-testid="detail-modelled" className="mt-1 text-3xl font-bold tabular-nums text-slate-900">
+        <div className="mt-3">
+          <StatusPipeline current={target.status} />
+        </div>
+        <div data-testid="detail-modelled" className="mt-3 text-3xl font-bold tabular-nums text-slate-900">
           £{finalTargetFor(target)}k
         </div>
         {target.override ? (
