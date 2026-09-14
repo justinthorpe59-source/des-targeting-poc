@@ -12,7 +12,8 @@
     "verify:engine": "tsx scripts/verify-targeting-engine.ts",
     "verify:exceptions": "tsx scripts/verify-exceptions.ts",
     "verify:ingestion": "tsx scripts/verify-ingestion.ts",
-    "verify:aggregation": "tsx scripts/verify-aggregation.ts"
+    "verify:aggregation": "tsx scripts/verify-aggregation.ts",
+    "verify:risk-status": "tsx scripts/verify-risk-status.ts"
   },
   "dependencies": {
     "gsap": "^3.15.0",
