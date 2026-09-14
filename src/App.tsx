@@ -12,6 +12,8 @@ import { MassAdjustment } from './system1/screens/MassAdjustment'
 import { EmployeeView } from './system1/screens/EmployeeView'
 import { SnapshotExport } from './system1/screens/SnapshotExport'
 import { System2Root } from './system2/System2Root'
+import { ScreenA as System2ScreenA } from './system2/screens/ScreenA'
+import { ScreenB as System2ScreenB } from './system2/screens/ScreenB'
 
 export default function App() {
   return (
@@ -35,7 +37,11 @@ export default function App() {
           <Route path="employee/:id" element={<EmployeeView />} />
           <Route path="snapshot-export" element={<SnapshotExport />} />
         </Route>
-        <Route path="/system2" element={<System2Root />} />
+        <Route path="/system2" element={<System2Root />}>
+          <Route index element={<Navigate to="a" replace />} />
+          <Route path="a" element={<System2ScreenA />} />
+          <Route path="b" element={<System2ScreenB />} />
+        </Route>
         <Route path="*" element={<Navigate to="/system1" replace />} />
       </Routes>
     </AppShell>
