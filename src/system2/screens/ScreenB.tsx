@@ -1,31 +1,52 @@
 import { useSystem2Store } from '../../store/system2Store'
 
-// S2-M0 placeholder — same shared value as Screen A, different mutation, to
-// make it visibly a distinct screen while proving the state really is
-// shared within System 2.
+// S2-M1 placeholder — same shared store as Screen A, read-only here, to
+// prove the imported records really are shared state within System 2, not
+// screen-local. If this doesn't match Screen A's count, the store isn't
+// wired up correctly.
 export function ScreenB() {
-  const demoValue = useSystem2Store((state) => state.demoValue)
-  const setDemoValue = useSystem2Store((state) => state.setDemoValue)
+  const records = useSystem2Store((state) => state.records)
 
   return (
     <section className="space-y-4">
-      <h1 className="text-lg font-semibold">Screen B (S2-M0 placeholder)</h1>
+      <h1 className="text-lg font-semibold">Screen B (S2-M1 placeholder)</h1>
       <p className="max-w-md text-sm text-slate-600">
-        Same shared value as Screen A, read from the same store. If this doesn't match what you last set
-        on Screen A, the shared state isn't wired up correctly.
+        Same imported records as Screen A, read from the same store.
       </p>
       <div className="flex items-center gap-3">
-        <span data-testid="s2-demo-value" className="text-3xl font-bold tabular-nums">
-          {demoValue}
+        <span data-testid="s2-imported-count" className="text-3xl font-bold tabular-nums">
+          {records.length}
         </span>
-        <button
-          type="button"
-          onClick={() => setDemoValue(demoValue - 1)}
-          className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
-        >
-          −1 from Screen B
-        </button>
+        <span className="text-sm text-slate-500">records</span>
       </div>
+      {records.length > 0 && (
+        <div className="overflow-x-auto rounded-lg border border-slate-200">
+          <table className="min-w-full divide-y divide-slate-200 text-sm">
+            <thead className="bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+              <tr>
+                <th className="px-3 py-2">ID</th>
+                <th className="px-3 py-2">Division</th>
+                <th className="px-3 py-2">Team</th>
+                <th className="px-3 py-2 text-right">Target</th>
+                <th className="px-3 py-2 text-right">Capacity util.</th>
+                <th className="px-3 py-2 text-right">Team trend</th>
+              </tr>
+            </thead>
+            <tbody data-testid="s2-imported-rows">
+              {records.map((r) => (
+                <tr key={r.id} data-testid="s2-imported-row" data-person-id={r.id} className="border-t border-slate-100">
+                  <td className="px-3 py-2 font-mono text-xs text-slate-500">{r.id}</td>
+                  <td className="px-3 py-2 text-slate-600">{r.division}</td>
+                  <td className="px-3 py-2 text-slate-600">{r.team}</td>
+                  <td className="px-3 py-2 text-right tabular-nums text-slate-900">£{r.target}k</td>
+                  <td className="px-3 py-2 text-right tabular-nums text-slate-900">{r.capacityUtilisation}</td>
+                  <td className="px-3 py-2 text-right tabular-nums text-slate-900">{r.teamHistoricalTrend}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </section>
   )
 }
