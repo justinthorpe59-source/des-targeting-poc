@@ -1,6 +1,7 @@
 import { useSystem1Store } from '../store/system1Store'
 import { useSystem2Store } from '../store/system2Store'
 import { useSnapshotStore } from '../store/snapshotStore'
+import { useScenarioStore } from '../store/scenarioStore'
 
 /**
  * Dev-only: exposes the zustand stores on window so Playwright (or manual
@@ -17,12 +18,18 @@ declare global {
       system1: typeof useSystem1Store
       system2: typeof useSystem2Store
       snapshot: typeof useSnapshotStore
+      scenario: typeof useScenarioStore
     }
   }
 }
 
 export function exposeStoresForTesting() {
   if (import.meta.env.DEV) {
-    window.__DES_DEBUG__ = { system1: useSystem1Store, system2: useSystem2Store, snapshot: useSnapshotStore }
+    window.__DES_DEBUG__ = {
+      system1: useSystem1Store,
+      system2: useSystem2Store,
+      snapshot: useSnapshotStore,
+      scenario: useScenarioStore,
+    }
   }
 }
