@@ -1,6 +1,7 @@
 import { useSystem1Store } from './system1Store'
 import { useSystem2Store } from './system2Store'
 import { useSnapshotStore } from './snapshotStore'
+import { useScenarioStore } from './scenarioStore'
 
 /**
  * The single "Reset all demo data" control lives in the app shell (not
@@ -15,4 +16,5 @@ export function resetAllDemoData() {
   useSystem1Store.getState().resetToSeed()
   useSystem2Store.getState().resetToSeed()
   useSnapshotStore.getState().clearSnapshot()
+  useScenarioStore.getState().resetToSeed()
 }
