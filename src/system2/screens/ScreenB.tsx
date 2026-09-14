@@ -1,24 +1,8 @@
 import { useMemo } from 'react'
 import { useSystem2Store } from '../../store/system2Store'
 import { aggregate } from '../engine/aggregation'
-import { computeRiskStatuses, type RiskStatus } from '../engine/riskStatus'
-
-function round1(n: number): number {
-  return Math.round(n * 10) / 10
-}
-
-function statusBadgeClass(status: RiskStatus): string {
-  switch (status) {
-    case 'On track':
-      return 'bg-emerald-100 text-emerald-800'
-    case 'At risk':
-      return 'bg-amber-100 text-amber-800'
-    case 'Off track':
-      return 'bg-orange-100 text-orange-800'
-    case 'Infeasible':
-      return 'bg-red-100 text-red-800'
-  }
-}
+import { computeRiskStatuses } from '../engine/riskStatus'
+import { round1, statusBadgeClass } from '../riskDisplay'
 
 // S2-M1 placeholder — same shared store as Screen A, read-only here, to
 // prove the imported records really are shared state within System 2, not
