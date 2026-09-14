@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "generate:data": "tsx scripts/generate-people.ts",
     "verify:engine": "tsx scripts/verify-targeting-engine.ts",
-    "verify:exceptions": "tsx scripts/verify-exceptions.ts"
+    "verify:exceptions": "tsx scripts/verify-exceptions.ts",
+    "verify:ingestion": "tsx scripts/verify-ingestion.ts"
   },
   "dependencies": {
     "gsap": "^3.15.0",
