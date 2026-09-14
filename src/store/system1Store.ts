@@ -35,6 +35,8 @@ export interface TargetRecord {
   notes: string
   /** Present only once a manager has overridden this record (M8, or M10's mass adjustment). Absent = the model's number stands. */
   override?: OverrideInfo
+  /** Set by approveRecord() (M11). M13's snapshot export reads this directly rather than scanning the audit log for the latest "Approved" entry. */
+  approvedAt?: string
 }
 
 /**
@@ -209,7 +211,10 @@ export const useSystem1Store = create<System1State>()(
         if (!existing || existing.status !== 'Proposed') return
 
         set((state) => ({
-          targets: { ...state.targets, [personId]: { ...existing, status: 'Approved' } },
+          targets: {
+            ...state.targets,
+            [personId]: { ...existing, status: 'Approved', approvedAt: new Date().toISOString() },
+          },
         }))
 
         get().addAuditEntry({
