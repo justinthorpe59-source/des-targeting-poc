@@ -34,6 +34,9 @@ export function System1Root() {
           <NavLink to="mass-adjustment" className={navLinkClass}>
             Mass adjustment
           </NavLink>
+          <NavLink to="employee" className={navLinkClass}>
+            Employee view
+          </NavLink>
         </nav>
       </aside>
       <div className="flex-1">
