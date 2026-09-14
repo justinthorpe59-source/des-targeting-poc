@@ -15,6 +15,7 @@ import { System2Root } from './system2/System2Root'
 import { ExecutiveSummary } from './system2/screens/ExecutiveSummary'
 import { DivisionComparison } from './system2/screens/DivisionComparison'
 import { TeamDrillDown } from './system2/screens/TeamDrillDown'
+import { ScenarioWorkspace } from './system2/screens/ScenarioWorkspace'
 
 export default function App() {
   return (
@@ -43,6 +44,7 @@ export default function App() {
           <Route path="executive-summary" element={<ExecutiveSummary />} />
           <Route path="division-comparison" element={<DivisionComparison />} />
           <Route path="team-drilldown" element={<TeamDrillDown />} />
+          <Route path="scenario-workspace" element={<ScenarioWorkspace />} />
         </Route>
         <Route path="*" element={<Navigate to="/system1" replace />} />
       </Routes>
