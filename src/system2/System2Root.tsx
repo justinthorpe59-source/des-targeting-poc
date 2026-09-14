@@ -8,8 +8,9 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
 // S2-M0: sidebar/tab nav layout for System 2's screens, mirroring
 // System1Root's structure exactly. S2-M4 replaced Screen A with the real
 // Executive summary (which absorbed Screen A's import action into its own
-// empty state). Screen B remains as the S2-M2/M3 verification placeholder
-// until Division comparison (S2-M5) and Team drill-down (S2-M6) replace it.
+// empty state). S2-M5 adds Division comparison alongside it. Screen B
+// remains as the S2-M2/M3 verification placeholder for team-level rollups
+// and raw imported rows until Team drill-down (S2-M6) replaces it.
 export function System2Root() {
   return (
     <div className="flex gap-8">
@@ -17,6 +18,9 @@ export function System2Root() {
         <nav className="flex flex-col gap-1">
           <NavLink to="executive-summary" className={navLinkClass}>
             Executive summary
+          </NavLink>
+          <NavLink to="division-comparison" className={navLinkClass}>
+            Division comparison
           </NavLink>
           <NavLink to="b" className={navLinkClass}>
             Screen B
