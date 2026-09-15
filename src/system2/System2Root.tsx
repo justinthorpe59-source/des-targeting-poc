@@ -1,4 +1,5 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import FadeContent from '../components/react-bits/FadeContent'
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
@@ -10,9 +11,13 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
 // Executive summary (which absorbed Screen A's import action into its own
 // empty state). S2-M5 added Division comparison. S2-M6 added Team
 // drill-down, which retired Screen B. S2-M7 added Scenario workspace.
-// S2-M8 added Scenario library. S2-M9 adds Exceptions/risk flags, the last
-// of the 6 locked screens.
+// S2-M8 added Scenario library. S2-M9 added Exceptions/risk flags, the
+// last of the 6 locked screens. S2-M10: FadeContent (react-bits) wraps the
+// routed screen, keyed to the current path so it remounts on every
+// navigation — same pattern System1Root already uses, one shared wrapper
+// covers all 6 System 2 screens rather than touching each file.
 export function System2Root() {
+  const location = useLocation()
   return (
     <div className="flex gap-8">
       <aside className="w-48 shrink-0">
@@ -38,7 +43,9 @@ export function System2Root() {
         </nav>
       </aside>
       <div className="flex-1">
-        <Outlet />
+        <FadeContent key={location.pathname} duration={400} initialOpacity={0} className="min-h-0">
+          <Outlet />
+        </FadeContent>
       </div>
     </div>
   )
