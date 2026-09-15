@@ -1,0 +1,27 @@
+import type { ReactNode } from 'react'
+import SpotlightCard from '../../components/react-bits/SpotlightCard'
+
+/**
+ * S2-M10: shared KPI tile for System 2's card-based screens (Executive
+ * summary, Scenario workspace) — extracted from Scenario workspace's own
+ * local KpiCard (S2-M7) rather than duplicating the same SpotlightCard
+ * wrapping in Executive Summary too. `value` takes a ReactNode (not just a
+ * string) so a caller can pass a <CountUp> element where that's wanted —
+ * kept as an explicit per-call-site choice rather than baked into this
+ * component, since a live-updating value (Scenario workspace's own tiles
+ * recompute on every lever tweak) must never be animated: CountUp's spring
+ * animation would make an immediate read return a mid-animation value
+ * instead of the settled one, same reasoning System 1's M14 used to keep
+ * CountUp off Mass Adjustment's live preview.
+ */
+export function KpiTile({ label, value, sub, testId }: { label: string; value: ReactNode; sub?: string; testId?: string }) {
+  return (
+    <SpotlightCard className="rounded-lg border border-slate-200 bg-white p-3" spotlightColor="rgba(15, 23, 42, 0.06)">
+      <div className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</div>
+      <div data-testid={testId} className="mt-1 text-xl font-bold tabular-nums text-slate-900">
+        {value}
+      </div>
+      {sub && <div className="mt-0.5 text-xs text-slate-500">{sub}</div>}
+    </SpotlightCard>
+  )
+}
