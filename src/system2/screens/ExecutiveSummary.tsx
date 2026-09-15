@@ -4,6 +4,8 @@ import { useSystem2Store } from '../../store/system2Store'
 import { aggregate } from '../engine/aggregation'
 import { computeRiskStatuses } from '../engine/riskStatus'
 import { round1, statusBadgeClass } from '../riskDisplay'
+import { KpiTile } from '../components/KpiTile'
+import CountUp from '../../components/react-bits/CountUp'
 
 /**
  * S2-M4: the sponsor-facing front door — goal, coverage, forecast, gap,
@@ -93,34 +95,34 @@ export function ExecutiveSummary() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
-          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Goal</div>
-          <div data-testid="s2-exec-goal" className="mt-1 text-2xl font-bold tabular-nums text-slate-900">
-            £{round1(goal)}k
-          </div>
-          <div className="mt-0.5 text-xs text-slate-500">sum of imported targets, by construction</div>
-        </div>
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
-          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Coverage</div>
-          <div data-testid="s2-exec-coverage" className="mt-1 text-2xl font-bold tabular-nums text-slate-900">
-            {round1(coverage)}%
-          </div>
-          <div className="mt-0.5 text-xs text-slate-500">starts at 100% until a goal is changed (S2-M7)</div>
-        </div>
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
-          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Forecast</div>
-          <div data-testid="s2-exec-forecast" className="mt-1 text-2xl font-bold tabular-nums text-slate-900">
-            {round1(desWideRisk.forecastRatio * 100)}%
-          </div>
-          <div className="mt-0.5 text-xs text-slate-500">£{round1(expected)}k expected achievement</div>
-        </div>
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
-          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Gap</div>
-          <div data-testid="s2-exec-gap" className="mt-1 text-2xl font-bold tabular-nums text-slate-900">
-            {gap >= 0 ? '−' : '+'}£{round1(Math.abs(gap))}k
-          </div>
-          <div className="mt-0.5 text-xs text-slate-500">{gap >= 0 ? 'shortfall vs goal' : 'surplus vs goal'}</div>
-        </div>
+        <KpiTile
+          label="Goal"
+          testId="s2-exec-goal"
+          value={
+            <>
+              £<CountUp to={round1(goal)} duration={0.6} />k
+            </>
+          }
+          sub="sum of imported targets, by construction"
+        />
+        <KpiTile
+          label="Coverage"
+          testId="s2-exec-coverage"
+          value={`${round1(coverage)}%`}
+          sub="starts at 100% until a goal is changed (S2-M7)"
+        />
+        <KpiTile
+          label="Forecast"
+          testId="s2-exec-forecast"
+          value={`${round1(desWideRisk.forecastRatio * 100)}%`}
+          sub={`£${round1(expected)}k expected achievement`}
+        />
+        <KpiTile
+          label="Gap"
+          testId="s2-exec-gap"
+          value={`${gap >= 0 ? '−' : '+'}£${round1(Math.abs(gap))}k`}
+          sub={gap >= 0 ? 'shortfall vs goal' : 'surplus vs goal'}
+        />
       </div>
 
       <div className="rounded-lg border border-slate-200 bg-white p-4">

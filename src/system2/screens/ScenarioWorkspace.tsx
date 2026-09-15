@@ -7,6 +7,7 @@ import { aggregate } from '../engine/aggregation'
 import { computeRiskStatuses, type Confidence } from '../engine/riskStatus'
 import { runScenario, type ScenarioLevers } from '../engine/scenario'
 import { round1, statusBadgeClass } from '../riskDisplay'
+import { KpiTile } from '../components/KpiTile'
 
 const selectClass =
   'rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-700 focus:border-slate-500 focus:outline-none'
@@ -91,16 +92,6 @@ function leversFrom(inputs: WorkspaceInputs): ScenarioLevers {
   }
 
   return levers
-}
-
-function KpiCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
-  return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3">
-      <div className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</div>
-      <div className="mt-1 text-xl font-bold tabular-nums text-slate-900">{value}</div>
-      {sub && <div className="mt-0.5 text-xs text-slate-500">{sub}</div>}
-    </div>
-  )
 }
 
 /**
@@ -453,8 +444,8 @@ export function ScenarioWorkspace() {
           <div className="space-y-2">
             <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Baseline</div>
             <div className="grid grid-cols-2 gap-2">
-              <KpiCard label="Goal" value={`£${round1(baselineGoal)}k`} />
-              <KpiCard
+              <KpiTile label="Goal" value={`£${round1(baselineGoal)}k`} />
+              <KpiTile
                 label="Forecast"
                 value={`${round1(baselineRisk.desWide.forecastRatio * 100)}%`}
                 sub={`£${round1(baselineAggregation.desWide.expectedAchievement)}k expected`}
@@ -471,8 +462,8 @@ export function ScenarioWorkspace() {
           <div className="space-y-2 rounded-lg border border-slate-300 bg-slate-50 p-2">
             <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Scenario</div>
             <div className="grid grid-cols-2 gap-2">
-              <KpiCard label="Goal" value={`£${round1(scenarioGoal)}k`} />
-              <KpiCard
+              <KpiTile label="Goal" value={`£${round1(scenarioGoal)}k`} />
+              <KpiTile
                 label="Forecast"
                 value={`${round1(scenario.riskStatuses.desWide.forecastRatio * 100)}%`}
                 sub={`£${round1(scenario.aggregation.desWide.expectedAchievement)}k expected`}
