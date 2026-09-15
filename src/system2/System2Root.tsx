@@ -10,8 +10,8 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
 // Executive summary (which absorbed Screen A's import action into its own
 // empty state). S2-M5 added Division comparison. S2-M6 added Team
 // drill-down, which retired Screen B. S2-M7 added Scenario workspace.
-// S2-M8 adds Scenario library. Exceptions/risk flags (S2-M9) is the last of
-// the 6 locked screens, still to come.
+// S2-M8 added Scenario library. S2-M9 adds Exceptions/risk flags, the last
+// of the 6 locked screens.
 export function System2Root() {
   return (
     <div className="flex gap-8">
@@ -31,6 +31,9 @@ export function System2Root() {
           </NavLink>
           <NavLink to="scenario-library" className={navLinkClass}>
             Scenario library
+          </NavLink>
+          <NavLink to="exceptions" className={navLinkClass}>
+            Exceptions / risk flags
           </NavLink>
         </nav>
       </aside>
