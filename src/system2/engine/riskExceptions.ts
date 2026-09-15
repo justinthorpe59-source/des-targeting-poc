@@ -59,6 +59,30 @@ function leversTargetGroup(levers: ScenarioLevers, level: GroupLevel, groupKey: 
   return false
 }
 
+/**
+ * Bug fix (found by playwright-mcp verification, not by reading the code):
+ * aggregation.desWide.expectedAchievement is a single running sum with no
+ * NaN isolation — one malformed record anywhere poisons the whole DES-wide
+ * total, and every OTHER group's reliance-share check silently stops
+ * firing (`NaN > 0.3` is false, `desWideExpectedAchievement > 0` is false
+ * too, so the check just never runs, for anyone, dataset-wide).
+ *
+ * Teams are the leaf level — never summed further into anything else — so
+ * a team's own expectedAchievement is either fully valid or that exact
+ * team is itself corrupted (and already gets its own missing-forecast-data
+ * flag from evaluateGroup(), independent of this). Summing only the finite
+ * team rollups reproduces the true DES-wide total exactly when nothing is
+ * corrupted, and isolates the poison to just the corrupted team/division
+ * when something is - never suppressing another group's real, correct flag.
+ */
+function sanitizedDesWideExpectedAchievement(aggregation: AggregationResult): number {
+  let total = 0
+  for (const rollup of aggregation.byTeam.values()) {
+    if (Number.isFinite(rollup.expectedAchievement)) total += rollup.expectedAchievement
+  }
+  return total
+}
+
 function evaluateGroup(
   groupKey: string,
   level: GroupLevel,
@@ -118,7 +142,7 @@ function evaluateGroup(
 
 export function detectRiskExceptions({ aggregation, riskStatuses, savedScenarios }: DetectRiskExceptionsInput): Map<string, RiskExceptionFlag[]> {
   const flagsByGroup = new Map<string, RiskExceptionFlag[]>()
-  const desWideExpectedAchievement = aggregation.desWide.expectedAchievement
+  const desWideExpectedAchievement = sanitizedDesWideExpectedAchievement(aggregation)
 
   for (const [division, rollup] of aggregation.byDivision) {
     const flags = evaluateGroup(division, 'division', rollup, riskStatuses.byDivision.get(division), desWideExpectedAchievement, savedScenarios)
