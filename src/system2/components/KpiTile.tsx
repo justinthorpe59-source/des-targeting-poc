@@ -16,12 +16,12 @@ import SpotlightCard from '../../components/react-bits/SpotlightCard'
  */
 export function KpiTile({ label, value, sub, testId }: { label: string; value: ReactNode; sub?: string; testId?: string }) {
   return (
-    <SpotlightCard className="rounded-lg border border-slate-200 bg-white p-3" spotlightColor="rgba(15, 23, 42, 0.06)">
-      <div className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</div>
-      <div data-testid={testId} className="mt-1 text-xl font-bold tabular-nums text-slate-900">
+    <SpotlightCard className="rounded-lg border border-pa-grey-01 bg-pa-white p-3" spotlightColor="rgba(2, 77, 120, 0.08)">
+      <div className="font-pa-body text-xs font-medium uppercase tracking-wide text-pa-grey-03">{label}</div>
+      <div data-testid={testId} className="mt-1 font-pa-mono text-xl font-bold tabular-nums text-pa-grey-04">
         {value}
       </div>
-      {sub && <div className="mt-0.5 text-xs text-slate-500">{sub}</div>}
+      {sub && <div className="mt-0.5 font-pa-body text-xs text-pa-grey-03">{sub}</div>}
     </SpotlightCard>
   )
 }
