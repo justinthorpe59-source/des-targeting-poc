@@ -2,8 +2,8 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import FadeContent from '../components/react-bits/FadeContent'
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-  `rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-    isActive ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'
+  `rounded-md px-3 py-1.5 font-pa-body text-sm font-medium transition-colors ${
+    isActive ? 'bg-pa-aqua-05 text-pa-white' : 'text-pa-grey-03 hover:bg-pa-grey-01'
   }`
 
 // S2-M0: sidebar/tab nav layout for System 2's screens, mirroring
@@ -19,7 +19,7 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
 export function System2Root() {
   const location = useLocation()
   return (
-    <div className="flex gap-8">
+    <div className="flex gap-8 bg-pa-grey-wash">
       <aside className="w-48 shrink-0">
         <nav className="flex flex-col gap-1">
           <NavLink to="executive-summary" className={navLinkClass}>

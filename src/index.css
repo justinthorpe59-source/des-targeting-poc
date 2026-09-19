@@ -1,1 +1,86 @@
 @import "tailwindcss";
+
+/*
+ * Searchlight design tokens — PA design-system palette, shared directly as
+ * hex values (the full token package isn't wired up yet). Kept as Tailwind
+ * v4 @theme entries so they compile to real CSS custom properties
+ * (--color-pa-*, --font-pa-*) and are trivially swappable in one place.
+ *
+ * Typography: Aeonik Pro / Orbikular / Aeonik Fono aren't available as
+ * installed/importable fonts in this environment. Manrope (body — geometric
+ * grotesk, closest free match to Aeonik Pro), Bricolage Grotesque (display —
+ * characterful stand-in for Orbikular's "moment" role, used large) and Space
+ * Mono (numeric/technical — closest match to Aeonik Fono) are used as Google
+ * Fonts placeholders, loaded in index.html, until the real files are
+ * shared. These are additive theme keys (font-pa-*, not font-sans/mono) so
+ * they don't change any other screen's default typography.
+ */
+@theme {
+  --color-pa-dark-blue: #00172d;
+  --color-pa-logo-grey: #7c8b9a;
+  --color-pa-grey-wash: #f9fafc;
+  --color-pa-white: #ffffff;
+  --color-pa-ingenuity-red: #f62b44;
+
+  --color-pa-grey-04: #36465a;
+  --color-pa-grey-03: #64778a;
+  --color-pa-grey-02: #a2b3c9;
+  --color-pa-grey-01: #e8ecf2;
+
+  --color-pa-aqua-05: #024d78;
+  --color-pa-aqua-04: #0580a7;
+  --color-pa-aqua-03: #4ab9d3;
+  --color-pa-aqua-02: #b7e5ee;
+  --color-pa-aqua-01: #cdecf2;
+
+  --color-pa-lime-04: #2c8027;
+  --color-pa-lime-03: #6cbd3a;
+  --color-pa-lime-02: #c0efa5;
+  --color-pa-lime-01: #d5ecc8;
+
+  --color-pa-apricot-04: #ebae00;
+  --color-pa-apricot-03: #ffc000;
+  --color-pa-apricot-02: #ffe18e;
+  --color-pa-apricot-01: #faecbd;
+
+  --color-pa-rose-04: #ee2f66;
+  --color-pa-rose-03: #f3809e;
+  --color-pa-rose-02: #ffbecf;
+  --color-pa-rose-01: #f3d3dc;
+
+  --font-pa-body: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --font-pa-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --font-pa-mono: 'Space Mono', ui-monospace, 'SFMono-Regular', monospace;
+}
+
+/* Searchlight-beam sweep for loading/thinking states (Executive Summary M0). */
+@keyframes pa-searchlight-rotate {
+  0%,
+  100% {
+    transform: rotate(-30deg);
+  }
+  50% {
+    transform: rotate(30deg);
+  }
+}
+
+@keyframes pa-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
