@@ -7,8 +7,8 @@ import { computeRiskStatuses } from '../engine/riskStatus'
 import type { RiskStatus } from '../engine/riskStatus'
 import { round1, statusBadgeClass } from '../riskDisplay'
 import { CoverageTrack } from '../components/CoverageTrack'
-import { SearchlightLoader } from '../components/SearchlightLoader'
-import { SketchDistribution } from '../components/SketchIllustrations'
+import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
+import { SketchDistribution } from '../../components/searchlight/SketchIllustrations'
 
 /**
  * S2-M4: the sponsor-facing front door — goal, coverage, forecast, gap,

@@ -15,7 +15,7 @@ export function explainTarget(person: Person, target: TargetRecord): string {
   return (
     `${person.division}'s baseline for this role is £${person.baseline}k. ` +
     `Adjusted for your capacity (${person.capacity} of full-time), your role factor ` +
-    `(${person.roleFactor} for Grade ${person.gradeCode} ${person.roleTitle}), and the current economic ` +
+    `(${person.roleFactor} for ${person.grade}), and the current economic ` +
     `factor (${person.economicFactor}), the modelled target is £${target.modelled}k — expressed as a range of ` +
     `£${target.rangeLow}k to £${target.rangeHigh}k (±15%) rather than a single fixed number, since this is a ` +
     `starting point for a conversation, not a formula-only decision.`

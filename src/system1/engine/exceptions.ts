@@ -17,6 +17,12 @@ import { buildTeamAverageMap } from './cohortAverages'
  *    manager's own sense-check only, same as every other exception here.
  */
 
+/** Locked in CLAUDE.md: final target >25% from the team average is an extreme-value exception. Also reused by the override cross-check's level-cohort norm check — same "significant outlier from a peer average" concept, one number. */
+export const EXTREME_VALUE_DEVIATION_THRESHOLD = 0.25
+
+/** Locked in CLAUDE.md: a manual change over ±20% is a large-adjustment exception. Also reused by Manager Override's own inline flag and the override cross-check's "drastic percentage change" sign-off trigger — one number, not three copies. */
+export const LARGE_ADJUSTMENT_THRESHOLD = 0.2
+
 export type ExceptionType = 'missing-data' | 'extreme-value' | 'large-adjustment'
 
 export interface ExceptionFlag {
@@ -33,7 +39,7 @@ interface DetectExceptionsInput {
 function hasMissingData(person: Person, target: TargetRecord | undefined): string | null {
   if (person.capacity === null || person.capacity === undefined) return 'capacity is missing'
   if (person.economicFactor === null || person.economicFactor === undefined) return 'economic factor is missing'
-  if (!person.roleTitle || person.roleFactor === null || person.roleFactor === undefined) return 'role is missing'
+  if (!person.grade || person.roleFactor === null || person.roleFactor === undefined) return 'role is missing'
   if (!person.location) return 'location is missing'
   if (person.baseline === null || person.baseline === undefined) return 'baseline is missing'
   if (!target || target.modelled === null || target.modelled === undefined) return 'modelled target is missing'
@@ -66,7 +72,7 @@ export function detectExceptions({ people, targets }: DetectExceptionsInput): Ma
       if (teamAverage && teamAverage > 0) {
         const finalTarget = finalTargetFor(target)
         const deviation = Math.abs(finalTarget - teamAverage) / teamAverage
-        if (deviation > 0.25) {
+        if (deviation > EXTREME_VALUE_DEVIATION_THRESHOLD) {
           flags.push({
             personId: person.id,
             type: 'extreme-value',
@@ -77,7 +83,7 @@ export function detectExceptions({ people, targets }: DetectExceptionsInput): Ma
 
       if (target.override) {
         const adjustmentPct = (target.override.finalValue - target.modelled) / target.modelled
-        if (Math.abs(adjustmentPct) > 0.2) {
+        if (Math.abs(adjustmentPct) > LARGE_ADJUSTMENT_THRESHOLD) {
           flags.push({
             personId: person.id,
             type: 'large-adjustment',

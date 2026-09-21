@@ -1,8 +1,14 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { SEED_PEOPLE } from '../data/people'
 import { DIVISIONS, LOCATIONS } from '../data/types'
 import { ALL, ALL_TEAMS, DEFAULT_FILTER, filterPeople, type PopulationFilter } from '../engine/filterPeople'
+import { combinedRevenueFor } from '../engine/revenueEngine'
+import { computeMassAdjustmentCrossCheck } from '../engine/massAdjustmentCrossCheck'
+import { buildMassSignOffContext } from '../engine/buildSignOffContext'
+import { MassAdjustmentCrossCheckPanel } from '../components/MassAdjustmentCrossCheckPanel'
 import { useSystem1Store } from '../../store/system1Store'
+import { useSystem2LiveSnapshot } from '../../system2/bridge/useSystem2LiveState'
 
 const selectClass =
   'rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-700 focus:border-slate-500 focus:outline-none'
@@ -45,10 +51,11 @@ export function MassAdjustment() {
   const [filter, setFilter] = useState<PopulationFilter>(DEFAULT_FILTER)
   const [percent, setPercent] = useState(0)
   const [reason, setReason] = useState('')
-  const [lastApplied, setLastApplied] = useState<{ count: number; percent: number } | null>(null)
+  const [lastApplied, setLastApplied] = useState<{ count: number; percent: number; signOffCount: number } | null>(null)
 
   const targets = useSystem1Store((state) => state.targets)
   const applyMassAdjustment = useSystem1Store((state) => state.applyMassAdjustment)
+  const system2Snapshot = useSystem2LiveSnapshot()
 
   const filtered = useMemo(() => filterPeople(SEED_PEOPLE, filter), [filter])
 
@@ -65,27 +72,46 @@ export function MassAdjustment() {
 
   const preview = useMemo(() => {
     return eligible.map((person) => {
-      const target = targets[person.id]
-      const before = target?.modelled ?? 0
+      const before = combinedRevenueFor(person)
       const after = Math.round(before * (1 + percent / 100))
       return { person, before, after }
     })
-  }, [eligible, targets, percent])
+  }, [eligible, percent])
 
   const totalBefore = preview.reduce((sum, row) => sum + row.before, 0)
   const totalAfter = preview.reduce((sum, row) => sum + row.after, 0)
   const netChange = totalAfter - totalBefore
   const netChangePct = totalBefore === 0 ? 0 : Math.round((netChange / totalBefore) * 100)
 
+  const crossCheck = useMemo(() => {
+    if (eligible.length === 0) return null
+    return computeMassAdjustmentCrossCheck({
+      people: eligible,
+      percent,
+      targets,
+      snapshot: system2Snapshot,
+      allPeople: SEED_PEOPLE,
+    })
+  }, [eligible, percent, targets, system2Snapshot])
+
+  const signOffPersonIds = useMemo(() => {
+    if (!crossCheck) return []
+    if (crossCheck.routing === 'whole-batch') return eligible.map((p) => p.id)
+    if (crossCheck.routing === 'outliers-only') return crossCheck.outliers.map((o) => o.person.id)
+    return []
+  }, [crossCheck, eligible])
+
   const canApply = reason.trim().length > 0 && eligible.length > 0 && percent !== 0
 
   function handleApply() {
     if (!canApply) return
+    const signOffContextByPersonId =
+      crossCheck && signOffPersonIds.length > 0 ? buildMassSignOffContext(crossCheck, crypto.randomUUID()) : undefined
     applyMassAdjustment(
       eligible.map((p) => p.id),
-      { percent, reason: reason.trim() },
+      { percent, reason: reason.trim(), signOffPersonIds, signOffContextByPersonId },
     )
-    setLastApplied({ count: eligible.length, percent })
+    setLastApplied({ count: eligible.length, percent, signOffCount: signOffPersonIds.length })
     setReason('')
   }
 
@@ -103,6 +129,15 @@ export function MassAdjustment() {
         <div data-testid="mass-adjustment-success" className="rounded-md bg-green-50 p-3 text-sm text-green-800">
           Applied {lastApplied.percent > 0 ? '+' : ''}
           {lastApplied.percent}% to {lastApplied.count} record{lastApplied.count === 1 ? '' : 's'}.
+          {lastApplied.signOffCount > 0 && (
+            <>
+              {' '}
+              {lastApplied.signOffCount} of those route to Pending Sign-off —{' '}
+              <Link to="/system1/signoff" className="font-medium underline">
+                view the Sign-off Queue →
+              </Link>
+            </>
+          )}
         </div>
       )}
 
@@ -198,8 +233,14 @@ export function MassAdjustment() {
         onClick={handleApply}
         className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
       >
-        Apply to {eligible.length} record{eligible.length === 1 ? '' : 's'}
+        {crossCheck?.routing === 'whole-batch'
+          ? `Apply to ${eligible.length} record${eligible.length === 1 ? '' : 's'} (routes to Pending Sign-off)`
+          : crossCheck?.routing === 'outliers-only'
+            ? `Apply to ${eligible.length} record${eligible.length === 1 ? '' : 's'} (${signOffPersonIds.length} route to Pending Sign-off)`
+            : `Apply to ${eligible.length} record${eligible.length === 1 ? '' : 's'}`}
       </button>
+
+      {crossCheck && <MassAdjustmentCrossCheckPanel result={crossCheck} />}
 
       <div className="overflow-x-auto rounded-lg border border-slate-200">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
