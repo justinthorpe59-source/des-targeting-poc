@@ -5,10 +5,10 @@ import { useScenarioStore } from '../../store/scenarioStore'
 import { aggregate } from '../engine/aggregation'
 import { computeRiskStatuses } from '../engine/riskStatus'
 import { detectRiskExceptions, type RiskExceptionType } from '../engine/riskExceptions'
-import { ScreenHeading } from '../components/ScreenHeading'
-import { SearchlightLoader } from '../components/SearchlightLoader'
-import { SketchDistribution } from '../components/SketchIllustrations'
-import { useInitialLoad } from '../components/useInitialLoad'
+import { ScreenHeading } from '../../components/searchlight/ScreenHeading'
+import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
+import { SketchDistribution } from '../../components/searchlight/SketchIllustrations'
+import { useInitialLoad } from '../../components/searchlight/useInitialLoad'
 
 const TYPE_LABELS: Record<RiskExceptionType, string> = {
   'missing-forecast-data': 'Missing forecast data',

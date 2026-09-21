@@ -2,8 +2,8 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import FadeContent from '../components/react-bits/FadeContent'
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-  `rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-    isActive ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'
+  `rounded-md px-3 py-1.5 font-pa-body text-sm font-medium transition-colors ${
+    isActive ? 'bg-pa-aqua-05 text-pa-white' : 'text-pa-grey-03 hover:bg-pa-grey-01'
   }`
 
 // Sidebar/tab nav layout for System 1's screens. Real screens replace the
@@ -15,7 +15,7 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
 export function System1Root() {
   const location = useLocation()
   return (
-    <div className="flex gap-8">
+    <div className="flex gap-8 bg-pa-grey-wash">
       <aside className="w-48 shrink-0">
         <nav className="flex flex-col gap-1">
           <NavLink to="overview" className={navLinkClass}>
@@ -38,6 +38,9 @@ export function System1Root() {
           </NavLink>
           <NavLink to="mass-adjustment" className={navLinkClass}>
             Mass adjustment
+          </NavLink>
+          <NavLink to="signoff" className={navLinkClass}>
+            Sign-off queue
           </NavLink>
           <NavLink to="employee" className={navLinkClass}>
             Employee view

@@ -1,4 +1,4 @@
-import { GRADE_CODES, LOCATIONS, type Person } from './types'
+import { GRADES, LOCATIONS, SALES_TARGET_GRADES, type Person } from './types'
 
 /**
  * Structural check mirroring CLAUDE.md's "missing data" exception fields:
@@ -13,7 +13,7 @@ export interface ValidationIssue {
   problem: string
 }
 
-const REQUIRED_STRING_FIELDS: (keyof Person)[] = ['id', 'name', 'division', 'team', 'roleTitle']
+const REQUIRED_STRING_FIELDS: (keyof Person)[] = ['id', 'name', 'division', 'team', 'grade']
 
 export function validatePeople(people: Person[]): ValidationIssue[] {
   const issues: ValidationIssue[] = []
@@ -40,8 +40,8 @@ export function validatePeople(people: Person[]): ValidationIssue[] {
       issues.push({ id: idLabel, field: 'location', problem: `invalid value ${String(person.location)}` })
     }
 
-    if (!GRADE_CODES.includes(person.gradeCode)) {
-      issues.push({ id: idLabel, field: 'gradeCode', problem: `invalid value ${String(person.gradeCode)}` })
+    if (!GRADES.includes(person.grade)) {
+      issues.push({ id: idLabel, field: 'grade', problem: `invalid value ${String(person.grade)}` })
     }
 
     if (person.roleFactor === null || person.roleFactor === undefined || Number.isNaN(person.roleFactor)) {
@@ -66,6 +66,30 @@ export function validatePeople(people: Person[]): ValidationIssue[] {
 
     if (person.baseline === null || person.baseline === undefined || Number.isNaN(person.baseline)) {
       issues.push({ id: idLabel, field: 'baseline', problem: 'empty' })
+    }
+
+    if (person.dayRate === null || person.dayRate === undefined || Number.isNaN(person.dayRate)) {
+      issues.push({ id: idLabel, field: 'dayRate', problem: 'empty' })
+    }
+
+    if (
+      person.utilisationTarget === null ||
+      person.utilisationTarget === undefined ||
+      Number.isNaN(person.utilisationTarget)
+    ) {
+      issues.push({ id: idLabel, field: 'utilisationTarget', problem: 'empty' })
+    }
+
+    const shouldHaveSalesTarget = SALES_TARGET_GRADES.includes(person.grade)
+    if (shouldHaveSalesTarget && (person.salesTarget === null || person.salesTarget === undefined)) {
+      issues.push({ id: idLabel, field: 'salesTarget', problem: `missing for grade ${person.grade}` })
+    }
+    if (!shouldHaveSalesTarget && person.salesTarget !== null && person.salesTarget !== undefined) {
+      issues.push({
+        id: idLabel,
+        field: 'salesTarget',
+        problem: `should be null for grade ${person.grade}, got ${person.salesTarget}`,
+      })
     }
   }
 

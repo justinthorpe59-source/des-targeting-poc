@@ -4,11 +4,11 @@ import { useSystem2Store } from '../../store/system2Store'
 import { aggregate } from '../engine/aggregation'
 import { computeRiskStatuses } from '../engine/riskStatus'
 import { round1, statusBadgeClass, statusFill } from '../riskDisplay'
-import { ScreenHeading } from '../components/ScreenHeading'
-import { SearchlightLoader } from '../components/SearchlightLoader'
-import { SketchScatter } from '../components/SketchIllustrations'
-import { HBarChart } from '../components/HBarChart'
-import { useInitialLoad } from '../components/useInitialLoad'
+import { ScreenHeading } from '../../components/searchlight/ScreenHeading'
+import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
+import { SketchScatter } from '../../components/searchlight/SketchIllustrations'
+import { HBarChart } from '../../components/searchlight/HBarChart'
+import { useInitialLoad } from '../../components/searchlight/useInitialLoad'
 
 /**
  * S2-M5: coverage/forecast/confidence/status side by side across divisions.

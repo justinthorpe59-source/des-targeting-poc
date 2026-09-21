@@ -9,6 +9,7 @@ import { WhatIfSandbox } from './system1/screens/WhatIfSandbox'
 import { ManagerOverride } from './system1/screens/ManagerOverride'
 import { ExceptionsQueue } from './system1/screens/ExceptionsQueue'
 import { MassAdjustment } from './system1/screens/MassAdjustment'
+import { SignOffQueue } from './system1/screens/SignOffQueue'
 import { EmployeeView } from './system1/screens/EmployeeView'
 import { SnapshotExport } from './system1/screens/SnapshotExport'
 import { System2Root } from './system2/System2Root'
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="override/:id" element={<ManagerOverride />} />
           <Route path="exceptions" element={<ExceptionsQueue />} />
           <Route path="mass-adjustment" element={<MassAdjustment />} />
+          <Route path="signoff" element={<SignOffQueue />} />
           <Route path="employee" element={<EmployeeView />} />
           <Route path="employee/:id" element={<EmployeeView />} />
           <Route path="snapshot-export" element={<SnapshotExport />} />
