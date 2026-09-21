@@ -1,21 +1,23 @@
 import type { TargetStatus } from '../../store/system1Store'
 
-const STAGES: TargetStatus[] = ['Modelled', 'Adjusted', 'Proposed', 'Approved']
+// Full workflow order, including Pending Sign-off — a record in that state
+// previously fell off the pipeline (indexOf === -1 → nothing highlighted),
+// exactly the records that also show the Pending Sign-off banner.
+const STAGES: TargetStatus[] = ['Modelled', 'Adjusted', 'Pending Sign-off', 'Proposed', 'Approved']
+
+const STAGE_LABEL: Record<TargetStatus, string> = {
+  Modelled: 'Modelled',
+  Adjusted: 'Adjusted',
+  'Pending Sign-off': 'Sign-off',
+  Proposed: 'Proposed',
+  Approved: 'Approved',
+}
 
 /**
- * M14: a small, honest, hand-built component — not from react-bits.
- * react-bits' Stepper is an interactive multi-step form wizard (always
- * renders Back/Next/Complete controls with no way to fully suppress them);
- * forcing it into a passive, store-driven status display would either fight
- * the component with CSS or leave confusing buttons that don't actually
- * advance anything (Propose/Approve do that, on the buttons elsewhere on
- * this screen). Said so explicitly per the frontend-components skill rather
- * than silently building custom without checking first.
- *
- * Position-based: a status positionally before the current one renders as
- * "passed" even if that exact stage was skipped (e.g. Modelled straight to
- * Proposed) — standard stepper convention, and status is a single value,
- * not a visited-stages history.
+ * A small, hand-built status pipeline (not react-bits — its Stepper is an
+ * interactive form wizard with unsuppressable controls). Position-based: a
+ * status positionally before the current one renders as "passed". Searchlight
+ * design pass: migrated off the old slate palette onto PA tokens.
  */
 export function StatusPipeline({ current }: { current: TargetStatus }) {
   const currentIndex = STAGES.indexOf(current)
@@ -29,26 +31,26 @@ export function StatusPipeline({ current }: { current: TargetStatus }) {
           <div key={stage} className="flex flex-1 items-center last:flex-none">
             <div className="flex flex-col items-center gap-1">
               <div
-                className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
+                className={`flex h-6 w-6 items-center justify-center rounded-full font-pa-mono text-xs font-semibold transition-colors ${
                   isCurrent
-                    ? 'bg-slate-900 text-white'
+                    ? 'bg-pa-aqua-05 text-pa-white'
                     : isPast
-                      ? 'bg-slate-300 text-slate-700'
-                      : 'bg-slate-100 text-slate-400'
+                      ? 'bg-pa-aqua-02 text-pa-aqua-05'
+                      : 'bg-pa-grey-01 text-pa-grey-03'
                 }`}
               >
                 {isPast ? '✓' : i + 1}
               </div>
               <span
-                className={`text-[10px] font-medium uppercase tracking-wide ${
-                  isCurrent ? 'text-slate-900' : 'text-slate-400'
+                className={`font-pa-body text-[10px] font-medium uppercase tracking-wide ${
+                  isCurrent ? 'text-pa-grey-04' : 'text-pa-grey-03'
                 }`}
               >
-                {stage}
+                {STAGE_LABEL[stage]}
               </span>
             </div>
             {i < STAGES.length - 1 && (
-              <div className={`mx-1 h-0.5 flex-1 ${isPast ? 'bg-slate-300' : 'bg-slate-100'}`} />
+              <div className={`mx-1 h-0.5 flex-1 ${isPast ? 'bg-pa-aqua-02' : 'bg-pa-grey-01'}`} />
             )}
           </div>
         )

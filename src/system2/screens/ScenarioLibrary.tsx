@@ -6,10 +6,10 @@ import { aggregate } from '../engine/aggregation'
 import { computeRiskStatuses } from '../engine/riskStatus'
 import { runScenario, type ScenarioLevers } from '../engine/scenario'
 import { round1, statusBadgeClass } from '../riskDisplay'
-import { ScreenHeading } from '../components/ScreenHeading'
-import { SearchlightLoader } from '../components/SearchlightLoader'
-import { SketchSurface } from '../components/SketchIllustrations'
-import { useInitialLoad } from '../components/useInitialLoad'
+import { ScreenHeading } from '../../components/searchlight/ScreenHeading'
+import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
+import { SketchSurface } from '../../components/searchlight/SketchIllustrations'
+import { useInitialLoad } from '../../components/searchlight/useInitialLoad'
 
 function describeLevers(levers: ScenarioLevers): string {
   const parts: string[] = []

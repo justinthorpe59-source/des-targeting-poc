@@ -1,12 +1,25 @@
-import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { SEED_PEOPLE } from '../data/people'
 import { useSystem1Store, type OverrideType } from '../../store/system1Store'
+import { LARGE_ADJUSTMENT_THRESHOLD } from '../engine/exceptions'
+import { runOverrideCrossCheck } from '../engine/overrideCrossCheck'
+import { buildIndividualSignOffContext } from '../engine/buildSignOffContext'
+import { useSystem2LiveSnapshot } from '../../system2/bridge/useSystem2LiveState'
+import { explainTarget } from '../engine/explainTarget'
+import { CrossCheckPanel } from '../components/CrossCheckPanel'
 
 // M8: manager override. Either a % adjustment or a direct value — manager's
 // choice, both produce one final £k number. Reason required, no exceptions.
 // The model never blocks: a >20% change shows an inline flag for the
 // manager's own sense-check, but the Apply button stays enabled regardless.
+//
+// Batch 3b: real-time cross-check against System 2's live aggregate state
+// (team total, level-cohort norms, org goal integrity) — recomputed on
+// every keystroke via runOverrideCrossCheck(). A failing check or a drastic
+// change still doesn't block Apply (same "never blocks" ethos), but routes
+// the record to 'Pending Sign-off' instead of 'Adjusted' so it's never
+// silently treated as final.
 export function ManagerOverride() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -14,6 +27,7 @@ export function ManagerOverride() {
   const applyOverride = useSystem1Store((state) => state.applyOverride)
   const revertOverride = useSystem1Store((state) => state.revertOverride)
   const updateNotes = useSystem1Store((state) => state.updateNotes)
+  const system2Snapshot = useSystem2LiveSnapshot()
 
   const sortedPeople = [...SEED_PEOPLE].sort((a, b) => a.name.localeCompare(b.name))
   const person = id ? SEED_PEOPLE.find((p) => p.id === id) : undefined
@@ -46,15 +60,29 @@ export function ManagerOverride() {
       ? Math.round(target.modelled * (1 + percentValue / 100))
       : Math.round(directValue)
   const previewDeviationPct = target ? Math.round(((previewFinal - target.modelled) / target.modelled) * 100) : 0
-  const isLargeAdjustment = Math.abs(previewDeviationPct) > 20
+  const isLargeAdjustment = Math.abs(previewDeviationPct) > LARGE_ADJUSTMENT_THRESHOLD * 100
   const canSubmit = reason.trim().length > 0
+
+  const crossCheck = useMemo(() => {
+    if (!person || !target) return null
+    return runOverrideCrossCheck({
+      person,
+      proposedFinalTarget: previewFinal,
+      currentModelledTarget: target.modelled,
+      snapshot: system2Snapshot,
+      people: SEED_PEOPLE,
+    })
+  }, [person, target, previewFinal, system2Snapshot])
 
   function handleApply() {
     if (!person || !canSubmit) return
+    const requiresSignOff = crossCheck?.requiresSignOff ?? false
     applyOverride(person.id, {
       type: overrideType,
       value: overrideType === 'percent' ? percentValue : directValue,
       reason: reason.trim(),
+      requiresSignOff,
+      signOffContext: requiresSignOff && crossCheck ? buildIndividualSignOffContext(crossCheck) : undefined,
     })
     setReason('')
   }
@@ -117,6 +145,16 @@ export function ManagerOverride() {
               {target.rangeLow}k – £{target.rangeHigh}k)
             </div>
 
+            {target.status === 'Pending Sign-off' && (
+              <p data-testid="override-pending-signoff-banner" className="mt-3 rounded-md bg-amber-50 p-3 text-xs text-amber-800">
+                This change is pending sign-off from {person.division} / {person.team}&apos;s leadership group —
+                it hasn&apos;t applied as final yet.{' '}
+                <Link to="/system1/signoff" className="font-medium underline">
+                  View the Sign-off Queue →
+                </Link>
+              </p>
+            )}
+
             {target.override && (
               <div data-testid="override-current" className="mt-3 rounded-md bg-slate-50 p-3 text-sm">
                 <div className="font-medium text-slate-700">Current override</div>
@@ -152,6 +190,13 @@ export function ManagerOverride() {
                 </div>
               </div>
             )}
+          </div>
+
+          <div className="rounded-lg border border-slate-200 bg-white p-4">
+            <h2 className="text-sm font-semibold text-slate-700">Explanation</h2>
+            <p data-testid="override-explanation" className="mt-2 text-sm leading-relaxed text-slate-700">
+              {explainTarget(person, target)}
+            </p>
           </div>
 
           <div className="rounded-lg border border-slate-200 bg-white p-4">
@@ -241,9 +286,11 @@ export function ManagerOverride() {
               onClick={handleApply}
               className="mt-3 rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Apply override
+              {crossCheck?.requiresSignOff ? 'Apply override (routes to Pending Sign-off)' : 'Apply override'}
             </button>
           </div>
+
+          {crossCheck && <CrossCheckPanel result={crossCheck} />}
 
           <div className="rounded-lg border border-slate-200 bg-white p-4">
             <h2 className="text-sm font-semibold text-slate-700">Personal context</h2>

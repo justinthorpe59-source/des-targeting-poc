@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { DATA_SEED, generatePeople } from '../src/system1/data/generatePeople'
 import { validatePeople } from '../src/system1/data/validatePeople'
+import { GRADES } from '../src/system1/data/types'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const OUT_PATH = path.join(__dirname, '../src/system1/data/people.seed.json')
@@ -35,9 +36,7 @@ const byDivision = Object.fromEntries(
   ]),
 )
 const byGrade = Object.fromEntries(
-  Array.from(new Set(people.map((p) => p.gradeCode)))
-    .sort((a, b) => a - b)
-    .map((g) => [`G${g}`, people.filter((p) => p.gradeCode === g).length]),
+  GRADES.map((g) => [g, people.filter((p) => p.grade === g).length]).filter(([, count]) => count > 0),
 )
 
 console.log(`Wrote ${people.length} records to ${path.relative(process.cwd(), OUT_PATH)}`)

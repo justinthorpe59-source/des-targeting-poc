@@ -20,12 +20,14 @@ function person(overrides: Partial<Person> & { id: string }): Person {
     division: 'Design',
     team: 'DefaultTeam',
     location: 'Boston',
-    gradeCode: 3,
-    roleTitle: 'Engineer',
+    grade: 'Consultant',
     roleFactor: 1.0,
     capacity: 0.8,
     economicFactor: 1.0,
     baseline: 100,
+    dayRate: 800,
+    utilisationTarget: 0.85,
+    salesTarget: null,
     ...overrides,
   }
 }
