@@ -28,7 +28,7 @@ for (const id of sampleIds) {
   const identical =
     run1.modelled === run2.modelled && run1.rangeLow === run2.rangeLow && run1.rangeHigh === run2.rangeHigh
 
-  console.log(`${person.id} — ${person.name} (${person.division}, G${person.gradeCode} ${person.roleTitle})`)
+  console.log(`${person.id} — ${person.name} (${person.division}, ${person.grade})`)
   console.log(
     `  baseline=${inputs.baseline} x capacity=${inputs.capacity} x roleFactor=${inputs.roleFactor} x economicFactor=${inputs.economicFactor}`,
   )

@@ -4,6 +4,8 @@ export interface HBarRow {
   value: number
   display: string
   fill: string
+  /** Optional QA hook placed on the value cell. */
+  testId?: string
 }
 
 /**
@@ -30,7 +32,9 @@ export function HBarChart({ rows }: { rows: HBarRow[] }) {
               style={{ width: `${(Math.abs(r.value) / max) * 100}%`, background: r.fill }}
             />
           </div>
-          <div className="w-24 shrink-0 text-right font-pa-mono text-xs text-pa-grey-04">{r.display}</div>
+          <div data-testid={r.testId} className="w-24 shrink-0 text-right font-pa-mono text-xs text-pa-grey-04">
+            {r.display}
+          </div>
         </div>
       ))}
     </div>

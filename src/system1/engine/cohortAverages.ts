@@ -1,6 +1,8 @@
 import type { Division, Person } from '../data/types'
+import { SALES_TARGET_GRADES } from '../data/types'
 import type { TargetRecord } from '../../store/system1Store'
 import { finalTargetFor } from './finalTarget'
+import { combinedRevenueFor } from './revenueEngine'
 
 /**
  * Shared cohort-averaging logic. M3's exceptions detector and M6's Cohort
@@ -62,5 +64,30 @@ export function computeCohortAverages(
   return {
     teamAverage: teamMap.get(`${person.division}::${person.team}`) ?? 0,
     divisionAverage: divisionMap.get(person.division) ?? 0,
+  }
+}
+
+/**
+ * Revenue-based cohort averaging for Cohort Comparison, restricted to
+ * like-for-like people: utilisation-only cohorts (below Managing Consultant)
+ * are never averaged in with people who also carry a sales target, since
+ * their combined-revenue figures aren't comparable.
+ */
+export function computeRevenueCohortAverages(person: Person, people: Person[]): CohortAverages {
+  const sameCohort = people.filter(
+    (p) => SALES_TARGET_GRADES.includes(p.grade) === SALES_TARGET_GRADES.includes(person.grade),
+  )
+
+  const teamValues: number[] = []
+  const divisionValues: number[] = []
+  for (const p of sameCohort) {
+    const revenue = combinedRevenueFor(p)
+    if (p.division === person.division && p.team === person.team) teamValues.push(revenue)
+    if (p.division === person.division) divisionValues.push(revenue)
+  }
+
+  return {
+    teamAverage: average(teamValues),
+    divisionAverage: average(divisionValues),
   }
 }

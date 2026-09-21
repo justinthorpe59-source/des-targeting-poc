@@ -15,7 +15,11 @@
     "verify:aggregation": "tsx scripts/verify-aggregation.ts",
     "verify:risk-status": "tsx scripts/verify-risk-status.ts",
     "verify:scenario": "tsx scripts/verify-scenario.ts",
-    "verify:risk-exceptions": "tsx scripts/verify-risk-exceptions.ts"
+    "verify:risk-exceptions": "tsx scripts/verify-risk-exceptions.ts",
+    "verify:live-bridge": "tsx scripts/verify-live-bridge.ts",
+    "verify:override-cross-check": "tsx scripts/verify-override-cross-check.ts",
+    "verify:mass-adjustment-cross-check": "tsx scripts/verify-mass-adjustment-cross-check.ts",
+    "verify:signoff-context": "tsx scripts/verify-signoff-context.ts"
   },
   "dependencies": {
     "gsap": "^3.15.0",
