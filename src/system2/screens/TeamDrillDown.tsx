@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useSystem2Store } from '../../store/system2Store'
 import { aggregate } from '../engine/aggregation'
 import { computeRiskStatuses } from '../engine/riskStatus'
+import { computeGoals } from '../engine/goals'
 import { round1, statusBadgeClass, statusFill } from '../riskDisplay'
 import { ScreenHeading } from '../../components/searchlight/ScreenHeading'
 import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
@@ -13,22 +14,25 @@ import { useInitialLoad } from '../../components/searchlight/useInitialLoad'
 /**
  * S2-M6: teams ranked by contribution to the gap. Locked rule: this does
  * NOT apportion the DES-wide goal down to team level — each team compares
- * its own allocated target to its own expected achievement. Ranking is by
- * absolute gap. Searchlight design pass added the loader, network motif and
- * a token-styled gap bar chart (standard chart) that mirrors the ranking;
- * the table logic is unchanged.
+ * its own expected achievement to its own GOAL (prior-year revenue x 1.1,
+ * independently computed per team by goals.ts — never a slice of the
+ * DES-wide figure). Ranking is by absolute gap. Searchlight design pass
+ * added the loader, network motif and a token-styled gap bar chart
+ * (standard chart) that mirrors the ranking; the table logic is otherwise
+ * unchanged.
  */
 export function TeamDrillDown() {
   const records = useSystem2Store((state) => state.records)
   const rollups = useMemo(() => aggregate(records), [records])
-  const riskStatuses = useMemo(() => computeRiskStatuses(records, rollups), [records, rollups])
+  const goals = useMemo(() => computeGoals(rollups), [rollups])
+  const riskStatuses = useMemo(() => computeRiskStatuses(records, rollups, goals), [records, rollups, goals])
   const loading = useInitialLoad(records.length > 0)
 
   if (records.length === 0) {
     return (
       <section className="space-y-4">
         <ScreenHeading title="Team drill-down">
-          Teams ranked by their absolute contribution to the gap between target and expected
+          Teams ranked by their absolute contribution to the gap between goal and expected
           achievement.
         </ScreenHeading>
         <div className="rounded-lg border border-pa-grey-01 bg-pa-white p-4 font-pa-body text-sm text-pa-grey-03">
@@ -45,8 +49,9 @@ export function TeamDrillDown() {
   const teamRows = [...rollups.byTeam.entries()]
     .map(([teamKey, rollup]) => {
       const risk = riskStatuses.byTeam.get(teamKey)!
-      const gap = rollup.target - rollup.expectedAchievement
-      return { teamKey, rollup, risk, gap }
+      const goal = goals.byTeam.get(teamKey) ?? rollup.target
+      const gap = goal - rollup.expectedAchievement
+      return { teamKey, rollup, risk, gap, goal }
     })
     .sort((a, b) => Math.abs(b.gap) - Math.abs(a.gap))
 
@@ -63,8 +68,9 @@ export function TeamDrillDown() {
       <SketchNetwork className="pointer-events-none absolute right-2 top-6 -z-10 h-[380px] w-[380px] max-w-none opacity-[0.06]" />
 
       <ScreenHeading title="Team drill-down">
-        Teams ranked by their absolute contribution to the gap between target and expected
-        achievement — each team against its own target, not a slice of the DES-wide goal.
+        Teams ranked by their absolute contribution to the gap between goal and expected
+        achievement — each team against its own goal (prior year revenue + 10%), not a slice of
+        the DES-wide goal.
       </ScreenHeading>
 
       {loading ? (
@@ -84,6 +90,7 @@ export function TeamDrillDown() {
                   <th className="px-3 py-2">Team</th>
                   <th className="px-3 py-2 text-right">Headcount</th>
                   <th className="px-3 py-2 text-right">Target</th>
+                  <th className="px-3 py-2 text-right">Goal</th>
                   <th className="px-3 py-2 text-right">Expected achievement</th>
                   <th className="px-3 py-2 text-right">Gap</th>
                   <th className="px-3 py-2">Confidence</th>
@@ -91,7 +98,7 @@ export function TeamDrillDown() {
                 </tr>
               </thead>
               <tbody data-testid="s2-team-drilldown-rows">
-                {teamRows.map(({ teamKey, rollup, risk, gap }, index) => (
+                {teamRows.map(({ teamKey, rollup, risk, gap, goal }, index) => (
                   <tr
                     key={teamKey}
                     data-testid="s2-team-drilldown-row"
@@ -103,6 +110,9 @@ export function TeamDrillDown() {
                     <td className="px-3 py-2 font-medium text-pa-grey-04">{teamKey.replace('::', ' / ')}</td>
                     <td className="px-3 py-2 text-right font-pa-mono tabular-nums text-pa-grey-03">{rollup.headcount}</td>
                     <td className="px-3 py-2 text-right font-pa-mono tabular-nums text-pa-grey-04">£{round1(rollup.target)}k</td>
+                    <td data-testid="s2-team-drilldown-goal" className="px-3 py-2 text-right font-pa-mono tabular-nums text-pa-grey-04">
+                      £{round1(goal)}k
+                    </td>
                     <td className="px-3 py-2 text-right font-pa-mono tabular-nums text-pa-grey-04">
                       £{round1(rollup.expectedAchievement)}k
                     </td>

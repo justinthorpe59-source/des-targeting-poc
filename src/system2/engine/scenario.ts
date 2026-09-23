@@ -2,6 +2,7 @@ import type { Division } from '../../system1/data/types'
 import type { OrgRecord } from '../data/types'
 import { aggregate, type AggregationResult } from './aggregation'
 import { assessRisk, computeRiskStatuses, type Confidence, type RiskStatusResult } from './riskStatus'
+import { computeGoals, type GoalResult } from './goals'
 
 /**
  * S2-M7: the four locked Scenario Workspace levers, and the pure function
@@ -70,6 +71,8 @@ function recordsForGroup(records: OrgRecord[], target: GroupOverrideTarget): Org
 export interface ScenarioResult {
   aggregation: AggregationResult
   riskStatuses: RiskStatusResult
+  /** Baseline goals (prior-year x 1.1), pinned to the real, untransformed records — never recomputed from lever-adjusted ones, so levers 2/3 (capacity/population changes) never silently drag the goal along with them. Only lever 1 overrides the DES-wide figure, applied by the caller reading `levers.goal ?? goals.desWide`. */
+  goals: GoalResult
 }
 
 /**
@@ -86,15 +89,19 @@ export interface ScenarioResult {
  * outright — "what if it was actually X" is a deliberate manual
  * replacement, not something an automatic transform should still be
  * averaged against.
+ *
+ * Goals are computed once from the REAL, untransformed records (never the
+ * lever-2/3-adjusted scenarioRecords) — see ScenarioResult.goals.
  */
 export function runScenario(records: OrgRecord[], levers: ScenarioLevers): ScenarioResult {
+  const goals = computeGoals(aggregate(records))
   const scenarioRecords = applyLeverTransforms(records, levers)
   const aggregation = aggregate(scenarioRecords)
-  const riskStatuses = computeRiskStatuses(scenarioRecords, aggregation, levers.goal)
+  const riskStatuses = computeRiskStatuses(scenarioRecords, aggregation, goals, levers.goal)
 
   const override = levers.groupOverride
   if (!override || (override.expectedAchievement === undefined && override.confidence === undefined)) {
-    return { aggregation, riskStatuses }
+    return { aggregation, riskStatuses, goals }
   }
 
   const { target, expectedAchievement, confidence } = override
@@ -103,32 +110,34 @@ export function runScenario(records: OrgRecord[], levers: ScenarioLevers): Scena
   if (target.level === 'desWide') {
     const base = aggregation.desWide
     const rollup = { ...base, expectedAchievement: expectedAchievement ?? base.expectedAchievement }
-    const goal = levers.goal ?? aggregation.desWide.target
+    const goal = levers.goal ?? goals.desWide
     const risk = assessRisk(rollup, groupRecords, 'DES-wide', goal, confidence)
-    return { aggregation: { ...aggregation, desWide: rollup }, riskStatuses: { ...riskStatuses, desWide: risk } }
+    return { aggregation: { ...aggregation, desWide: rollup }, riskStatuses: { ...riskStatuses, desWide: risk }, goals }
   }
 
   if (target.level === 'division') {
     const division = target.division!
     const base = aggregation.byDivision.get(division)
-    if (!base) return { aggregation, riskStatuses }
+    if (!base) return { aggregation, riskStatuses, goals }
     const rollup = { ...base, expectedAchievement: expectedAchievement ?? base.expectedAchievement }
-    const risk = assessRisk(rollup, groupRecords, division, rollup.target, confidence)
+    const goal = goals.byDivision.get(division) ?? rollup.target
+    const risk = assessRisk(rollup, groupRecords, division, goal, confidence)
     const byDivision = new Map(aggregation.byDivision)
     byDivision.set(division, rollup)
     const riskByDivision = new Map(riskStatuses.byDivision)
     riskByDivision.set(division, risk)
-    return { aggregation: { ...aggregation, byDivision }, riskStatuses: { ...riskStatuses, byDivision: riskByDivision } }
+    return { aggregation: { ...aggregation, byDivision }, riskStatuses: { ...riskStatuses, byDivision: riskByDivision }, goals }
   }
 
   const teamKey = `${target.division}::${target.team}`
   const base = aggregation.byTeam.get(teamKey)
-  if (!base) return { aggregation, riskStatuses }
+  if (!base) return { aggregation, riskStatuses, goals }
   const rollup = { ...base, expectedAchievement: expectedAchievement ?? base.expectedAchievement }
-  const risk = assessRisk(rollup, groupRecords, teamKey, rollup.target, confidence)
+  const goal = goals.byTeam.get(teamKey) ?? rollup.target
+  const risk = assessRisk(rollup, groupRecords, teamKey, goal, confidence)
   const byTeam = new Map(aggregation.byTeam)
   byTeam.set(teamKey, rollup)
   const riskByTeam = new Map(riskStatuses.byTeam)
   riskByTeam.set(teamKey, risk)
-  return { aggregation: { ...aggregation, byTeam }, riskStatuses: { ...riskStatuses, byTeam: riskByTeam } }
+  return { aggregation: { ...aggregation, byTeam }, riskStatuses: { ...riskStatuses, byTeam: riskByTeam }, goals }
 }

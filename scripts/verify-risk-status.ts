@@ -4,6 +4,7 @@
  */
 import { aggregate } from '../src/system2/engine/aggregation'
 import { assessRisk, computeRiskStatuses, isConcentrationRisk, simulateConfidence } from '../src/system2/engine/riskStatus'
+import { computeGoals } from '../src/system2/engine/goals'
 import type { OrgRecord } from '../src/system2/data/types'
 
 function record(overrides: Partial<OrgRecord> & { id: string }): OrgRecord {
@@ -149,14 +150,22 @@ const s2m2Records = [
   record({ id: 'R4', division: 'Engineering', team: 'Platform', target: 120, capacityUtilisation: 0.85, teamHistoricalTrend: 1.05 }),
 ]
 const s2m2Aggregation = aggregate(s2m2Records)
-const results = computeRiskStatuses(s2m2Records, s2m2Aggregation)
+// Team/division goals are independently computed (goals.ts), not the
+// group's own target — derive the expected ratio from the same primitive
+// computeGoals() calls, same "call the primitive, don't hardcode a guessed
+// number" technique this file already uses for simulateConfidence() above.
+const s2m2Goals = computeGoals(s2m2Aggregation)
+const results = computeRiskStatuses(s2m2Records, s2m2Aggregation, s2m2Goals)
 check('computeRiskStatuses: has a status for every division', results.byDivision.size, s2m2Aggregation.byDivision.size)
 check('computeRiskStatuses: has a status for every team', results.byTeam.size, s2m2Aggregation.byTeam.size)
-check(
-  'computeRiskStatuses: Studio North ratio matches its own rollup (122/150)',
-  Math.round((results.byTeam.get('Design::Studio North')!.forecastRatio) * 1e6) / 1e6,
-  Math.round((122 / 150) * 1e6) / 1e6,
-)
+{
+  const studioNorthGoal = s2m2Goals.byTeam.get('Design::Studio North')!
+  check(
+    "computeRiskStatuses: Studio North ratio matches its own expected achievement (122) over its own computed goal, not its target (150)",
+    Math.round(results.byTeam.get('Design::Studio North')!.forecastRatio * 1e6) / 1e6,
+    Math.round((122 / studioNorthGoal) * 1e6) / 1e6,
+  )
+}
 
 // --- Determinism: the acceptance signal itself, stated directly ---
 // Rerun the full pipeline from the same inputs, fresh objects each time
@@ -170,7 +179,7 @@ function runPipeline() {
     record({ id: 'R4', division: 'Engineering', team: 'Platform', target: 120, capacityUtilisation: 0.85, teamHistoricalTrend: 1.05 }),
   ]
   const agg = aggregate(records)
-  return computeRiskStatuses(records, agg)
+  return computeRiskStatuses(records, agg, computeGoals(agg))
 }
 
 function serialise(result: ReturnType<typeof runPipeline>) {

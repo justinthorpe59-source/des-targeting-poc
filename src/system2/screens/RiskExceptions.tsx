@@ -4,6 +4,7 @@ import { useSystem2Store } from '../../store/system2Store'
 import { useScenarioStore } from '../../store/scenarioStore'
 import { aggregate } from '../engine/aggregation'
 import { computeRiskStatuses } from '../engine/riskStatus'
+import { computeGoals } from '../engine/goals'
 import { detectRiskExceptions, type RiskExceptionType } from '../engine/riskExceptions'
 import { ScreenHeading } from '../../components/searchlight/ScreenHeading'
 import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
@@ -50,7 +51,8 @@ export function RiskExceptions() {
   const loading = useInitialLoad(records.length > 0)
 
   const aggregation = useMemo(() => aggregate(records), [records])
-  const riskStatuses = useMemo(() => computeRiskStatuses(records, aggregation), [records, aggregation])
+  const goals = useMemo(() => computeGoals(aggregation), [aggregation])
+  const riskStatuses = useMemo(() => computeRiskStatuses(records, aggregation, goals), [records, aggregation, goals])
   const flagsByGroup = useMemo(
     () => detectRiskExceptions({ aggregation, riskStatuses, savedScenarios }),
     [aggregation, riskStatuses, savedScenarios],
