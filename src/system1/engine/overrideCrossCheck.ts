@@ -209,7 +209,12 @@ export function runOverrideCrossCheck(input: OverrideCrossCheckInput): OverrideC
   const teamOtherRecords = (teamBefore?.records ?? []).filter((r) => r.id !== person.id)
   const teamAfterRecords = [...teamOtherRecords, hypotheticalRecord]
   const teamAfterRollup = aggregate(teamAfterRecords).desWide
-  const teamAfterRisk = assessRisk(teamAfterRollup, teamAfterRecords, `${person.division}::${person.team}`)
+  const teamAfterRisk = assessRisk(
+    teamAfterRollup,
+    teamAfterRecords,
+    `${person.division}::${person.team}`,
+    teamBefore?.goal ?? teamAfterRollup.target,
+  )
   const teamBeforeStatus = teamBefore?.risk.status ?? null
   // Absolute, not regression-based — the spec's wording for this check is
   // "does it still add up sensibly", not a transition condition (that's
@@ -239,7 +244,12 @@ export function runOverrideCrossCheck(input: OverrideCrossCheckInput): OverrideC
   const divisionOtherRecords = (divisionBefore?.records ?? []).filter((r) => r.id !== person.id)
   const divisionAfterRecords = [...divisionOtherRecords, hypotheticalRecord]
   const divisionAfterRollup = aggregate(divisionAfterRecords).desWide
-  const divisionAfterRisk = assessRisk(divisionAfterRollup, divisionAfterRecords, person.division)
+  const divisionAfterRisk = assessRisk(
+    divisionAfterRollup,
+    divisionAfterRecords,
+    person.division,
+    divisionBefore?.goal ?? divisionAfterRollup.target,
+  )
   const divisionBeforeStatus = divisionBefore?.risk.status ?? null
   const divisionPasses = isCompliant(divisionAfterRisk.status)
   const division: DivisionCheckResult = {

@@ -5,6 +5,7 @@ import { useSystem2Store } from '../../store/system2Store'
 import { aggregate } from '../engine/aggregation'
 import { computeRiskStatuses } from '../engine/riskStatus'
 import type { RiskStatus } from '../engine/riskStatus'
+import { computeGoals } from '../engine/goals'
 import { round1, statusBadgeClass } from '../riskDisplay'
 import { CoverageTrack } from '../components/CoverageTrack'
 import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
@@ -12,9 +13,12 @@ import { SketchDistribution } from '../../components/searchlight/SketchIllustrat
 
 /**
  * S2-M4: the sponsor-facing front door — goal, coverage, forecast, gap,
- * confidence, top risk drivers. Everything here is derived live from
- * aggregate()/computeRiskStatuses() (S2-M2/M3), the same engines ScreenB
- * exercises — this screen adds no new calculation, only presentation.
+ * confidence, top risk drivers. Derived live from aggregate()/
+ * computeRiskStatuses()/computeGoals() (S2-M2/M3, and goals.ts's baseline-
+ * plus-growth model) — this screen adds no new calculation, only
+ * presentation. Goal is prior-year revenue x 1.1 (see goals.ts), not the
+ * sum of imported targets — that earlier definition was circular, since it
+ * made coverage trivially ~100% by construction.
  *
  * The empty state (no snapshot imported yet) is this screen's real first-run
  * state, not a placeholder edge case, and it's the one place the "Import
@@ -73,7 +77,8 @@ export function ExecutiveSummary() {
   const importSnapshot = useSystem2Store((state) => state.importSnapshot)
 
   const rollups = useMemo(() => aggregate(records), [records])
-  const riskStatuses = useMemo(() => computeRiskStatuses(records, rollups), [records, rollups])
+  const goals = useMemo(() => computeGoals(rollups), [rollups])
+  const riskStatuses = useMemo(() => computeRiskStatuses(records, rollups, goals), [records, rollups, goals])
 
   const hasRecords = records.length > 0
   const [loading, setLoading] = useState(hasRecords)
@@ -121,22 +126,26 @@ export function ExecutiveSummary() {
     )
   }
 
-  const goal = rollups.desWide.target
+  const goal = goals.desWide
   const expected = rollups.desWide.expectedAchievement
   const gap = goal - expected
   const coverage = goal > 0 ? (rollups.desWide.target / goal) * 100 : 0
   const desWideRisk = riskStatuses.desWide
 
   // Lightweight top-3 risk drivers: teams ranked by absolute gap contribution
-  // (their own target vs their own expected achievement — no apportioning
-  // of the DES-wide goal down to team level, per the locked rule). Full,
-  // interactive drill-down stays deferred to S2-M6.
+  // (their own goal vs their own expected achievement — no apportioning of
+  // the DES-wide goal down to team level, per the locked rule; each team's
+  // goal is independently computed from its own prior-year revenue, see
+  // goals.ts). Full, interactive drill-down stays deferred to S2-M6.
   const topDrivers = [...rollups.byTeam.entries()]
-    .map(([teamKey, rollup]) => ({
-      teamKey,
-      gap: rollup.target - rollup.expectedAchievement,
-      status: riskStatuses.byTeam.get(teamKey)!.status,
-    }))
+    .map(([teamKey, rollup]) => {
+      const teamGoal = goals.byTeam.get(teamKey) ?? rollup.target
+      return {
+        teamKey,
+        gap: teamGoal - rollup.expectedAchievement,
+        status: riskStatuses.byTeam.get(teamKey)!.status,
+      }
+    })
     .sort((a, b) => Math.abs(b.gap) - Math.abs(a.gap))
     .slice(0, 3)
 
@@ -203,14 +212,14 @@ export function ExecutiveSummary() {
               label="Goal"
               testId="s2-exec-goal"
               value={<>£{round1(goal)}k</>}
-              sub="sum of imported targets"
+              sub="prior year revenue + 10%"
               rule="var(--color-pa-grey-02)"
             />
             <MetricCell
               label="Coverage"
               testId="s2-exec-coverage"
               value={`${round1(coverage)}%`}
-              sub="100% until goal changes (S2-M7)"
+              sub="allocated targets vs goal"
               rule="var(--color-pa-aqua-04)"
             />
             <MetricCell

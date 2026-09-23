@@ -129,13 +129,14 @@ System 2 is the tool that tells leadership whether the organisation is actually 
 - **Expected achievement** = Target × (capacity utilisation × team historical trend)
 - **Confidence** = simulated High/Medium/Low, labelled illustrative only — not derived from real data, must be visibly flagged as such in the UI
 - **Concentration risk** = an organisational-level flag only. It must never feed back into individual targets in System 1 for this POC — the response to concentration is a resourcing/planning decision, not a target increase on high performers.
-- Team drill-down does **not** apportion the org goal down to team level — each team compares its own allocated target to its own expected achievement, ranked by absolute contribution to the gap.
+- Team drill-down does **not** apportion the org goal down to team level — each team compares its own expected achievement to its own goal, ranked by absolute contribution to the gap.
+- **Gap** = goal − expected achievement (goal-based, not target-based), computed at whichever level (DES-wide, division, team) is being shown.
 
 ## Locked dataset defaults (System 2 additions)
 
 - **Capacity utilisation:** random 0.75–1.05 per record (feeds expected achievement)
 - **Team historical trend:** random 0.85–1.05 per record (feeds expected achievement)
-- **Organisational goal default:** sum of modelled targets across the imported snapshot (so coverage starts near 100% by construction), adjustable via the Scenario Workspace's "change goal" lever
+- **Organisational goal:** prior-year revenue (fabricated per team, seeded/deterministic) × 1.1, rolled up to division and DES-wide by summing — never a slice of the DES-wide figure apportioned back down. Adjustable at the DES-wide level only via the Scenario Workspace's "change goal" lever.
 
 ## Risk status thresholds
 

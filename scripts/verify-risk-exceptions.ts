@@ -15,6 +15,7 @@
  */
 import { aggregate } from '../src/system2/engine/aggregation'
 import { computeRiskStatuses } from '../src/system2/engine/riskStatus'
+import { computeGoals } from '../src/system2/engine/goals'
 import { detectRiskExceptions } from '../src/system2/engine/riskExceptions'
 import type { AggregationResult, Rollup } from '../src/system2/engine/aggregation'
 import type { RiskAssessment, RiskStatusResult } from '../src/system2/engine/riskStatus'
@@ -216,7 +217,7 @@ console.log('--- Part 2: NaN-poisoning regression ---')
   ]
 
   const realAggregation = aggregate(records)
-  const realRiskStatuses = computeRiskStatuses(records, realAggregation)
+  const realRiskStatuses = computeRiskStatuses(records, realAggregation, computeGoals(realAggregation))
   const realResult = detectRiskExceptions({ aggregation: realAggregation, riskStatuses: realRiskStatuses, savedScenarios: [] })
 
   check(

@@ -73,15 +73,16 @@ const records: OrgRecord[] = [
   check('lever 2: cascades to the parent division', scenario.aggregation.byDivision.get('Design')!.expectedAchievement, expectedR1 + 80 * 0.86 * 0.96)
 }
 
-// --- Lever 3 (population-wide adjustment): every record's target scales, ratio unchanged when goal isn't independently set ---
+// --- Lever 3 (population-wide adjustment): every record's target scales, goal does NOT (it's pinned to the real baseline records — see goals.ts), so ratio scales too ---
 {
   const baseline = runScenario(records, {})
   const scenario = runScenario(records, { populationAdjustmentPercent: 10 })
   check('lever 3: DES-wide target scales by +10%', scenario.aggregation.desWide.target, Math.round(baseline.aggregation.desWide.target * 1.1))
+  check('lever 3: goal is untouched by the population lever (pinned to the real baseline records)', scenario.goals.desWide, baseline.goals.desWide)
   check(
-    'lever 3: forecast ratio unchanged when goal is not independently set (target and goal scale together)',
+    "lever 3: forecast ratio scales by +10% too, since goal is fixed — this is the bug fix goals.ts exists for: goal used to be re-derived from the (lever-adjusted) target sum, making coverage move in lockstep with whatever this lever changed",
     Math.round(scenario.riskStatuses.desWide.forecastRatio * 1000) / 1000,
-    Math.round(baseline.riskStatuses.desWide.forecastRatio * 1000) / 1000,
+    Math.round(baseline.riskStatuses.desWide.forecastRatio * 1.1 * 1000) / 1000,
   )
 }
 
@@ -93,8 +94,13 @@ const records: OrgRecord[] = [
   })
   const overridden = scenario.aggregation.byDivision.get('Engineering')!
   const overriddenRisk = scenario.riskStatuses.byDivision.get('Engineering')!
+  const engineeringGoal = scenario.goals.byDivision.get('Engineering')!
   check('lever 4: rollup and risk assessment agree on the overridden expected achievement', overridden.expectedAchievement, 55)
-  check('lever 4: forecast ratio matches the overridden value, not the pre-override one', Math.round(overriddenRisk.forecastRatio * 1000) / 1000, Math.round((55 / 50) * 1000) / 1000)
+  check(
+    "lever 4: forecast ratio matches the overridden value over the division's own computed goal (not its target, and not the pre-override expected achievement)",
+    Math.round(overriddenRisk.forecastRatio * 1000) / 1000,
+    Math.round((55 / engineeringGoal) * 1000) / 1000,
+  )
   check('lever 4: confidence override applied', overriddenRisk.confidence, 'High')
   check('lever 4: does not cascade to DES-wide', scenario.aggregation.desWide, baseline.aggregation.desWide)
   check('lever 4: does not cascade to a sibling division (Design)', scenario.aggregation.byDivision.get('Design'), baseline.aggregation.byDivision.get('Design'))
