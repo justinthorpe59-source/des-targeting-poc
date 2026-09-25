@@ -1,8 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from './shell/AppShell'
 import { System1Root } from './system1/System1Root'
-import { Overview } from './system1/screens/Overview'
-import { Population } from './system1/screens/Population'
+import { OverviewPopulation } from './system1/screens/OverviewPopulation'
 import { IndividualDetail } from './system1/screens/IndividualDetail'
 import { CohortComparison } from './system1/screens/CohortComparison'
 import { WhatIfSandbox } from './system1/screens/WhatIfSandbox'
@@ -27,8 +26,7 @@ export default function App() {
         <Route path="/" element={<Navigate to="/system1" replace />} />
         <Route path="/system1" element={<System1Root />}>
           <Route index element={<Navigate to="overview" replace />} />
-          <Route path="overview" element={<Overview />} />
-          <Route path="population" element={<Population />} />
+          <Route path="overview" element={<OverviewPopulation />} />
           <Route path="person/:id" element={<IndividualDetail />} />
           <Route path="cohort" element={<CohortComparison />} />
           <Route path="cohort/:id" element={<CohortComparison />} />
