@@ -47,7 +47,7 @@ export function IndividualDetail() {
     return (
       <section className="space-y-4">
         <p className="font-pa-body text-sm text-pa-grey-03">No record found for id &quot;{id}&quot;.</p>
-        <Link to="/system1/population" className="font-pa-body text-sm font-medium text-pa-aqua-05 underline">
+        <Link to="/system1/overview" className="font-pa-body text-sm font-medium text-pa-aqua-05 underline">
           Back to Population
         </Link>
       </section>
@@ -61,7 +61,7 @@ export function IndividualDetail() {
       <SketchDistribution className="pointer-events-none absolute right-0 top-10 -z-10 h-[300px] w-[480px] max-w-none opacity-[0.05]" />
 
       <div>
-        <Link to="/system1/population" className="font-pa-body text-xs font-medium text-pa-grey-03 hover:text-pa-grey-04">
+        <Link to="/system1/overview" className="font-pa-body text-xs font-medium text-pa-grey-03 hover:text-pa-grey-04">
           ← Back to Population
         </Link>
       </div>
