@@ -291,7 +291,7 @@ export function ManagerOverride() {
   }
 
   return (
-    <section className="max-w-2xl space-y-6">
+    <section className="mx-auto max-w-2xl space-y-6">
       <div>
         <h1 className="text-lg font-semibold">Manager override</h1>
         <p className="mt-1 max-w-md text-sm text-slate-600">

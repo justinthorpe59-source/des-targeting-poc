@@ -57,7 +57,7 @@ export function IndividualDetail() {
   const personHistory = auditLog.filter((entry) => entry.personId === person.id)
 
   return (
-    <section className="relative max-w-3xl space-y-6">
+    <section className="relative mx-auto max-w-3xl space-y-6">
       <SketchDistribution className="pointer-events-none absolute right-0 top-10 -z-10 h-[300px] w-[480px] max-w-none opacity-[0.05]" />
 
       <div>

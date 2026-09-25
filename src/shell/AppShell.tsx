@@ -15,6 +15,11 @@ import { resetAllDemoData } from '../store/resetAll'
  * to own, so screen links for whichever system is active now live up here
  * alongside the system switcher.
  *
+ * Full bleed: the bar and the page body both run the full viewport width
+ * (25 Sept 2026 decision, applies to every screen). Individual content that
+ * would be unreadable at that measure — long prose especially — keeps its
+ * own max-width rather than the shell imposing one globally.
+ *
  * Deliberately omitted: the spec's "search" utility icon. A non-functional
  * search affordance in a sponsor demo invites a click that does nothing.
  * The notification indicator IS wired to real data — System 1's open
@@ -54,7 +59,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-pa-grey-wash text-pa-grey-04">
       <header className="bg-pa-dark-blue">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-6 py-3">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 px-8 py-3">
           <span className="font-pa-display text-lg font-semibold tracking-tight text-pa-white">Searchlight</span>
 
           <nav aria-label="System" className="flex gap-1">
@@ -117,7 +122,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-10">{children}</main>
+      <main className="px-8 py-10">{children}</main>
     </div>
   )
 }
