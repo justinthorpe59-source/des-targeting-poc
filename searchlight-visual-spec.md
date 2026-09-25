@@ -59,7 +59,9 @@ Compiled from the screenshot-derived design pass, 24 Sept 2026. This is a compan
 - Full-width hero card, two zones: left ≈58% (identity + data), right ≈42% (visual).
 - Left zone, top-to-bottom: identity row (avatar + name + subtext), stat row (large value + label, paired with a secondary value + label), metadata row (small value + label).
 - Right zone: large square visual. **Undecided — needs Justin's call before build:** cohort-comparison chart, or a plain avatar/photo placeholder.
-- Below hero: "Attributes" section, strict 4-column × 2-row chip grid — one chip per target factor (role, capacity, location, discipline), each showing its weighting % and value.
+- Below hero: "Attributes" section, 2×2 chip grid — one chip per target factor (role, capacity, location, discipline), four chips total. Chip anatomy per the reference: muted label top-left, small percentage badge top-right, bold value below, each in its own bordered box.
+  - **Corrected 26 Sept 2026.** This line previously said "strict 4-column × 2-row chip grid", i.e. 8 cells. That was transcribed from the reference image, which carries 8 NFT traits, and was never reconciled with CLAUDE.md's locked factor list — which is exactly four, "only these". Eight cells and "one chip per target factor" could not both be true. Four chips, 2×2.
+  - The badge shows each factor's real multiplier read as a percentage (capacity 0.69 → 69%, role 0.95 → 95%). Location and discipline have **no** badge: they select which baseline applies rather than scaling it, so there is no percentage to show and none should be invented.
 - Below that: two-column row of history cards — timestamp + source-tag pill (top row), bold headline, 2–3 line body. This is the change-history log for this person.
 - Also lives on this screen (per consolidation): Cohort Comparison as a tab/panel, not a separate screen.
 - **Not yet designed at all:** the plain-language factor explanation text block the functional spec requires ("why this target differs from peers"). No screenshot reference covers this — needs original design work.
