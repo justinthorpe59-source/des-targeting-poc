@@ -1,6 +1,7 @@
 import type { Division } from '../../system1/data/types'
 import type { OrgRecord } from '../data/types'
 import type { AggregationResult, Rollup } from './aggregation'
+import type { GoalResult } from './goals'
 import { mulberry32, seedFromId } from './prng'
 
 /**
@@ -20,12 +21,14 @@ import { mulberry32, seedFromId } from './prng'
  * the function pure and total - every input combination maps to exactly one
  * status, which is what "same inputs always produce the same status" needs.
  *
- * Division/team status compares each group's own allocated target (from
- * aggregate()) against its own expected achievement - the same implicit-goal
- * logic already stated for Team drill-down's gap ranking, extended to
- * status. Only DES-wide takes an explicit `goal` override, since that's the
- * one Scenario Workspace (S2-M7) lever that changes a goal independent of
- * the imported targets.
+ * Division/team status compares each group's own expected achievement
+ * against its own GOAL (prior-year revenue x 1.1, from goals.ts) - never
+ * apportioned from the DES-wide goal down, per the locked no-apportioning
+ * rule. Goal was previously each group's own allocated target (circular:
+ * coverage was ~100% by construction), fixed when goals.ts was introduced.
+ * DES-wide additionally takes an explicit `desWideGoalOverride`, since
+ * that's the one Scenario Workspace (S2-M7) lever that changes a goal
+ * independent of the computed prior-year figure.
  */
 
 export type Confidence = 'High' | 'Medium' | 'Low'
@@ -140,24 +143,33 @@ function groupRecords(records: OrgRecord[]): { byDivision: Map<Division, OrgReco
   return { byDivision, byTeam }
 }
 
-/** desWideGoal defaults to the DES-wide target sum (coverage ~100% by construction, per the locked org-goal default) - S2-M7's "change goal" lever overrides it. */
+/**
+ * `goals` (from goals.ts's computeGoals()) supplies every level's fixed,
+ * prior-year-based figure. `desWideGoalOverride` defaults to goals.desWide -
+ * S2-M7's "change goal" lever is the only thing that overrides it, and only
+ * at DES-wide (divisions/teams keep their own computed goal, per the locked
+ * no-apportioning rule).
+ */
 export function computeRiskStatuses(
   records: OrgRecord[],
   aggregation: AggregationResult,
-  desWideGoal: number = aggregation.desWide.target,
+  goals: GoalResult,
+  desWideGoalOverride: number = goals.desWide,
 ): RiskStatusResult {
   const { byDivision: divisionRecords, byTeam: teamRecords } = groupRecords(records)
 
-  const desWide = assessRisk(aggregation.desWide, records, 'DES-wide', desWideGoal)
+  const desWide = assessRisk(aggregation.desWide, records, 'DES-wide', desWideGoalOverride)
 
   const byDivision = new Map<Division, RiskAssessment>()
   for (const [division, rollup] of aggregation.byDivision) {
-    byDivision.set(division, assessRisk(rollup, divisionRecords.get(division) ?? [], division))
+    const goal = goals.byDivision.get(division) ?? rollup.target
+    byDivision.set(division, assessRisk(rollup, divisionRecords.get(division) ?? [], division, goal))
   }
 
   const byTeam = new Map<string, RiskAssessment>()
   for (const [teamKey, rollup] of aggregation.byTeam) {
-    byTeam.set(teamKey, assessRisk(rollup, teamRecords.get(teamKey) ?? [], teamKey))
+    const goal = goals.byTeam.get(teamKey) ?? rollup.target
+    byTeam.set(teamKey, assessRisk(rollup, teamRecords.get(teamKey) ?? [], teamKey, goal))
   }
 
   return { desWide, byDivision, byTeam }

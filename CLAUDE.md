@@ -64,27 +64,29 @@ These are fixed numbers, not examples — build to them exactly so both systems 
 
 ---
 
-## Screens (11) — free navigation (sidebar/tabs), shared state underneath
+## Screens (5 — consolidated 25 Sept 2026, supersedes the original 11) — free navigation, shared state underneath
+
+**This consolidation exists only as a decision right now — the 11 original screen files are all still present in the codebase (`src/system1/screens/`) and have not been merged.** The architectural merge described below is the first job before any visual rebuild work starts. See "Consolidation plan" further down for the concrete file-level work.
 
 All screens read/write the same single data store. An override on Individual Detail must be reflected immediately in Overview totals, the Population list, and the Exceptions queue — these are not disconnected mockups.
 
-1. **Overview / home** — population summary (counts, % modelled vs adjusted, aggregate totals, open exceptions)
-2. **Population view** — filterable list (division, team, location)
-3. **Individual detail** — factor breakdown, plain-language explanation, personal context, change history for this person
-4. **Manager override** — % or direct value, reason required, revert option
-5. **Cohort comparison** — person vs team avg vs division avg
-6. **What-if sandbox** — non-committing recalculation as inputs are tweaked
-7. **Exceptions queue** — flagged records (missing data / extreme value / large adjustment)
-8. **Mass adjustment** — filtered population, % change, live preview, aggregate impact
-9. **Employee view** — read-only, own target + explanation + notes, anonymised cohort averages only (no peer-level data)
-10. **Audit / change log** — full history across all records: who, what, when, why
-11. **Snapshot export** — Approved records only, one-way hand-off to System 2 (schema TBD at M13)
+1. **Overview & Population** (merges old #1 Overview/home + #2 Population view) — population summary stats, plus the population view itself. Population view's landing state is a bubble network: one uniform-size bubble per DES team (not per person, not per division), with location (Boston/Ireland/London/GITC) as a filter control that narrows which team bubbles show. Clicking a team bubble drills the same screen into a team-level list state — full roster, card-per-person, with search/filter, per-person status pill, checkbox multi-select (feeds Mass Adjustment), and per-card actions (View → Individual Detail, Notes → that person's manager-notes field). Also carries "last synced with System 2" status + manual re-export action (replaces old #11 Snapshot export as a dedicated screen — Approve already writes live, so this is the fallback path, not primary).
+2. **Individual detail** (absorbs old #5 Cohort comparison as a tab/panel) — factor breakdown, plain-language explanation, personal context, change history for this person, cohort comparison as a tab/panel rather than a separate screen.
+3. **Manager override** (absorbs old #6 What-if sandbox as its live preview) — % or direct value, reason required, revert option, live before/after ripple preview on team/division aggregates and cohort averages (this preview *is* what the sandbox screen would have shown — no separate sandbox needed). Real-time cross-check results (team total / level-cohort norms / org goal integrity) shown via the shared accordion component (see Design direction below) — pass/fail per check collapsed, specific effect on that check when expanded. A failed check or high-impact change routes to a sign-off gate (2–3 person team leadership group) instead of applying immediately.
+4. **Exceptions queue** — accordion list (same shared component as Manager Override's cross-check display): collapsed row = person + flag type (missing data / extreme value / large adjustment) + severity; one row expands at a time to show which check failed, the field/value vs. threshold, and a resolve action routing into Manager Override for that person.
+5. **Mass adjustment** — filtered population (fed by Overview & Population's checkbox multi-select, not its own separate picker), percentage-only change, live preview (number of people affected, before/after values, aggregate economic impact, policy-breach flags) before the reason/confirm step.
 
-Approve action (Proposed → Approved) is folded into Individual Detail (single record) and Population view (bulk), not a separate screen.
+**Cut entirely from the POC build:**
+- **Employee view** (old #9) — deprioritised; sits outside the manager's journey and doesn't evidence the sponsor decision.
+- **Audit / change log** (old #10) — deprioritised as a standalone screen; per-person change history still lives on Individual Detail. A population-wide audit view is a fast-follow, not in this POC.
+
+Approve action (Proposed → Approved) is folded into Individual Detail (single record) and Overview & Population's team-level list state (bulk), not a separate screen.
 
 ---
 
 ## Milestone / PR plan
+
+**Note (25 Sept 2026): this list is a historical record of the original 11-screen build — every milestone below is done and merged (see git log). It's now stale against the consolidated 5-screen structure above. Don't use it to plan new work; see "Consolidation plan" further down for what actually needs doing next.**
 
 Each milestone = its own branch + its own PR, reviewed before merging to main.
 
@@ -129,13 +131,14 @@ System 2 is the tool that tells leadership whether the organisation is actually 
 - **Expected achievement** = Target × (capacity utilisation × team historical trend)
 - **Confidence** = simulated High/Medium/Low, labelled illustrative only — not derived from real data, must be visibly flagged as such in the UI
 - **Concentration risk** = an organisational-level flag only. It must never feed back into individual targets in System 1 for this POC — the response to concentration is a resourcing/planning decision, not a target increase on high performers.
-- Team drill-down does **not** apportion the org goal down to team level — each team compares its own allocated target to its own expected achievement, ranked by absolute contribution to the gap.
+- Team drill-down does **not** apportion the org goal down to team level — each team compares its own expected achievement to its own goal, ranked by absolute contribution to the gap.
+- **Gap** = goal − expected achievement (goal-based, not target-based), computed at whichever level (DES-wide, division, team) is being shown.
 
 ## Locked dataset defaults (System 2 additions)
 
 - **Capacity utilisation:** random 0.75–1.05 per record (feeds expected achievement)
 - **Team historical trend:** random 0.85–1.05 per record (feeds expected achievement)
-- **Organisational goal default:** sum of modelled targets across the imported snapshot (so coverage starts near 100% by construction), adjustable via the Scenario Workspace's "change goal" lever
+- **Organisational goal:** prior-year revenue (fabricated per team, seeded/deterministic) × 1.1, rolled up to division and DES-wide by summing — never a slice of the DES-wide figure apportioned back down. Adjustable at the DES-wide level only via the Scenario Workspace's "change goal" lever.
 
 ## Risk status thresholds
 
@@ -163,16 +166,17 @@ System 2 is the tool that tells leadership whether the organisation is actually 
 
 - System 2 → System 1 feedback loop (org-level risk/capacity suggesting individual target changes back to managers)
 
-## Screens (6) — free navigation, shared state within System 2
+## Screens (3 — consolidated 25 Sept 2026, supersedes the original 6) — free navigation, shared state within System 2
 
-1. **Executive summary** — goal, coverage, forecast, gap, confidence, top risk drivers
-2. **Division comparison** — coverage/forecast/confidence/status side by side across divisions
-3. **Team drill-down** — teams ranked by contribution to the gap
-4. **Scenario workspace** — the four locked levers, baseline vs scenario comparison
-5. **Scenario library** — save named scenarios, compare multiple side by side
-6. **Exceptions/risk flags** — flagged divisions/teams per the thresholds above
+**As with System 1, this consolidation is a decision only — the 6 original screen files are all still present (`src/system2/screens/`). See "Consolidation plan" below for the file-level merge work, which comes before any visual rebuild.**
+
+1. **Executive summary** (absorbs old #6 Exceptions/risk flags as a drill-in) — goal, coverage, forecast, gap, confidence, plus a Top Risks list below the fold using the same accordion/list component as System 1's Exceptions Queue (replaces a standalone Exceptions/Risk Flags screen).
+2. **Division comparison** (absorbs old #3 Team drill-down as an expand-in-place interaction) — coverage/forecast/confidence/status side by side across divisions; clicking a division expands it in place into a nested row of team cards at the same level of detail (replaces a standalone Team drill-down screen).
+3. **Scenario workspace** (absorbs old #5 Scenario library as a panel) — the four locked levers, baseline vs scenario comparison, with a saved/named-scenarios panel built into the same screen (replaces a standalone Scenario library screen).
 
 ## Milestone / PR plan
+
+**Note (25 Sept 2026): this list is a historical record of the original 6-screen build — every milestone below is done and merged (see git log; S2-M10 demo polish is complete). It's now stale against the consolidated 3-screen structure above. Don't use it to plan new work; see "Consolidation plan" further down.**
 
 Graphify and playwright-mcp are already set up from System 1 — no need to redo M0-level tooling.
 
@@ -189,6 +193,44 @@ Each entry below includes its **acceptance signal**.
 - **S2-M8** — Scenario library. *Done when:* a saved scenario, reopened later, shows exactly the same result it showed when saved.
 - **S2-M9** — Exceptions/risk flags screen. *Done when:* it catches every record that violates a locked threshold in a hand-built test case with a known answer.
 - **S2-M10** — Demo polish. *Done when:* a full run-through of the core journey (import snapshot → executive summary → drill-down → run a scenario → save it) completes with no visual or functional errors.
+
+---
+
+## Consolidation plan — do this first, before any visual rebuild work
+
+This is the current top-priority work. It is a pure architectural/routing merge — no visual restyling as part of this pass, that comes after (see "Design direction" and `searchlight-visual-spec.md` below). Branch per merge, PR reviewed before merging, same discipline as the milestone plans above.
+
+**System 1 — file-level merges needed** (current files live in `src/system1/screens/`):
+- Merge `Overview.tsx` + `Population.tsx` into one `OverviewPopulation.tsx` (or equivalent) with the bubble-network landing state and team-level drill-in list state described above as two states of one screen, not two routes.
+- Merge `CohortComparison.tsx` into `IndividualDetail.tsx` as a tab/panel; delete the standalone screen and its route once merged.
+- Merge `WhatIfSandbox.tsx`'s recalculation logic into `ManagerOverride.tsx`'s live preview; delete the standalone screen and its route once the preview covers the same ground.
+- Delete `EmployeeView.tsx` and its route (cut from POC — see Screens section above for why).
+- Delete `SnapshotExport.tsx` as a standalone screen/route; fold its function (last-synced status + manual re-export) into `OverviewPopulation.tsx`.
+- Audit/change log: confirm there's no standalone screen already built under a different filename; if there is, delete it — per-person history stays on Individual Detail only.
+- `SignOffQueue.tsx` — clarify whether this is the Exceptions Queue under a different name, or a separate sign-off-gate screen that should fold into Manager Override's accordion cross-check instead. Check before deleting anything.
+
+**System 2 — file-level merges needed** (current files live in `src/system2/screens/`):
+- Merge whichever file is Exceptions/Risk Flags into `ExecutiveSummary.tsx` as a Top Risks drill-in section; delete the standalone screen and route.
+- Merge `TeamDrillDown.tsx`'s logic into `DivisionComparison.tsx` as an expand-in-place interaction; delete the standalone screen and route.
+- Merge `ScenarioLibrary.tsx` into `ScenarioWorkspace.tsx` as a saved-scenarios panel; delete the standalone screen and route.
+
+**For every merge above:** update the app shell's navigation/routing to drop the deleted routes, check nothing else in the codebase links to a route being removed (grep or graphify query first), and re-run the existing acceptance signals for the screens being merged into — a merge must not silently break behaviour that was already verified and working.
+
+**Acceptance signal for the consolidation phase as a whole:** the app has exactly 5 System 1 routes and 3 System 2 routes, every deleted screen's functionality is demonstrably still reachable from its new home, and a full run-through of both core journeys (per the existing M14/S2-M10 acceptance criteria) still passes with no functional regressions.
+
+Only once this is done and confirmed working does the visual rebuild phase start — see `searchlight-visual-spec.md` in the repo root for the full screen-by-screen visual spec, and the Design direction section immediately below for the shared system it's built from.
+
+## Design direction — Searchlight
+
+This section did not previously exist in this file — it captures decisions made in a separate design working session and is being recorded here for the first time (25 Sept 2026).
+
+- **Proposition name:** Searchlight.
+- **Overall feel:** clean, crisp, and clear; uses PA's own design-system colours and typography (token file shared directly with Claude Code in this repo, not reproduced here — confirm the token file's location/name before building and flag if it can't be found rather than inventing values).
+- **Motion:** a searchlight-beam-like sweep, fluid and organic — reserved specifically for loading/thinking states and screen transitions. Not a general decorative device used elsewhere.
+- **Data visualisation:** mostly standard, trustworthy charts (bar/line); a small number of signature custom visualisations reserved for key moments only (e.g. Executive Summary's gap/forecast figure). A plain donut/gauge does not count as a "signature visualisation" — this was tried and explicitly rejected.
+- **Illustration:** hand-sketchy, academic-paper-style technical diagrams (network graphs, distribution curves, scatter plots, grid/matrix patterns) used subtly and sparingly in the background only, never as a hero/foreground element. Redraw in PA's actual colour tokens — do not carry over any warm/vintage colouring from style references used during design exploration.
+- **Full screen-by-screen visual spec:** see `searchlight-visual-spec.md` in the repo root. It covers the shared component system (navigation, card/chip radius hierarchy, the status pill component, the accordion component used by both Exceptions Queue and Manager Override, typography roles) plus per-screen structure for all 8 consolidated screens, an explicit list of rejected patterns from a prior failed design pass, and a list of what's still genuinely undesigned and needs a decision before it can be built.
+- **Verification requirement:** after building each screen's visual pass, take a screenshot and compare it line-by-line against that screen's section in `searchlight-visual-spec.md` — colour, type, spacing, layout, and the specific content mappings called out there. Report deviations explicitly rather than silently approximating. This replaces relying on taste-skill/emil-design-eng to drive the design — use those only as a final checklist, not as the thing generating decisions.
 
 ---
 

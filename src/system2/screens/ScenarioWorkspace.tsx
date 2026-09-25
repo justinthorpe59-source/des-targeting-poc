@@ -5,6 +5,7 @@ import { useSystem2Store } from '../../store/system2Store'
 import { useScenarioStore } from '../../store/scenarioStore'
 import { aggregate } from '../engine/aggregation'
 import { computeRiskStatuses, type Confidence } from '../engine/riskStatus'
+import { computeGoals } from '../engine/goals'
 import { runScenario, type ScenarioLevers } from '../engine/scenario'
 import { round1, statusBadgeClass } from '../riskDisplay'
 import { KpiTile } from '../components/KpiTile'
@@ -105,8 +106,11 @@ function leversFrom(inputs: WorkspaceInputs): ScenarioLevers {
  * engine functions (aggregate()/computeRiskStatuses(), via runScenario())
  * that every other System 2 screen uses on the real data, just with
  * hypothetical inputs. Baseline is always computed from the untouched real
- * records. Searchlight design pass added the loader, grid motif and token
- * styling; all lever logic is unchanged.
+ * records — including the goal (prior-year revenue x 1.1, from goals.ts),
+ * pinned to the real records inside runScenario() so levers 2/3 never
+ * silently drag it along with whatever they change. Searchlight design pass
+ * added the loader, grid motif and token styling; all lever logic is
+ * unchanged.
  */
 export function ScenarioWorkspace() {
   const records = useSystem2Store((state) => state.records)
@@ -115,9 +119,13 @@ export function ScenarioWorkspace() {
   const deleteScenario = useScenarioStore((state) => state.deleteScenario)
 
   const baselineAggregation = useMemo(() => aggregate(records), [records])
-  const baselineRisk = useMemo(() => computeRiskStatuses(records, baselineAggregation), [records, baselineAggregation])
+  const baselineGoals = useMemo(() => computeGoals(baselineAggregation), [baselineAggregation])
+  const baselineRisk = useMemo(
+    () => computeRiskStatuses(records, baselineAggregation, baselineGoals),
+    [records, baselineAggregation, baselineGoals],
+  )
 
-  const [inputs, setInputs] = useState<WorkspaceInputs>(() => defaultInputs(baselineAggregation.desWide.target))
+  const [inputs, setInputs] = useState<WorkspaceInputs>(() => defaultInputs(baselineGoals.desWide))
   const [scenarioName, setScenarioName] = useState('')
   const loading = useInitialLoad(records.length > 0)
 
@@ -154,8 +162,8 @@ export function ScenarioWorkspace() {
         .map((key) => key.split('::')[1])
     : []
 
-  const baselineGoal = baselineAggregation.desWide.target
-  const scenarioGoal = levers.goal ?? scenario.aggregation.desWide.target
+  const baselineGoal = baselineGoals.desWide
+  const scenarioGoal = levers.goal ?? scenario.goals.desWide
   const isTweaked = Object.keys(levers).length > 0
 
   // The specific group a scoped lever targets, if any — shown as its own
@@ -218,7 +226,7 @@ export function ScenarioWorkspace() {
                 />
                 Change the organisational goal
               </label>
-              <p className="mt-1 font-pa-body text-xs text-pa-grey-03">DES-wide only — divisions/teams keep their own target as their own goal.</p>
+              <p className="mt-1 font-pa-body text-xs text-pa-grey-03">DES-wide only — divisions/teams keep their own prior-year-based goal.</p>
               <input
                 type="number"
                 data-testid="lever-goal-value"
@@ -440,7 +448,7 @@ export function ScenarioWorkspace() {
           {isTweaked && (
             <button
               type="button"
-              onClick={() => setInputs(defaultInputs(baselineAggregation.desWide.target))}
+              onClick={() => setInputs(defaultInputs(baselineGoals.desWide))}
               className="rounded-md border border-pa-grey-02 px-3 py-1.5 font-pa-body text-sm font-medium text-pa-grey-04 hover:bg-pa-grey-01"
             >
               Reset scenario

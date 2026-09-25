@@ -192,6 +192,7 @@ export function computeMassAdjustmentCrossCheck(input: MassAdjustmentCrossCheckI
         before,
         afterRecords: [...otherRecords, ...teamHypotheticals],
         seedKey: teamKey,
+        goal: before?.goal,
       }),
     )
   }
@@ -208,6 +209,7 @@ export function computeMassAdjustmentCrossCheck(input: MassAdjustmentCrossCheckI
         before,
         afterRecords: [...otherRecords, ...divisionHypotheticals],
         seedKey: division,
+        goal: before?.goal,
       }),
     )
   }

@@ -11,6 +11,7 @@
  */
 import { computeMassAdjustmentCrossCheck } from '../src/system1/engine/massAdjustmentCrossCheck'
 import { computeSystem2LiveSnapshot } from '../src/system2/bridge/liveOrgState'
+import { combinedRevenueFor } from '../src/system1/engine/revenueEngine'
 import type { OrgRecord } from '../src/system2/data/types'
 import type { Person } from '../src/system1/data/types'
 import type { TargetRecord } from '../src/store/system1Store'
@@ -63,19 +64,23 @@ console.log('=== Scenario 1: clean pass for everyone ===')
 {
   // 3 people, all Consultant, dayRate=1000 (revenue 187k each, matching
   // each other exactly) -> cohort deviation ~0 for all three. Team/org
-  // baseline is a generous, surplus-EA (trend 1.05) team so a modest +5%
-  // addition can't drag coverage below 100%, individually or combined —
-  // trend>1 (not exactly 1) avoids the "ratio drops from exactly 1.0 to
-  // just under 1.0" regression trap a razor's-edge baseline would trip.
-  // Split across 6 equal records rather than 3 larger ones so headcount
-  // growing from 6 to 9 doesn't change topCount's rounded share of the
-  // total enough to flip isConcentrationRisk on its own (topCount =
-  // ceil(headcount*0.2) jumps from 1 to 2 crossing headcount 5, which
-  // would otherwise nearly double the top-N share captured).
+  // baseline needs a REAL surplus-EA buffer under the goal model (goals.ts,
+  // prior-year revenue x 1.1): trend 1.05 (this fixture's original value)
+  // gives EA £15750k against a goal of ~£17193k — already short before any
+  // addition, since goal no longer trivially equals target (that was the
+  // circularity being fixed: EA/target was always exactly 1.0, zero real
+  // headroom). Trend 1.15 clears the goal with genuine margin (EA £17250k
+  // vs goal £17193k, and — critically — maxFeasible (£18112k, capacity 1.05
+  // x trend) also clears the goal, so the team isn't forced Infeasible
+  // outright). Split across 6 equal records rather than 3 larger ones so
+  // headcount growing from 6 to 9 doesn't change topCount's rounded share of
+  // the total enough to flip isConcentrationRisk on its own (topCount =
+  // ceil(headcount*0.2) jumps from 1 to 2 crossing headcount 5, which would
+  // otherwise nearly double the top-N share captured).
   const people = [person({ id: 'MASS_OUT1' }), person({ id: 'MASS_OUT2' }), person({ id: 'MASS_OUT3' })]
   const targets: Record<string, TargetRecord> = Object.fromEntries(people.map((p) => [p.id, targetRecord(p.id, 100)]))
   const baseline: OrgRecord[] = Array.from({ length: 6 }, (_, i) =>
-    orgRecord({ id: `BASE${i + 1}`, target: 2500, teamHistoricalTrend: 1.05 }),
+    orgRecord({ id: `BASE${i + 1}`, target: 2500, teamHistoricalTrend: 1.15 }),
   )
   const snapshot = computeSystem2LiveSnapshot(baseline, '2026-01-01T00:00:00.000Z')
 
@@ -92,19 +97,43 @@ console.log('=== Scenario 1: clean pass for everyone ===')
 console.log()
 console.log('=== Scenario 2: aggregate fails even though no individual is drastic ===')
 {
-  // 3 people, dayRate=4074 (revenue 762k each, matching each other exactly
-  // -> cohort trivially fine), +5% each (not drastic). Team baseline is 2
-  // healthy records (target 1000k each, ratio 1.0). Each person ALONE
-  // (individual check) barely dents that baseline and stays >=90% coverage
-  // — but all 3 added AT ONCE drags it under 90%, which summing three
-  // independent single-person checks could never show.
+  // Redesigned for the goal model (goals.ts, prior-year revenue x 1.1,
+  // pinned to the real committed snapshot — see riskStatus.ts/scenario.ts).
+  // The ORIGINAL version of this scenario modelled three brand-NEW hires
+  // being added to a small team; under a FIXED goal that can no longer
+  // demonstrate "aggregate fails though no individual does" — proven during
+  // development (scripts/_probe-mass*.ts, since deleted): any combination of
+  // purely-additive, positive-revenue new hires against a fixed goal can
+  // only ever IMPROVE the ratio, never combine to make it worse, so a team
+  // that individually tolerates each hire tolerates all three together too.
+  // (That's a direct, desirable consequence of the fix — the old version's
+  // "team fails" only worked because target-as-goal meant more hires moved
+  // the goalposts along with the total, which is exactly the circularity
+  // being removed.)
+  //
+  // The genuine way an aggregate-only failure still exists under a fixed
+  // goal is a CUT to already-EXISTING contributors: three individually-
+  // tolerable trims can combine into a team-level breach in a way summing
+  // three independent single-person checks can't show, because subtracting
+  // from a fixed goal's numerator behaves differently to only ever adding
+  // to it. So these 3 people are modelled as already part of the team (an
+  // OrgRecord each, at their real combinedRevenueFor(), which is what
+  // proposedRevenueFor() scales proportionally — matching an arbitrary
+  // number here would produce an incoherent, not-really-"a 10% cut" jump),
+  // facing a -10% mass cut.
   const ids = ['MASS_A1', 'MASS_A2', 'MASS_A3']
-  const people = ids.map((id) => person({ id, dayRate: 4074 }))
+  const people = ids.map((id) => person({ id, dayRate: 1000 })) // revenue 187k each, matching each other -> cohort trivially fine
+  const currentRevenue = combinedRevenueFor(people[0])
+  check('sanity: combinedRevenueFor(dayRate=1000 person) is 187k, matching this file\'s other fixtures', currentRevenue, 187)
   const targets: Record<string, TargetRecord> = Object.fromEntries(people.map((p) => [p.id, targetRecord(p.id, 100)]))
-  const baseline: OrgRecord[] = [orgRecord({ id: 'BASE1', target: 1000 }), orgRecord({ id: 'BASE2', target: 1000 })]
+  const baseline: OrgRecord[] = [
+    orgRecord({ id: 'ANCHOR', target: 8000, teamHistoricalTrend: 1.1 }),
+    ...ids.map((id) => orgRecord({ id, target: currentRevenue, teamHistoricalTrend: 1.1 })),
+  ]
   const snapshot = computeSystem2LiveSnapshot(baseline, '2026-01-01T00:00:00.000Z')
+  check('sanity: team starts compliant (At risk, not already failing)', snapshot.org?.risk.status, 'At risk')
 
-  const result = computeMassAdjustmentCrossCheck({ people, percent: 5, targets, snapshot, allPeople: people })
+  const result = computeMassAdjustmentCrossCheck({ people, percent: -10, targets, snapshot, allPeople: people })
 
   check('hasOrgData', result.hasOrgData, true)
   check('all 3 pass individually (none independently drastic or failing)', result.individualPassCount, 3)
@@ -133,10 +162,11 @@ console.log('=== Scenario 3: a few individuals are outliers within an otherwise-
     person({ id: 'MASS_OUT4', dayRate: 1600 }),
   ]
   const targets: Record<string, TargetRecord> = Object.fromEntries(people.map((p) => [p.id, targetRecord(p.id, 100)]))
-  // Same 6-equal-record baseline shape as Scenario 1, for the same reason
-  // (keeps isConcentrationRisk's topCount-rounding stable as headcount grows).
+  // Same 6-equal-record baseline shape and trend as Scenario 1, for the
+  // same reasons (real — not illusory — goal-model buffer, and stable
+  // isConcentrationRisk topCount-rounding as headcount grows).
   const baseline: OrgRecord[] = Array.from({ length: 6 }, (_, i) =>
-    orgRecord({ id: `BASE${i + 1}`, target: 2500, teamHistoricalTrend: 1.05 }),
+    orgRecord({ id: `BASE${i + 1}`, target: 2500, teamHistoricalTrend: 1.15 }),
   )
   const snapshot = computeSystem2LiveSnapshot(baseline, '2026-01-01T00:00:00.000Z')
 

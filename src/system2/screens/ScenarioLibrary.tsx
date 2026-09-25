@@ -4,6 +4,7 @@ import { useSystem2Store } from '../../store/system2Store'
 import { useScenarioStore, type SavedScenario } from '../../store/scenarioStore'
 import { aggregate } from '../engine/aggregation'
 import { computeRiskStatuses } from '../engine/riskStatus'
+import { computeGoals } from '../engine/goals'
 import { runScenario, type ScenarioLevers } from '../engine/scenario'
 import { round1, statusBadgeClass } from '../riskDisplay'
 import { ScreenHeading } from '../../components/searchlight/ScreenHeading'
@@ -51,7 +52,11 @@ export function ScenarioLibrary() {
   const loading = useInitialLoad(records.length > 0)
 
   const baselineAggregation = useMemo(() => aggregate(records), [records])
-  const baselineRisk = useMemo(() => computeRiskStatuses(records, baselineAggregation), [records, baselineAggregation])
+  const baselineGoals = useMemo(() => computeGoals(baselineAggregation), [baselineAggregation])
+  const baselineRisk = useMemo(
+    () => computeRiskStatuses(records, baselineAggregation, baselineGoals),
+    [records, baselineAggregation, baselineGoals],
+  )
 
   const results = useMemo(() => {
     const map = new Map<string, ReturnType<typeof runScenario>>()
@@ -164,7 +169,7 @@ export function ScenarioLibrary() {
                 <tbody>
                   <tr data-testid="scenario-compare-baseline" className="border-t border-pa-grey-01">
                     <td className="px-3 py-2 font-medium text-pa-grey-03">Baseline</td>
-                    <td className="px-3 py-2 text-right font-pa-mono tabular-nums text-pa-grey-04">£{round1(baselineAggregation.desWide.target)}k</td>
+                    <td className="px-3 py-2 text-right font-pa-mono tabular-nums text-pa-grey-04">£{round1(baselineGoals.desWide)}k</td>
                     <td className="px-3 py-2 text-right font-pa-mono tabular-nums text-pa-grey-04">
                       {round1(baselineRisk.desWide.forecastRatio * 100)}%
                     </td>
@@ -180,7 +185,7 @@ export function ScenarioLibrary() {
                   </tr>
                   {selectedScenarios.map((scenario) => {
                     const result = results.get(scenario.id)!
-                    const goal = scenario.levers.goal ?? result.aggregation.desWide.target
+                    const goal = scenario.levers.goal ?? result.goals.desWide
                     return (
                       <tr key={scenario.id} data-testid="scenario-compare-row" data-scenario-id={scenario.id} className="border-t border-pa-grey-01 bg-pa-grey-wash">
                         <td className="px-3 py-2 font-medium text-pa-grey-04">{scenario.name}</td>
