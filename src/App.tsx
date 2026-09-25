@@ -3,7 +3,6 @@ import { AppShell } from './shell/AppShell'
 import { System1Root } from './system1/System1Root'
 import { OverviewPopulation } from './system1/screens/OverviewPopulation'
 import { IndividualDetail } from './system1/screens/IndividualDetail'
-import { CohortComparison } from './system1/screens/CohortComparison'
 import { WhatIfSandbox } from './system1/screens/WhatIfSandbox'
 import { ManagerOverride } from './system1/screens/ManagerOverride'
 import { ExceptionsQueue } from './system1/screens/ExceptionsQueue'
@@ -27,8 +26,6 @@ export default function App() {
           <Route index element={<Navigate to="overview" replace />} />
           <Route path="overview" element={<OverviewPopulation />} />
           <Route path="person/:id" element={<IndividualDetail />} />
-          <Route path="cohort" element={<CohortComparison />} />
-          <Route path="cohort/:id" element={<CohortComparison />} />
           <Route path="whatif" element={<WhatIfSandbox />} />
           <Route path="whatif/:id" element={<WhatIfSandbox />} />
           <Route path="override" element={<ManagerOverride />} />
