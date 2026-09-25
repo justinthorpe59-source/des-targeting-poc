@@ -31,9 +31,6 @@ export function System2Root() {
           <NavLink to="scenario-workspace" className={navLinkClass}>
             Scenario workspace
           </NavLink>
-          <NavLink to="scenario-library" className={navLinkClass}>
-            Scenario library
-          </NavLink>
         </nav>
       </aside>
       <div className="flex-1">
