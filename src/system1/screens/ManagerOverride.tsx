@@ -1,13 +1,204 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { SEED_PEOPLE } from '../data/people'
+import { GRADES, GRADE_TABLE, type Grade } from '../data/types'
 import { useSystem1Store, type OverrideType } from '../../store/system1Store'
+import { calculateModelledTarget } from '../engine/targetingEngine'
 import { LARGE_ADJUSTMENT_THRESHOLD } from '../engine/exceptions'
 import { runOverrideCrossCheck } from '../engine/overrideCrossCheck'
 import { buildIndividualSignOffContext } from '../engine/buildSignOffContext'
 import { useSystem2LiveSnapshot } from '../../system2/bridge/useSystem2LiveState'
 import { explainTarget } from '../engine/explainTarget'
 import { CrossCheckPanel } from '../components/CrossCheckPanel'
+
+const CAPACITY_MIN = 0.3
+const CAPACITY_MAX = 1.3
+const ECONOMIC_MIN = 0.8
+const ECONOMIC_MAX = 1.3
+
+interface SandboxInputs {
+  capacity: number
+  grade: Grade
+  economicFactor: number
+}
+
+/**
+ * Former WhatIfSandbox.tsx (M7), folded in here as the consolidation plan
+ * requires. The override form above already previews the FINAL value live;
+ * what only the sandbox could do was recalculate the MODELLED target from
+ * the factors themselves. That is what moves here.
+ *
+ * It calls the same M2 engine function, calculateModelledTarget(), with
+ * hypothetical inputs and writes nothing to the store — identical to the
+ * standalone screen. The one thing the merge adds over a bolted-on copy:
+ * "Use as direct value" pushes the sandbox result into the override form,
+ * so exploring a factor change and committing it with a reason is now one
+ * flow rather than two screens.
+ */
+function FactorSandbox({
+  person,
+  storedFinal,
+  onUseValue,
+}: {
+  person: (typeof SEED_PEOPLE)[number]
+  storedFinal: number
+  onUseValue: (value: number) => void
+}) {
+  const initial: SandboxInputs = {
+    capacity: person.capacity,
+    grade: person.grade,
+    economicFactor: person.economicFactor,
+  }
+  const [open, setOpen] = useState(false)
+  const [inputs, setInputs] = useState<SandboxInputs>(initial)
+
+  // Switching person resets to *their* actual values (render-time adjustment).
+  const [forId, setForId] = useState(person.id)
+  if (person.id !== forId) {
+    setForId(person.id)
+    setInputs({ capacity: person.capacity, grade: person.grade, economicFactor: person.economicFactor })
+  }
+
+  const result = useMemo(
+    () =>
+      calculateModelledTarget({
+        baseline: person.baseline,
+        capacity: inputs.capacity,
+        roleFactor: GRADE_TABLE[inputs.grade].roleFactor,
+        economicFactor: inputs.economicFactor,
+      }),
+    [person.baseline, inputs],
+  )
+
+  const isTweaked =
+    inputs.capacity !== person.capacity ||
+    inputs.grade !== person.grade ||
+    inputs.economicFactor !== person.economicFactor
+  const delta = result.modelled - storedFinal
+
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-4">
+      <button
+        type="button"
+        data-testid="whatif-toggle"
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-baseline justify-between text-left"
+      >
+        <span className="text-sm font-semibold text-slate-700">What-if — recalculate from the factors</span>
+        <span className="text-xs text-slate-500">{open ? 'Hide' : 'Show'}</span>
+      </button>
+
+      {open && (
+        <div className="mt-3 space-y-3">
+          <p className="text-xs text-slate-500">
+            Scenario only — never changes {person.name}&apos;s stored record. Use it to see what the model would
+            produce under different factors, then commit a value below with a reason.
+          </p>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <label className="block text-xs font-medium text-slate-500">
+              Capacity <span className="font-mono text-slate-700">{inputs.capacity.toFixed(2)}</span>
+              <input
+                data-testid="whatif-capacity-slider"
+                type="range"
+                min={CAPACITY_MIN}
+                max={CAPACITY_MAX}
+                step={0.01}
+                value={inputs.capacity}
+                onChange={(e) => setInputs((prev) => ({ ...prev, capacity: Number(e.target.value) }))}
+                className="mt-1 w-full"
+              />
+              <span data-testid="whatif-capacity-value" className="sr-only">
+                {inputs.capacity.toFixed(2)}
+              </span>
+            </label>
+
+            <label className="block text-xs font-medium text-slate-500">
+              Economic factor <span className="font-mono text-slate-700">{inputs.economicFactor.toFixed(2)}</span>
+              <input
+                data-testid="whatif-economic-slider"
+                type="range"
+                min={ECONOMIC_MIN}
+                max={ECONOMIC_MAX}
+                step={0.01}
+                value={inputs.economicFactor}
+                onChange={(e) => setInputs((prev) => ({ ...prev, economicFactor: Number(e.target.value) }))}
+                className="mt-1 w-full"
+              />
+              <span data-testid="whatif-economic-value" className="sr-only">
+                {inputs.economicFactor.toFixed(2)}
+              </span>
+            </label>
+
+            <label className="block text-xs font-medium text-slate-500">
+              Grade / role
+              <select
+                data-testid="whatif-grade-select"
+                value={inputs.grade}
+                onChange={(e) => setInputs((prev) => ({ ...prev, grade: e.target.value as Grade }))}
+                className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+              >
+                {GRADES.map((grade) => (
+                  <option key={grade} value={grade}>
+                    {grade} ({GRADE_TABLE[grade].roleFactor})
+                  </option>
+                ))}
+              </select>
+              <span data-testid="whatif-grade-value" className="sr-only">
+                {inputs.grade} ({GRADE_TABLE[inputs.grade].roleFactor})
+              </span>
+            </label>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-md bg-slate-50 p-3 text-sm">
+            <span className="text-slate-600">
+              Sandbox target:{' '}
+              <span data-testid="whatif-sandbox-modelled" className="font-semibold tabular-nums text-slate-900">
+                £{result.modelled}k
+              </span>{' '}
+              <span data-testid="whatif-sandbox-range" className="text-xs text-slate-500">
+                (£{result.rangeLow}k – £{result.rangeHigh}k)
+              </span>
+            </span>
+            <span className="text-xs text-slate-500">
+              stored{' '}
+              <span data-testid="whatif-stored-modelled" className="font-mono">
+                £{storedFinal}k
+              </span>
+              {isTweaked && (
+                <>
+                  {' '}
+                  · {delta > 0 ? '+' : ''}
+                  {delta}k vs stored
+                </>
+              )}
+            </span>
+            <div className="ml-auto flex gap-2">
+              <button
+                type="button"
+                data-testid="whatif-use-value-button"
+                onClick={() => onUseValue(result.modelled)}
+                className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100"
+              >
+                Use as direct value
+              </button>
+              {isTweaked && (
+                <button
+                  type="button"
+                  data-testid="whatif-reset-button"
+                  onClick={() => setInputs({ capacity: person.capacity, grade: person.grade, economicFactor: person.economicFactor })}
+                  className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 // M8: manager override. Either a % adjustment or a direct value — manager's
 // choice, both produce one final £k number. Reason required, no exceptions.
@@ -289,6 +480,15 @@ export function ManagerOverride() {
               {crossCheck?.requiresSignOff ? 'Apply override (routes to Pending Sign-off)' : 'Apply override'}
             </button>
           </div>
+
+          <FactorSandbox
+            person={person}
+            storedFinal={target.override ? target.override.finalValue : target.modelled}
+            onUseValue={(value) => {
+              setOverrideType('direct')
+              setDirectValue(value)
+            }}
+          />
 
           {crossCheck && <CrossCheckPanel result={crossCheck} />}
 

@@ -10,7 +10,7 @@ import { computeGoals, type GoalResult } from './goals'
  * computed by feeding the SAME real aggregate()/computeRiskStatuses()
  * functions a hypothetical records array/goal instead of the real ones,
  * exactly the same non-committing shape as System 1's What-if sandbox
- * (WhatIfSandbox.tsx) calling calculateModelledTarget() with hypothetical
+ * (ManagerOverride.tsx's FactorSandbox) calling calculateModelledTarget() with hypothetical
  * inputs. The caller decides what's real and what's hypothetical; this file
  * never reads a store.
  */

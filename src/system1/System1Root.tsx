@@ -21,9 +21,6 @@ export function System1Root() {
           <NavLink to="overview" className={navLinkClass}>
             Overview &amp; Population
           </NavLink>
-          <NavLink to="whatif" className={navLinkClass}>
-            What-if sandbox
-          </NavLink>
           <NavLink to="override" className={navLinkClass}>
             Manager override
           </NavLink>
