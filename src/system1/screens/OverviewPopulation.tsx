@@ -24,6 +24,14 @@ const STATE_TOKEN: Record<TargetStatus, string> = {
   Approved: 'var(--color-pa-state-approved)',
 }
 
+/** Connector colours, rotated across the network. PA tokens only — the
+ *  reference image's own colours are never lifted. */
+const CONNECTOR_TOKENS = [
+  'var(--color-pa-aqua-03)',
+  'var(--color-pa-apricot-03)',
+  'var(--color-pa-rose-03)',
+]
+
 const ALL_LOCATIONS = 'All locations' as const
 type LocationFilter = Location | typeof ALL_LOCATIONS
 
@@ -49,7 +57,7 @@ function initials(name: string): string {
  * in one readable unit.
  */
 const VIEW_W = 1152
-const VIEW_H = 900
+const VIEW_H = 1040
 
 const MEMBER_SIZE = 60
 const MEMBER_GAP = 9
@@ -81,7 +89,7 @@ function pillAnchors(count: number) {
     const t = (i + 0.5) / count
     const f = 0.42 + 0.58 * Math.sqrt(t)
     const a = i * GOLDEN
-    return { x: cx + Math.cos(a) * 418 * f, y: cy + Math.sin(a) * 318 * f }
+    return { x: cx + Math.cos(a) * 412 * f, y: cy + Math.sin(a) * 360 * f }
   })
 }
 
@@ -107,8 +115,8 @@ function layoutNetwork(nodes: TeamNode[]) {
     node.people.forEach((person, i) => {
       const t = (i + 0.5) / n
       const f = Math.sqrt(t)
-      const rx = 104 + 46 * f
-      const ry = 92 + 38 * f
+      const rx = 88 + 34 * f
+      const ry = 80 + 28 * f
       const a = i * GOLDEN + ti * 1.7
       const x = anchor.x + Math.cos(a) * rx
       const y = anchor.y + Math.sin(a) * ry
@@ -185,7 +193,54 @@ function layoutNetwork(nodes: TeamNode[]) {
   }
   clearPills()
 
-  return { anchors, members }
+  // Connectors, restored after the structure change. In the reference the
+  // dotted lines run between the PEOPLE circles, not between the labels, and
+  // they are sparse — roughly one segment per pair of neighbours, not a line
+  // per node. So: link consecutive teams by their two closest members, which
+  // weaves a loose path across the whole canvas at the reference's density
+  // (5 segments for 6 teams) rather than a spoke per person.
+  const edges: Array<{ d: string; stroke: string }> = []
+  for (let t = 0; t < nodes.length - 1; t++) {
+    const from = members.filter((m) => m.teamKey === nodes[t].key)
+    const to = members.filter((m) => m.teamKey === nodes[t + 1].key)
+    if (from.length === 0 || to.length === 0) continue
+
+    let best: [Placed, Placed] | null = null
+    let bestD = Infinity
+    for (const a of from) {
+      for (const b of to) {
+        const d = Math.hypot(a.x - b.x, a.y - b.y)
+        if (d < bestD) {
+          bestD = d
+          best = [a, b]
+        }
+      }
+    }
+    if (!best) continue
+
+    const [a, b] = best
+    const dx = b.x - a.x
+    const dy = b.y - a.y
+    const len = Math.hypot(dx, dy) || 1
+    const ux = dx / len
+    const uy = dy / len
+    // start and end at the bubbles' edges, so the dashes sit in the gap
+    const gap = half + 5
+    const x1 = a.x + ux * gap
+    const y1 = a.y + uy * gap
+    const x2 = b.x - ux * gap
+    const y2 = b.y - uy * gap
+    if (len < gap * 2 + 20) continue
+    const bow = (t % 2 === 0 ? 1 : -1) * Math.min(len * 0.2, 70)
+    const mx = (x1 + x2) / 2 - uy * bow
+    const my = (y1 + y2) / 2 + ux * bow
+    edges.push({
+      d: `M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`,
+      stroke: CONNECTOR_TOKENS[t % CONNECTOR_TOKENS.length],
+    })
+  }
+
+  return { anchors, members, edges }
 }
 
 /**
@@ -258,13 +313,34 @@ function TeamBubbleNetwork({
   nodes: TeamNode[]
   onOpen: (key: string) => void
 }) {
-  const { anchors, members } = useMemo(() => layoutNetwork(nodes), [nodes])
+  const { anchors, members, edges } = useMemo(() => layoutNetwork(nodes), [nodes])
 
   return (
     <div
       className="relative mx-auto w-full"
       style={{ maxWidth: VIEW_W, aspectRatio: `${VIEW_W} / ${VIEW_H}` }}
     >
+      <svg
+        viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
+        preserveAspectRatio="none"
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 h-full w-full"
+      >
+        {edges.map((edge, i) => (
+          <path
+            key={i}
+            d={edge.d}
+            fill="none"
+            stroke={edge.stroke}
+            strokeWidth="2"
+            strokeDasharray="6 9"
+            strokeLinecap="round"
+            opacity="0.9"
+            vectorEffect="non-scaling-stroke"
+          />
+        ))}
+      </svg>
+
       {members.map((m) => (
         <MemberBubble key={m.personId} x={m.x} y={m.y} />
       ))}
