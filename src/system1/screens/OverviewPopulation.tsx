@@ -6,6 +6,8 @@ import { DIVISIONS, LOCATIONS, type Person } from '../data/types'
 import { ALL, ALL_TEAMS, DEFAULT_FILTER, filterPeople, type PopulationFilter } from '../engine/filterPeople'
 import { groupPeople, GROUP_LEVELS, type GroupLevel } from '../engine/groupPeople'
 import { useSystem1Store, type TargetStatus, type TargetRecord } from '../../store/system1Store'
+import { useSnapshotStore } from '../../store/snapshotStore'
+import { buildSnapshot } from '../engine/buildSnapshot'
 import { detectExceptions } from '../engine/exceptions'
 import { finalTargetFor } from '../engine/finalTarget'
 import { combinedRevenueFor } from '../engine/revenueEngine'
@@ -178,6 +180,91 @@ function BubbleCluster({
   )
 }
 
+function downloadJson(filename: string, data: unknown) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
+/**
+ * Former SnapshotExport.tsx (M13), folded in here as the consolidation plan
+ * requires: last-synced status + the manual re-export action. Approve already
+ * writes to the bridge live, so this is the fallback path, not the primary
+ * one — hence a status strip rather than the standalone screen's full
+ * record-by-record preview table.
+ *
+ * buildSnapshot() is untouched and remains the only place the Approved-only
+ * filter and the locked schema live.
+ */
+function System2SyncStrip() {
+  const targets = useSystem1Store((state) => state.targets)
+  const lastSnapshot = useSnapshotStore((state) => state.lastSnapshot)
+  const setSnapshot = useSnapshotStore((state) => state.setSnapshot)
+
+  const preview = useMemo(() => buildSnapshot(SEED_PEOPLE, targets), [targets])
+  const isStale = lastSnapshot !== null && lastSnapshot.recordCount !== preview.recordCount
+
+  function handleExport() {
+    const snapshot = buildSnapshot(SEED_PEOPLE, targets)
+    setSnapshot(snapshot)
+    downloadJson(`snapshot-${snapshot.exportedAt.replace(/[:.]/g, '-')}.json`, snapshot)
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-xl border border-pa-grey-01 bg-pa-white px-4 py-3">
+      <div>
+        <div className="font-pa-body text-[11px] font-medium uppercase tracking-wide text-pa-grey-03">
+          Last synced with System 2
+        </div>
+        {lastSnapshot ? (
+          <div className="mt-0.5 flex flex-wrap items-baseline gap-2">
+            <span data-testid="export-last-count" className="font-pa-mono text-sm font-bold text-pa-grey-04">
+              {lastSnapshot.recordCount} record{lastSnapshot.recordCount === 1 ? '' : 's'}
+            </span>
+            <span data-testid="export-last-timestamp" className="font-pa-mono text-[11px] text-pa-grey-03">
+              {lastSnapshot.exportedAt}
+            </span>
+            {isStale && (
+              <span
+                data-testid="export-stale-warning"
+                className="rounded bg-pa-apricot-01 px-1.5 py-0.5 font-pa-body text-[11px] text-pa-grey-04"
+              >
+                Out of date — re-export to include the latest Approved records.
+              </span>
+            )}
+          </div>
+        ) : (
+          <div data-testid="export-never" className="mt-0.5 font-pa-body text-sm text-pa-grey-03">
+            Never exported
+          </div>
+        )}
+      </div>
+
+      <div className="ml-auto flex items-center gap-3">
+        <span className="font-pa-body text-[11px] text-pa-grey-03">
+          Approved records sync live · <span data-testid="export-preview-count" className="font-pa-mono">{preview.recordCount}</span>{' '}
+          approved now
+        </span>
+        <button
+          type="button"
+          data-testid="export-button"
+          onClick={handleExport}
+          disabled={preview.recordCount === 0}
+          className="rounded-md bg-pa-aqua-05 px-3 py-1.5 font-pa-body text-sm font-medium text-pa-white hover:bg-pa-aqua-04 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Re-export ({preview.recordCount})
+        </button>
+      </div>
+    </div>
+  )
+}
+
 /**
  * Consolidated screen 1 of 5 — "Overview & Population".
  *
@@ -294,6 +381,8 @@ export function OverviewPopulation() {
             )}
             .
           </p>
+
+          <System2SyncStrip />
 
           {/* Population workflow — a single stacked bar of where the whole
               population sits in the Modelled → Approved pipeline. */}
