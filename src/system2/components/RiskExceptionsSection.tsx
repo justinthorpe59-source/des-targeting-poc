@@ -6,9 +6,7 @@ import { aggregate } from '../engine/aggregation'
 import { computeRiskStatuses } from '../engine/riskStatus'
 import { computeGoals } from '../engine/goals'
 import { detectRiskExceptions, type RiskExceptionType } from '../engine/riskExceptions'
-import { ScreenHeading } from '../../components/searchlight/ScreenHeading'
 import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
-import { SketchDistribution } from '../../components/searchlight/SketchIllustrations'
 import { useInitialLoad } from '../../components/searchlight/useInitialLoad'
 
 const TYPE_LABELS: Record<RiskExceptionType, string> = {
@@ -38,13 +36,18 @@ const FILTER_OPTIONS: Array<RiskExceptionType | 'All'> = [
 ]
 
 /**
- * S2-M9: the last of the 6 locked System 2 screens. detectRiskExceptions()
- * is the only place these thresholds are implemented — this screen adds no
- * new detection logic, just a filtered list. Searchlight design pass added
- * the loader, distribution motif (tails = exceptions) and token styling;
- * detection and filtering are unchanged.
+ * S2-M9's risk/exception flags. Since the 3-screen consolidation this is the
+ * Top Risks drill-in section at the foot of Executive Summary rather than a
+ * screen of its own — the sponsor's front door is where "where does the real
+ * risk sit?" gets answered, so the flags belong under the headline figures
+ * that provoke the question.
+ *
+ * detectRiskExceptions() is still the only place these thresholds are
+ * implemented — this adds no detection logic, just a filtered list. The
+ * parent screen owns the empty state (no snapshot imported), so this renders
+ * nothing when there are no records.
  */
-export function RiskExceptions() {
+export function RiskExceptionsSection() {
   const records = useSystem2Store((state) => state.records)
   const savedScenarios = useScenarioStore((state) => state.scenarios)
   const [typeFilter, setTypeFilter] = useState<RiskExceptionType | 'All'>('All')
@@ -70,33 +73,18 @@ export function RiskExceptions() {
     return entries
   }, [flagsByGroup, typeFilter])
 
-  if (records.length === 0) {
-    return (
-      <section className="space-y-4">
-        <ScreenHeading title="Exceptions / risk flags">
-          Divisions/teams that violate a locked threshold. Flagged for review only — nothing here is
-          ever blocked.
-        </ScreenHeading>
-        <div className="rounded-lg border border-pa-grey-01 bg-pa-white p-4 font-pa-body text-sm text-pa-grey-03">
-          No snapshot imported yet.{' '}
-          <Link to="/system2/executive-summary" className="font-medium text-pa-aqua-05 underline">
-            Import from System 1
-          </Link>{' '}
-          on Executive summary first.
-        </div>
-      </section>
-    )
-  }
+  if (records.length === 0) return null
 
   return (
-    <section className="relative space-y-6">
-      <SketchDistribution className="pointer-events-none absolute right-0 top-8 -z-10 h-[340px] w-[560px] max-w-none opacity-[0.06]" />
-
-      <ScreenHeading title="Exceptions / risk flags">
-        Divisions/teams that violate a locked threshold — missing forecast data, infeasible, low
-        confidence with high reliance, or a large gap no scenario has tested yet. Flagged for review
-        only; nothing here is ever blocked.
-      </ScreenHeading>
+    <section className="space-y-4">
+      <div>
+        <h2 className="font-pa-display text-base font-semibold text-pa-grey-04">Top risks</h2>
+        <p className="mt-1 max-w-2xl font-pa-body text-sm text-pa-grey-03">
+          Divisions/teams that violate a locked threshold — missing forecast data, infeasible, low
+          confidence with high reliance, or a large gap no scenario has tested yet. Flagged for review
+          only; nothing here is ever blocked.
+        </p>
+      </div>
 
       {loading ? (
         <SearchlightLoader />

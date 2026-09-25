@@ -8,6 +8,7 @@ import type { RiskStatus } from '../engine/riskStatus'
 import { computeGoals } from '../engine/goals'
 import { round1, statusBadgeClass } from '../riskDisplay'
 import { CoverageTrack } from '../components/CoverageTrack'
+import { RiskExceptionsSection } from '../components/RiskExceptionsSection'
 import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
 import { SketchDistribution } from '../../components/searchlight/SketchIllustrations'
 
@@ -295,6 +296,10 @@ export function ExecutiveSummary() {
                 </tbody>
               </table>
             </div>
+          </div>
+
+          <div className="border-t border-pa-grey-01 pt-6">
+            <RiskExceptionsSection />
           </div>
         </div>
       )}
