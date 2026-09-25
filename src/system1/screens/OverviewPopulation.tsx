@@ -24,14 +24,6 @@ const STATE_TOKEN: Record<TargetStatus, string> = {
   Approved: 'var(--color-pa-state-approved)',
 }
 
-/** Connector colours, rotated across the network. PA tokens only — the
- *  reference image's own colours are never lifted. */
-const CONNECTOR_TOKENS = [
-  'var(--color-pa-aqua-03)',
-  'var(--color-pa-apricot-03)',
-  'var(--color-pa-rose-03)',
-]
-
 const ALL_LOCATIONS = 'All locations' as const
 type LocationFilter = Location | typeof ALL_LOCATIONS
 
@@ -52,129 +44,210 @@ function initials(name: string): string {
 }
 
 /**
- * The network canvas is drawn in a 160x90 coordinate space matching the
- * container's 16/9 aspect, so a circle stays a circle and one unit means the
- * same thing on both axes — which lets the connectors be trimmed back to the
- * nodes' edges accurately.
+ * The network canvas is a fixed virtual pixel space, converted to percentages
+ * at render time so it scales with its container while the layout maths stays
+ * in one readable unit.
  */
-const VIEW_W = 160
-const VIEW_H = 90
-/** Node circle is 6rem across on a max-w-4xl (896px) container: 96/896 of the
- *  width, which is 17.2 units of 160. Half of that is its radius. */
-const BUBBLE_R = 8.6
+const VIEW_W = 1152
+const VIEW_H = 900
+
+const MEMBER_SIZE = 60
+const MEMBER_GAP = 9
+/** Half-extents of a team's name pill, used as a keep-out box. */
+const PILL_HALF_W = 82
+const PILL_HALF_H = 23
+
+const GOLDEN = Math.PI * (3 - Math.sqrt(5))
+
+interface Placed {
+  teamKey: string
+  personId: string
+  x: number
+  y: number
+  seedX: number
+  seedY: number
+}
 
 /**
- * Deterministic organic ring. Positions are a pure function of index and
- * count, so the same teams land in the same place on every reload — the
- * explicit call over a force-directed simulation, which would settle
- * differently each run and jitter whenever the location filter changed the
- * set.
- *
- * An even ring with an alternating radius reads as organic while keeping the
- * nodes well spread and the centre open, so the connectors between them stay
- * visible. A golden-angle spiral was tried first and clustered them into one
- * corner at this count.
- *
- * Half-extents leave room for each node's caption pill, which hangs below the
- * circle and is wider than it.
+ * Anchor points for each team's name pill — golden-angle placement in an
+ * ellipse, so teams sit irregularly rather than on a grid, and always in the
+ * same place for a given set (a pure function of index and count).
  */
-function scatter(count: number) {
+function pillAnchors(count: number) {
   const cx = VIEW_W / 2
   const cy = VIEW_H / 2
-  const halfX = 62
-  const halfY = 27
   if (count === 1) return [{ x: cx, y: cy }]
   return Array.from({ length: count }, (_, i) => {
-    const angle = (i / count) * Math.PI * 2 - Math.PI / 2
-    const wobble = i % 2 === 0 ? 1 : 0.68
-    return {
-      x: cx + Math.cos(angle) * halfX * wobble,
-      y: cy + Math.sin(angle) * halfY * wobble,
+    const t = (i + 0.5) / count
+    const f = 0.42 + 0.58 * Math.sqrt(t)
+    const a = i * GOLDEN
+    return { x: cx + Math.cos(a) * 418 * f, y: cy + Math.sin(a) * 318 * f }
+  })
+}
+
+/**
+ * Lays out the whole network: one name pill per team, and one placeholder
+ * bubble per team member scattered around its own pill.
+ *
+ * Members are seeded in an annulus around their pill (golden angle again, so
+ * the scatter is irregular rather than a ring), then a deterministic
+ * relaxation pass resolves every collision at once — bubble against bubble
+ * across ALL teams, bubble against any pill, and bubble against the canvas
+ * edge — while a weak spring back to its seed keeps each member visually
+ * attached to its own team. No randomness anywhere, so the same population
+ * always produces the same picture.
+ */
+function layoutNetwork(nodes: TeamNode[]) {
+  const anchors = pillAnchors(nodes.length)
+  const members: Placed[] = []
+
+  nodes.forEach((node, ti) => {
+    const anchor = anchors[ti]
+    const n = node.people.length
+    node.people.forEach((person, i) => {
+      const t = (i + 0.5) / n
+      const f = Math.sqrt(t)
+      const rx = 104 + 46 * f
+      const ry = 92 + 38 * f
+      const a = i * GOLDEN + ti * 1.7
+      const x = anchor.x + Math.cos(a) * rx
+      const y = anchor.y + Math.sin(a) * ry
+      members.push({ teamKey: node.key, personId: person.id, x, y, seedX: x, seedY: y })
+    })
+  })
+
+  const minDist = MEMBER_SIZE + MEMBER_GAP
+  const half = MEMBER_SIZE / 2
+  const padX = PILL_HALF_W + half + 8
+  const padY = PILL_HALF_H + half + 8
+
+  const separate = () => {
+    for (let i = 0; i < members.length; i++) {
+      for (let j = i + 1; j < members.length; j++) {
+        const dx = members[j].x - members[i].x
+        const dy = members[j].y - members[i].y
+        const d = Math.hypot(dx, dy) || 0.01
+        if (d >= minDist) continue
+        const push = (minDist - d) / 2
+        const ux = dx / d
+        const uy = dy / d
+        members[i].x -= ux * push
+        members[i].y -= uy * push
+        members[j].x += ux * push
+        members[j].y += uy * push
+      }
     }
-  })
+  }
+
+  const clearPills = () => {
+    for (const m of members) {
+      for (const a of anchors) {
+        const dx = m.x - a.x
+        const dy = m.y - a.y
+        if (Math.abs(dx) >= padX || Math.abs(dy) >= padY) continue
+        // shove out along whichever axis needs the smaller move
+        if (padX - Math.abs(dx) < padY - Math.abs(dy)) {
+          m.x = a.x + (dx >= 0 ? padX : -padX)
+        } else {
+          m.y = a.y + (dy >= 0 ? padY : -padY)
+        }
+      }
+    }
+  }
+
+  const clampToCanvas = () => {
+    for (const m of members) {
+      m.x = Math.min(Math.max(m.x, half + 2), VIEW_W - half - 2)
+      m.y = Math.min(Math.max(m.y, half + 2), VIEW_H - half - 2)
+    }
+  }
+
+  // Phase 1 — shape the clusters: a weak spring home keeps each member
+  // associated with its own team while collisions are worked out.
+  for (let pass = 0; pass < 200; pass++) {
+    for (const m of members) {
+      m.x += (m.seedX - m.x) * 0.08
+      m.y += (m.seedY - m.y) * 0.08
+    }
+    separate()
+    clearPills()
+    clampToCanvas()
+  }
+
+  // Phase 2 — settle: with the spring switched off, nothing pulls bubbles
+  // back into contact, so alternating the two constraints converges on a
+  // state that satisfies BOTH. Running them inside phase 1 could only ever
+  // satisfy whichever ran last.
+  for (let pass = 0; pass < 80; pass++) {
+    clearPills()
+    separate()
+    clampToCanvas()
+  }
+  clearPills()
+
+  return { anchors, members }
 }
 
 /**
- * Consecutive links around the ring — each team joined to its neighbour,
- * forming one continuous path through the population. Each segment is
- * trimmed back by the node radius at both ends so the dashes show in the gap
- * instead of disappearing underneath the circles.
+ * A blank placeholder for one team member. Deliberately generic — no photo,
+ * no initials, no text. Real headshots replace these later; until then it
+ * reads as "a person" without inventing an identity.
  */
-function ringEdges(points: Array<{ x: number; y: number }>) {
-  if (points.length < 2) return []
-  const gap = BUBBLE_R + 1.5
-  return points.flatMap((from, i) => {
-    const to = points[(i + 1) % points.length]
-    const dx = to.x - from.x
-    const dy = to.y - from.y
-    const len = Math.hypot(dx, dy) || 1
-    // Neighbours sitting close leave too little room between them once the
-    // line is trimmed to their edges — a two-dash stub reads as an artefact,
-    // so drop the connector entirely rather than draw a fragment.
-    if (len < gap * 2 + 8) return []
-    const ux = dx / len
-    const uy = dy / len
-    const x1 = from.x + ux * gap
-    const y1 = from.y + uy * gap
-    const x2 = to.x - ux * gap
-    const y2 = to.y - uy * gap
-    const bow = (i % 2 === 0 ? 1 : -1) * Math.min(len * 0.16, 10)
-    const mx = (x1 + x2) / 2 - uy * bow
-    const my = (y1 + y2) / 2 + ux * bow
-    return [
-      {
-        d: `M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`,
-        stroke: CONNECTOR_TOKENS[i % CONNECTOR_TOKENS.length],
-      },
-    ]
-  })
-}
-
-/**
- * The node's avatar placeholder. The reference puts a headshot here, but a
- * node is a TEAM of ten, not a person — so this is a deliberately plural
- * glyph (a small group, not one silhouette), which reads as "people" without
- * implying the node stands for an individual.
- */
-function TeamAvatar() {
+function MemberBubble({ x, y }: { x: number; y: number }) {
   return (
     <span
       aria-hidden="true"
-      className="flex h-24 w-24 items-center justify-center rounded-full border border-pa-grey-01 shadow-[0_2px_16px_rgba(2,77,120,0.10)] transition-transform duration-200 ease-out group-hover:scale-105 group-focus-visible:scale-105"
-      style={{ background: 'var(--color-pa-aqua-01)' }}
+      data-testid="member-bubble"
+      className="absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-pa-grey-02"
+      style={{
+        left: `${(x / VIEW_W) * 100}%`,
+        top: `${(y / VIEW_H) * 100}%`,
+        width: `${(MEMBER_SIZE / VIEW_W) * 100}%`,
+        aspectRatio: '1',
+        background: 'var(--color-pa-grey-01)',
+      }}
     >
-      <svg viewBox="0 0 48 48" className="h-11 w-11" fill="none" stroke="var(--color-pa-aqua-05)" strokeWidth="2.1">
-        {/* back pair, offset behind */}
-        <circle cx="14" cy="19" r="5" opacity="0.55" />
-        <path d="M5 34c0-4.4 4-7.5 9-7.5" strokeLinecap="round" opacity="0.55" />
-        <circle cx="34" cy="19" r="5" opacity="0.55" />
-        <path d="M43 34c0-4.4-4-7.5-9-7.5" strokeLinecap="round" opacity="0.55" />
-        {/* front figure */}
-        <circle cx="24" cy="18" r="7" />
-        <path d="M12 37c0-6 5.4-10 12-10s12 4 12 10" strokeLinecap="round" />
+      <svg viewBox="0 0 24 24" className="h-1/2 w-1/2" fill="none" stroke="var(--color-pa-grey-02)" strokeWidth="1.9">
+        <circle cx="12" cy="9" r="3.6" />
+        <path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6" strokeLinecap="round" />
       </svg>
     </span>
   )
 }
 
 /**
- * The node's caption pill, matching the reference's floating white labels.
+ * The team's name pill — the interactive affordance for the whole node.
  *
  * Deliberately NOT the shared StatusPill. The spec locks that component to
- * two semantic uses — target workflow state and risk status — where the fill
- * colour IS the meaning. This carries no state at all: it is a neutral label
- * chip, white on elevation with no semantic colour, so folding it into the
- * shared component would dilute what a coloured pill signifies everywhere
- * else. Kept local to this screen; promote it only if a second screen needs
- * the same thing.
+ * two semantic uses, workflow state and risk status, where the fill colour IS
+ * the meaning. This carries no state: it is a neutral label, white on
+ * elevation. Folding it in would dilute what a coloured pill signifies
+ * everywhere else. Contains the team name and nothing else.
  */
-function TeamLabel({ team, division, headcount }: { team: string; division: string; headcount: number }) {
+function TeamPill({
+  team,
+  teamKey,
+  x,
+  y,
+  onOpen,
+}: {
+  team: string
+  teamKey: string
+  x: number
+  y: number
+  onOpen: () => void
+}) {
   return (
-    <span className="flex items-baseline gap-1.5 whitespace-nowrap rounded-full border border-pa-grey-01 bg-pa-white px-3 py-1.5 shadow-[0_2px_10px_rgba(2,77,120,0.10)]">
-      <span className="font-pa-body text-xs font-semibold text-pa-grey-04">{team}</span>
-      <span className="font-pa-body text-[11px] text-pa-grey-03">{division}</span>
-      <span className="font-pa-mono text-[11px] font-bold text-pa-aqua-05">{headcount}</span>
-    </span>
+    <button
+      type="button"
+      data-testid="team-node"
+      data-team-key={teamKey}
+      onClick={onOpen}
+      style={{ left: `${(x / VIEW_W) * 100}%`, top: `${(y / VIEW_H) * 100}%` }}
+      className="absolute z-10 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border border-pa-grey-01 bg-pa-white px-6 py-3 font-pa-body text-base font-semibold text-pa-grey-04 shadow-[0_2px_12px_rgba(2,77,120,0.10)] transition-transform duration-200 ease-out hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-aqua-04 focus-visible:ring-offset-2"
+    >
+      {team}
+    </button>
   )
 }
 
@@ -185,62 +258,26 @@ function TeamBubbleNetwork({
   nodes: TeamNode[]
   onOpen: (key: string) => void
 }) {
-  const points = scatter(nodes.length)
-  // A visual cue that these are one population — not an assertion of any
-  // relationship the data actually holds.
-  const edges = ringEdges(points)
+  const { anchors, members } = useMemo(() => layoutNetwork(nodes), [nodes])
 
   return (
-    <div className="relative mx-auto mt-4 aspect-[16/9] w-full max-w-4xl">
-      <svg
-        viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
-        preserveAspectRatio="none"
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 h-full w-full"
-      >
-        {edges.map((edge, i) => (
-          <path
-            key={i}
-            d={edge.d}
-            fill="none"
-            stroke={edge.stroke}
-            strokeWidth="2"
-            strokeDasharray="5 7"
-            strokeLinecap="round"
-            opacity="0.9"
-            /* Keeps the dash weight identical regardless of how the box is
-               scaled by its container. */
-            vectorEffect="non-scaling-stroke"
-          />
-        ))}
-      </svg>
-
-      {nodes.map((node, i) => {
-        const p = points[i]
-        return (
-          <button
-            key={node.key}
-            type="button"
-            data-testid="team-bubble"
-            data-team-key={node.key}
-            onClick={() => onOpen(node.key)}
-            style={{
-              left: `${(p.x / VIEW_W) * 100}%`,
-              top: `${(p.y / VIEW_H) * 100}%`,
-              animation: 'pa-pop-in 360ms ease-out both',
-              animationDelay: `${Math.min(i * 60, 400)}ms`,
-            }}
-            /* Sized to the circle and centred on the point, so the connector
-               geometry lines up; the caption hangs below without shifting it. */
-            className="group absolute flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-aqua-04 focus-visible:ring-offset-2"
-          >
-            <TeamAvatar />
-            <span className="absolute left-1/2 top-full z-10 -translate-x-1/2 -translate-y-2">
-              <TeamLabel team={node.team} division={node.division} headcount={node.people.length} />
-            </span>
-          </button>
-        )
-      })}
+    <div
+      className="relative mx-auto w-full"
+      style={{ maxWidth: VIEW_W, aspectRatio: `${VIEW_W} / ${VIEW_H}` }}
+    >
+      {members.map((m) => (
+        <MemberBubble key={m.personId} x={m.x} y={m.y} />
+      ))}
+      {nodes.map((node, i) => (
+        <TeamPill
+          key={node.key}
+          team={node.team}
+          teamKey={node.key}
+          x={anchors[i].x}
+          y={anchors[i].y}
+          onOpen={() => onOpen(node.key)}
+        />
+      ))}
     </div>
   )
 }
