@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useSystem2Store } from '../../store/system2Store'
 import { aggregate } from '../engine/aggregation'
 import { computeRiskStatuses } from '../engine/riskStatus'
+import { computeGoals } from '../engine/goals'
 import { round1, statusBadgeClass, statusFill } from '../riskDisplay'
 import { ScreenHeading } from '../../components/searchlight/ScreenHeading'
 import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
@@ -18,9 +19,10 @@ import { useInitialLoad } from '../../components/searchlight/useInitialLoad'
  * chart (standard chart, not a custom viz); the table logic is unchanged.
  *
  * "Coverage" here follows the risk engine's own no-apportioning rule
- * (riskStatus.ts): a division's implicit goal is its own target, same as a
- * team's. So coverage = target / target = 100% for every division until
- * S2-M7 adds a lever that changes it.
+ * (riskStatus.ts): a division's goal is independently computed from its own
+ * prior-year revenue (goals.ts), never apportioned from the DES-wide goal.
+ * Coverage = allocated target / that own goal — no longer ~100% by
+ * construction now that goal is a real, independent figure.
  *
  * Acceptance signal: every division in the imported snapshot appears, no
  * omissions. Satisfied by iterating rollups.byDivision directly.
@@ -28,7 +30,8 @@ import { useInitialLoad } from '../../components/searchlight/useInitialLoad'
 export function DivisionComparison() {
   const records = useSystem2Store((state) => state.records)
   const rollups = useMemo(() => aggregate(records), [records])
-  const riskStatuses = useMemo(() => computeRiskStatuses(records, rollups), [records, rollups])
+  const goals = useMemo(() => computeGoals(rollups), [rollups])
+  const riskStatuses = useMemo(() => computeRiskStatuses(records, rollups, goals), [records, rollups, goals])
   const loading = useInitialLoad(records.length > 0)
 
   if (records.length === 0) {
@@ -50,8 +53,9 @@ export function DivisionComparison() {
 
   const divisionRows = [...rollups.byDivision.entries()].map(([division, rollup]) => {
     const risk = riskStatuses.byDivision.get(division)!
-    const coverage = rollup.target > 0 ? (rollup.target / rollup.target) * 100 : 0
-    return { division, rollup, risk, coverage }
+    const goal = goals.byDivision.get(division) ?? 0
+    const coverage = goal > 0 ? (rollup.target / goal) * 100 : 0
+    return { division, rollup, risk, coverage, goal }
   })
 
   const chartRows = divisionRows.map(({ division, risk }) => ({
@@ -67,8 +71,8 @@ export function DivisionComparison() {
       <SketchScatter className="pointer-events-none absolute right-0 top-8 -z-10 h-[360px] w-[560px] max-w-none opacity-[0.06]" />
 
       <ScreenHeading title="Division comparison">
-        Coverage, forecast, confidence and status side by side across DES&apos;s divisions. Coverage is
-        100% by construction until a goal is changed (S2-M7).
+        Coverage, forecast, confidence and status side by side across DES&apos;s divisions. Each
+        division&apos;s goal is its own prior year revenue + 10%, independent of the others.
       </ScreenHeading>
 
       {loading ? (
@@ -87,6 +91,7 @@ export function DivisionComparison() {
                   <th className="px-3 py-2">Division</th>
                   <th className="px-3 py-2 text-right">Headcount</th>
                   <th className="px-3 py-2 text-right">Target</th>
+                  <th className="px-3 py-2 text-right">Goal</th>
                   <th className="px-3 py-2 text-right">Coverage</th>
                   <th className="px-3 py-2 text-right">Forecast</th>
                   <th className="px-3 py-2">Confidence</th>
@@ -94,7 +99,7 @@ export function DivisionComparison() {
                 </tr>
               </thead>
               <tbody data-testid="s2-division-comparison-rows">
-                {divisionRows.map(({ division, rollup, risk, coverage }) => (
+                {divisionRows.map(({ division, rollup, risk, coverage, goal }) => (
                   <tr
                     key={division}
                     data-testid="s2-division-comparison-row"
@@ -104,6 +109,9 @@ export function DivisionComparison() {
                     <td className="px-3 py-2 font-medium text-pa-grey-04">{division}</td>
                     <td className="px-3 py-2 text-right font-pa-mono tabular-nums text-pa-grey-03">{rollup.headcount}</td>
                     <td className="px-3 py-2 text-right font-pa-mono tabular-nums text-pa-grey-04">£{round1(rollup.target)}k</td>
+                    <td data-testid="s2-division-comparison-goal" className="px-3 py-2 text-right font-pa-mono tabular-nums text-pa-grey-04">
+                      £{round1(goal)}k
+                    </td>
                     <td className="px-3 py-2 text-right font-pa-mono tabular-nums text-pa-grey-04">{round1(coverage)}%</td>
                     <td className="px-3 py-2 text-right font-pa-mono tabular-nums text-pa-grey-04">
                       {round1(risk.forecastRatio * 100)}%

@@ -13,6 +13,7 @@ import {
 } from '../src/system2/bridge/liveOrgState'
 import { aggregate } from '../src/system2/engine/aggregation'
 import { computeRiskStatuses } from '../src/system2/engine/riskStatus'
+import { computeGoals } from '../src/system2/engine/goals'
 import type { OrgRecord } from '../src/system2/data/types'
 
 function record(overrides: Partial<OrgRecord> & { id: string }): OrgRecord {
@@ -69,12 +70,13 @@ console.log('--- Part 2: bridge values match System 2\'s own engine on the same 
 {
   const snapshot = computeSystem2LiveSnapshot(records, '2026-01-01T00:00:00.000Z')
   const directAggregation = aggregate(records)
-  const directRiskStatuses = computeRiskStatuses(records, directAggregation)
+  const directGoals = computeGoals(directAggregation)
+  const directRiskStatuses = computeRiskStatuses(records, directAggregation, directGoals)
 
   check('hasData is true', snapshot.hasData, true)
 
   const org = getOrgLiveState(snapshot)
-  check('org goal matches aggregate()\'s own DES-wide target', org?.goal, directAggregation.desWide.target)
+  check("org goal matches computeGoals()'s own DES-wide figure (prior-year revenue x 1.1, not the target sum)", org?.goal, directGoals.desWide)
   check('org rollup matches aggregate() directly', org?.rollup, directAggregation.desWide)
   check('org risk matches computeRiskStatuses() directly', org?.risk, directRiskStatuses.desWide)
 

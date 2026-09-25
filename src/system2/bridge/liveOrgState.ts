@@ -1,6 +1,7 @@
 import type { Division } from '../../system1/data/types'
 import { aggregate, type AggregationResult, type Rollup } from '../engine/aggregation'
 import { computeRiskStatuses, type RiskAssessment, type RiskStatusResult } from '../engine/riskStatus'
+import { computeGoals, type GoalResult } from '../engine/goals'
 import type { OrgRecord } from '../data/types'
 
 /**
@@ -22,10 +23,12 @@ import type { OrgRecord } from '../data/types'
  * fresh each time (see useSystem2LiveState.ts), not from any caching here.
  */
 
-/** A team's or division's own rollup, risk assessment, and the records that produced them. Team/division status is never apportioned from the org goal — each compares against its own allocated target, per the locked rule (see riskStatus.ts) — so "portion of the org goal" is this group's own rollup.target. */
+/** A team's or division's own rollup, risk assessment, and the records that produced them. Team/division status is never apportioned from the org goal — each compares against its own goal (prior-year revenue x 1.1, from goals.ts), fixed to the real committed snapshot regardless of what a hypothetical what-if check does to the "after" numbers. */
 export interface GroupLiveState {
   rollup: Rollup
   risk: RiskAssessment
+  /** This group's own fixed goal (prior-year revenue x 1.1) — pass explicitly into a what-if re-run of assessRisk() rather than letting it default to the hypothetical "after" rollup's own target, which would let one person's override silently move the goal it's being checked against. */
+  goal: number
   /** This group's own records only, frozen. Exposed (not just the rollup/risk summary) because a what-if check needs to re-run assessRisk() against a hypothetically-modified rollup — concentration and max-feasible-capacity both depend on the individual records, not just their sums. */
   records: readonly Readonly<OrgRecord>[]
 }
@@ -43,6 +46,7 @@ export interface System2LiveSnapshot {
   org: OrgLiveState | null
   aggregation: AggregationResult | null
   riskStatuses: RiskStatusResult | null
+  goals: GoalResult | null
   records: readonly Readonly<OrgRecord>[]
 }
 
@@ -59,42 +63,46 @@ export function computeSystem2LiveSnapshot(records: OrgRecord[], importedAt: str
   const frozenRecords = freezeRecords(records)
 
   if (records.length === 0) {
-    return { hasData: false, importedAt, org: null, aggregation: null, riskStatuses: null, records: frozenRecords }
+    return { hasData: false, importedAt, org: null, aggregation: null, riskStatuses: null, goals: null, records: frozenRecords }
   }
 
   const aggregation = aggregate(records)
-  const riskStatuses = computeRiskStatuses(records, aggregation)
+  const goals = computeGoals(aggregation)
+  const riskStatuses = computeRiskStatuses(records, aggregation, goals)
 
   return {
     hasData: true,
     importedAt,
-    org: { goal: aggregation.desWide.target, rollup: aggregation.desWide, risk: riskStatuses.desWide },
+    org: { goal: goals.desWide, rollup: aggregation.desWide, risk: riskStatuses.desWide },
     aggregation,
     riskStatuses,
+    goals,
     records: frozenRecords,
   }
 }
 
-/** Org-wide goal, current allocated total (rollup.target), and current forecast/gap (derivable from rollup.expectedAchievement vs goal) — null when System 2 has no data yet. */
+/** Org-wide goal (prior-year revenue x 1.1), current allocated total (rollup.target), and current forecast/gap (derivable from rollup.expectedAchievement vs goal) — null when System 2 has no data yet. */
 export function getOrgLiveState(snapshot: System2LiveSnapshot): OrgLiveState | null {
   return snapshot.org
 }
 
-/** A given team's current total and status — null if the team doesn't exist in System 2's current data (including "no data at all yet"). */
+/** A given team's current total, goal, and status — null if the team doesn't exist in System 2's current data (including "no data at all yet"). */
 export function getTeamLiveState(snapshot: System2LiveSnapshot, division: Division, team: string): GroupLiveState | null {
-  if (!snapshot.hasData || !snapshot.aggregation || !snapshot.riskStatuses) return null
+  if (!snapshot.hasData || !snapshot.aggregation || !snapshot.riskStatuses || !snapshot.goals) return null
   const key = `${division}::${team}`
   const rollup = snapshot.aggregation.byTeam.get(key)
   const risk = snapshot.riskStatuses.byTeam.get(key)
-  if (!rollup || !risk) return null
-  return { rollup, risk, records: snapshot.records.filter((r) => r.division === division && r.team === team) }
+  const goal = snapshot.goals.byTeam.get(key)
+  if (!rollup || !risk || goal === undefined) return null
+  return { rollup, risk, goal, records: snapshot.records.filter((r) => r.division === division && r.team === team) }
 }
 
-/** The division a given team rolls into — its current total and status. Null under the same conditions as getTeamLiveState(). */
+/** The division a given team rolls into — its current total, goal, and status. Null under the same conditions as getTeamLiveState(). */
 export function getDivisionLiveState(snapshot: System2LiveSnapshot, division: Division): GroupLiveState | null {
-  if (!snapshot.hasData || !snapshot.aggregation || !snapshot.riskStatuses) return null
+  if (!snapshot.hasData || !snapshot.aggregation || !snapshot.riskStatuses || !snapshot.goals) return null
   const rollup = snapshot.aggregation.byDivision.get(division)
   const risk = snapshot.riskStatuses.byDivision.get(division)
-  if (!rollup || !risk) return null
-  return { rollup, risk, records: snapshot.records.filter((r) => r.division === division) }
+  const goal = snapshot.goals.byDivision.get(division)
+  if (!rollup || !risk || goal === undefined) return null
+  return { rollup, risk, goal, records: snapshot.records.filter((r) => r.division === division) }
 }

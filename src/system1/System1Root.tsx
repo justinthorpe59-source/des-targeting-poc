@@ -19,10 +19,7 @@ export function System1Root() {
       <aside className="w-48 shrink-0">
         <nav className="flex flex-col gap-1">
           <NavLink to="overview" className={navLinkClass}>
-            Overview
-          </NavLink>
-          <NavLink to="population" className={navLinkClass}>
-            Population
+            Overview &amp; Population
           </NavLink>
           <NavLink to="cohort" className={navLinkClass}>
             Cohort comparison

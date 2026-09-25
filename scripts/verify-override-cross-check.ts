@@ -12,6 +12,8 @@
 import { runOverrideCrossCheck } from '../src/system1/engine/overrideCrossCheck'
 import { computeSystem2LiveSnapshot } from '../src/system2/bridge/liveOrgState'
 import { mulberry32, randRange, seedFromId } from '../src/system2/engine/prng'
+import { aggregate } from '../src/system2/engine/aggregation'
+import { computeGoals } from '../src/system2/engine/goals'
 import type { OrgRecord } from '../src/system2/data/types'
 import type { Person } from '../src/system1/data/types'
 
@@ -85,9 +87,17 @@ console.log('=== Scenario A: passes all 3 checks ===')
 
   const testPerson = person({ id: testId, dayRate: 1000 }) // revenue = 187k, matches cohort exactly
   // Large-buffer team/org so this one person's addition can't tip ratio below 0.9 either way.
+  // teamHistoricalTrend 1.3 (not the default 1) is what makes this a genuine
+  // buffer under the goal model (goals.ts): goal is prior-year revenue x
+  // 1.1, which for this team's own current £4000k can be at most
+  // ~£4632k (worst case within GROWTH_RATE_RANGE) — trend 1 alone (EA=
+  // £4000k) would sit BELOW that, i.e. already failing before any change,
+  // same as goal used to trivially equal target (EA/target was always
+  // exactly 1.0, zero real headroom). Trend 1.3 (EA=£5200k) clears the
+  // worst-case goal with real margin, restoring an actually-generous buffer.
   const records: OrgRecord[] = [
-    orgRecord({ id: 'R1', division: 'Design', team: 'Studio North', target: 2000 }),
-    orgRecord({ id: 'R2', division: 'Design', team: 'Studio North', target: 2000 }),
+    orgRecord({ id: 'R1', division: 'Design', team: 'Studio North', target: 2000, teamHistoricalTrend: 1.3 }),
+    orgRecord({ id: 'R2', division: 'Design', team: 'Studio North', target: 2000, teamHistoricalTrend: 1.3 }),
   ]
   const snapshot = computeSystem2LiveSnapshot(records, '2026-01-01T00:00:00.000Z')
 
@@ -119,9 +129,10 @@ console.log('=== Scenario B: fails cohort-norm check specifically (team/org pass
 
   // dayRate 1100 (not 1000) -> current revenue = round(1100*0.85*220/1000) = 206k, already off the 187k cohort average.
   const testPerson = person({ id: testId, dayRate: 1100 })
+  // Same real (not illusory) buffer as Scenario A — see its comment.
   const records: OrgRecord[] = [
-    orgRecord({ id: 'R1', division: 'Design', team: 'Studio North', target: 2000 }),
-    orgRecord({ id: 'R2', division: 'Design', team: 'Studio North', target: 2000 }),
+    orgRecord({ id: 'R1', division: 'Design', team: 'Studio North', target: 2000, teamHistoricalTrend: 1.3 }),
+    orgRecord({ id: 'R2', division: 'Design', team: 'Studio North', target: 2000, teamHistoricalTrend: 1.3 }),
   ]
   const snapshot = computeSystem2LiveSnapshot(records, '2026-01-01T00:00:00.000Z')
 
@@ -152,21 +163,37 @@ console.log('=== Scenario C: fails team-coverage check specifically (cohort/org 
   check('sanity: PRNG draw for this id', { capacityUtilisation, teamHistoricalTrend }, { capacityUtilisation: 0.78, teamHistoricalTrend: 0.86 })
 
   const testPerson = person({ id: testId, dayRate: 1000 }) // revenue 187k, matches cohort exactly
-  // This person's own team is tiny (one other £50k record) — their hypothetical
-  // addition (target 196k, EA 196*0.78*0.86=131.53) drags team ratio to
-  // 131.53+50=181.53 / (50+196=246) = 0.738, and maxFeasible (52.5+177.06=229.56)
-  // < goal (246) -> Infeasible. Two other large, healthy records elsewhere keep
-  // the ORG total comfortably covered despite this one team's shortfall — and,
-  // deliberately, keep org headcount at 3 both before and after this person's
-  // hypothetical addition (2 -> 3 would flip isConcentrationRisk's own headcount
-  // gate on partway through, an artifact of the test fixture, not something a
-  // real override should trip by itself).
+  // Under the goal model (goals.ts, prior-year revenue x 1.1), a tiny
+  // pre-existing team can no longer be driven to fail by one large
+  // hypothetical addition — its goal is tiny too (jittered off its own
+  // small current revenue), so any real contribution clears it easily. The
+  // genuine way to make a team fail now is a team that's ALREADY
+  // underperforming relative to its own revenue base: R_TEAM's target
+  // (£2000k) sets a goal of ~£2292k (independently verified below), but its
+  // capacity/trend (0.5/0.5) caps its own expected achievement at £500k —
+  // failing long before this person's addition, and the hypothetical
+  // person (EA 196*0.78*0.86=131.5) can't meaningfully move that. Two
+  // other large, healthy teams elsewhere (£50k -> £50000k target,
+  // trend 1.1, so their OWN maxFeasible clears their OWN goal too) keep
+  // the ORG total comfortably covered — verified via scripts/_probe-fixtures
+  // during development (teamRatio 0.218 vs orgRatio 1.003, org maxFeasible
+  // 116550 vs org goal ~110170, both stable, not boundary-close).
   const records: OrgRecord[] = [
-    orgRecord({ id: 'R_TEAM', division: 'Design', team: 'Studio North', target: 50 }),
-    orgRecord({ id: 'R_OTHER1', division: 'Engineering', team: 'Platform', target: 2000 }),
-    orgRecord({ id: 'R_OTHER2', division: 'Science', team: 'Research', target: 2000 }),
+    orgRecord({ id: 'R_TEAM', division: 'Design', team: 'Studio North', target: 2000, capacityUtilisation: 0.5, teamHistoricalTrend: 0.5 }),
+    orgRecord({ id: 'R_OTHER1', division: 'Engineering', team: 'Platform', target: 50000, teamHistoricalTrend: 1.1 }),
+    orgRecord({ id: 'R_OTHER2', division: 'Science', team: 'Research', target: 50000, teamHistoricalTrend: 1.1 }),
   ]
   const snapshot = computeSystem2LiveSnapshot(records, '2026-01-01T00:00:00.000Z')
+  {
+    // Hand-verify the team/org goals this scenario depends on, the same
+    // rigour verify-risk-status.ts applies elsewhere — derived from the
+    // real primitive (computeGoals), not a guessed magic number.
+    const directAggregation = aggregate(records)
+    const directGoals = computeGoals(directAggregation)
+    const teamGoal = directGoals.byTeam.get('Design::Studio North')!
+    check('sanity: R_TEAM-only team goal is ~2292k (prior-year revenue x 1.1 off its own £2000k target)', Math.round(teamGoal), 2292)
+    check('sanity: R_TEAM-only team EA (500) is already below that goal, before any hypothetical addition', 500 < teamGoal, true)
+  }
 
   const result = runOverrideCrossCheck({
     person: testPerson,
@@ -177,7 +204,7 @@ console.log('=== Scenario C: fails team-coverage check specifically (cohort/org 
   })
 
   check('team check fails', result.team?.status, 'fail')
-  check('team after total', result.team?.afterTotal, 50 + 196)
+  check('team after total', result.team?.afterTotal, 2000 + 196)
   check('team after status is non-compliant', result.team?.afterStatus === 'Off track' || result.team?.afterStatus === 'Infeasible', true)
   check('cohort check passes', result.cohort?.status, 'pass')
   check('org check passes (other team covers it)', result.org?.status, 'pass')
@@ -195,9 +222,10 @@ console.log('=== Scenario D: drastic percentage change routes to sign-off even w
   check('sanity: PRNG draw for this id', { capacityUtilisation, teamHistoricalTrend }, { capacityUtilisation: 0.94, teamHistoricalTrend: 0.89 })
 
   const testPerson = person({ id: testId, dayRate: 1000 }) // revenue 187k, matches cohort exactly
+  // Same real buffer as Scenario A — see its comment.
   const records: OrgRecord[] = [
-    orgRecord({ id: 'R1', division: 'Design', team: 'Studio North', target: 2000 }),
-    orgRecord({ id: 'R2', division: 'Design', team: 'Studio North', target: 2000 }),
+    orgRecord({ id: 'R1', division: 'Design', team: 'Studio North', target: 2000, teamHistoricalTrend: 1.3 }),
+    orgRecord({ id: 'R2', division: 'Design', team: 'Studio North', target: 2000, teamHistoricalTrend: 1.3 }),
   ]
   const snapshot = computeSystem2LiveSnapshot(records, '2026-01-01T00:00:00.000Z')
 
