@@ -145,10 +145,10 @@ export function RiskExceptionsSection() {
                     </td>
                     <td className="px-3 py-2 text-right">
                       <Link
-                        to={level === 'division' ? '/system2/division-comparison' : '/system2/team-drilldown'}
+                        to="/system2/division-comparison"
                         className="text-xs font-medium text-pa-aqua-05 hover:text-pa-aqua-04"
                       >
-                        {level === 'division' ? 'Division comparison →' : 'Team drill-down →'}
+                        {level === 'division' ? 'Division comparison →' : 'Find in divisions →'}
                       </Link>
                     </td>
                   </tr>
