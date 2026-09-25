@@ -12,12 +12,11 @@ function deltaLabel(value: number, baseline: number): string {
 }
 
 /**
- * Shared cohort-comparison content (M6 logic) — person vs team average vs
- * division average, plus a plain-language delta sentence. Extracted in the
- * Searchlight design pass so it can render both as the scroll-down section on
- * Individual Detail (the merged page the product owner asked for) and on the
- * standalone Cohort comparison screen, with no duplicated calculation.
- * Averaging lives in cohortAverages.ts.
+ * Cohort-comparison content (M6 logic) — person vs team average vs division
+ * average, plus a plain-language delta sentence. Renders as the panel on
+ * Individual Detail, which since the 5-screen consolidation is its only
+ * home — the standalone Cohort comparison screen it used to also serve has
+ * been deleted. Averaging lives in cohortAverages.ts.
  */
 export function CohortComparisonPanel({ person }: { person: Person }) {
   const averages = computeRevenueCohortAverages(person, SEED_PEOPLE)
