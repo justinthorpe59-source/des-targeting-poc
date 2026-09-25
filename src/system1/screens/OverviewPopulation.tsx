@@ -332,12 +332,10 @@ function TeamBubbleNetwork({
   const { anchors, members, edges } = useMemo(() => layoutNetwork(nodes), [nodes])
 
   return (
-    /* Full-bleed: the app shell constrains <main> to max-w-6xl, which left
-       the network floating in the middle of a much wider screen. This breaks
-       out of that container so the population actually uses the viewport,
-       capped so it does not become absurdly tall on a very wide monitor. */
+    /* The shell is full-bleed, so this just fills it — capped so the canvas
+       does not become absurdly tall on a very wide monitor. */
     <div
-      className="relative left-1/2 w-screen max-w-[1600px] -translate-x-1/2 px-6"
+      className="relative mx-auto w-full max-w-[1600px]"
       style={{ aspectRatio: `${VIEW_W} / ${VIEW_H}` }}
     >
       <svg
