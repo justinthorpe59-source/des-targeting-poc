@@ -38,12 +38,6 @@ const RISK_TONE: Record<RiskStatus, PillTone> = {
   Infeasible: { fill: 'var(--color-pa-risk-infeasible)', text: 'var(--color-pa-white)' },
 }
 
-/** Proportional fill colour for the gap/forecast hero visualisations, which
- *  carry risk status as their fill rather than as a separate label. */
-export function riskFill(status: RiskStatus): string {
-  return RISK_TONE[status].fill
-}
-
 export function StatusPill({
   state,
   risk,
