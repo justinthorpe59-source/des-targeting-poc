@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { SEED_PEOPLE } from '../data/people'
 import { useSystem1Store } from '../../store/system1Store'
 import { detectExceptions, type ExceptionType } from '../engine/exceptions'
+import { SignOffSection } from '../components/SignOffSection'
 
 const TYPE_LABELS: Record<ExceptionType, string> = {
   'missing-data': 'Missing data',
@@ -18,6 +19,14 @@ const TYPE_BADGE_CLASS: Record<ExceptionType, string> = {
 
 const FILTER_OPTIONS: Array<ExceptionType | 'All'> = ['All', 'missing-data', 'extreme-value', 'large-adjustment']
 
+// M9: exceptions queue. Since the 5-screen consolidation this screen is the
+// single reviewer inbox for System 1: threshold exceptions (below) plus the
+// Pending sign-off queue (SignOffSection), which used to be its own screen.
+// They are separate lists on purpose — an exception is a live threshold
+// violation recomputed every render, a sign-off is a frozen decision waiting
+// on a person.
+//
+// Original M9 note:
 // M9: exceptions queue. detectExceptions() is the same shared function used
 // for Overview's count (M3) and large-adjustment (M8) — this screen adds no
 // new detection logic, just a list. Flags are recomputed live from the
@@ -48,7 +57,8 @@ export function ExceptionsQueue() {
         <h1 className="text-lg font-semibold">Exceptions queue</h1>
         <p className="mt-1 max-w-md text-sm text-slate-600">
           Records that violate a locked threshold — missing data, an extreme value, or a large manual
-          adjustment. Flagged for review only; nothing here is ever blocked.
+          adjustment — plus changes waiting on a leadership sign-off. Flagged for review only; nothing here is
+          ever blocked.
         </p>
       </div>
 
@@ -147,6 +157,10 @@ export function ExceptionsQueue() {
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="border-t border-slate-200 pt-6">
+        <SignOffSection />
       </div>
     </section>
   )

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { SEED_PEOPLE } from '../data/people'
 import { DIVISIONS, TEAMS_BY_DIVISION, type Person } from '../data/types'
 import { useSystem1Store, type SignOffContext, type TargetRecord } from '../../store/system1Store'
-import { CheckStatusRow } from '../components/CheckStatusRow'
+import { CheckStatusRow } from './CheckStatusRow'
 
 const ALL = 'All teams' as const
 
@@ -18,19 +18,22 @@ interface PendingRow {
 }
 
 /**
- * Batch 3d: the sign-off approval screen for changes 3b/3c routed to
- * 'Pending Sign-off'. Per locked-spec.md, this sits alongside the
- * Exceptions Queue's known access-control gap — the team selector below
- * scopes what's shown, exactly like the rest of this POC's "no real auth"
- * approach (Employee View's person picker, Manager Override's person
- * picker), not an enforced permission boundary.
+ * Batch 3d's sign-off approval queue. Since the 5-screen consolidation this
+ * is a section of the Exceptions Queue rather than a screen of its own: both
+ * are reviewer inboxes over the same population, and only this one can hold
+ * mass-adjustment BATCH entries, which have no single person and so could
+ * not live on a per-person screen.
+ *
+ * The team selector scopes what's shown, exactly like the rest of this POC's
+ * "no real auth" approach (Manager Override's person picker) — not an
+ * enforced permission boundary.
  *
  * Every check breakdown here is SignOffContext — the frozen cross-check
  * result 3b/3c already computed and Manager Override/Mass Adjustment
  * already stored on the record — rendered with the same CheckStatusRow
  * both of those screens' panels use. Nothing here recomputes a check.
  */
-export function SignOffQueue() {
+export function SignOffSection() {
   const targets = useSystem1Store((state) => state.targets)
   const auditLog = useSystem1Store((state) => state.auditLog)
   const approveSignOff = useSystem1Store((state) => state.approveSignOff)
@@ -75,9 +78,9 @@ export function SignOffQueue() {
   }, [scoped])
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-4">
       <div>
-        <h1 className="text-lg font-semibold">Sign-off queue</h1>
+        <h2 className="text-sm font-semibold text-slate-700">Pending sign-off</h2>
         <p className="mt-1 max-w-md text-sm text-slate-600">
           Changes the real-time cross-check flagged — a failed check, or a drastic percentage change — wait here
           for a team's leadership group to approve or reject.
