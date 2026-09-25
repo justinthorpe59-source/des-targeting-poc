@@ -56,8 +56,8 @@ function initials(name: string): string {
  * at render time so it scales with its container while the layout maths stays
  * in one readable unit.
  */
-const VIEW_W = 1152
-const VIEW_H = 1040
+const VIEW_W = 1600
+const VIEW_H = 820
 
 const MEMBER_SIZE = 60
 const MEMBER_GAP = 9
@@ -77,19 +77,24 @@ interface Placed {
 }
 
 /**
- * Anchor points for each team's name pill — golden-angle placement in an
- * ellipse, so teams sit irregularly rather than on a grid, and always in the
- * same place for a given set (a pure function of index and count).
+ * Anchor points for each team's name pill — evenly spaced around a wide
+ * ellipse, with an alternating radius so the result reads organic rather
+ * than as a regular polygon.
+ *
+ * Golden-angle placement was tried first: it distributes well at high counts
+ * but at six it bunched three teams into one corner and left the opposite
+ * side empty. Even angular spacing is what actually uses the full width.
+ * Still a pure function of index and count, so the layout never shifts
+ * between runs.
  */
 function pillAnchors(count: number) {
   const cx = VIEW_W / 2
   const cy = VIEW_H / 2
   if (count === 1) return [{ x: cx, y: cy }]
   return Array.from({ length: count }, (_, i) => {
-    const t = (i + 0.5) / count
-    const f = 0.42 + 0.58 * Math.sqrt(t)
-    const a = i * GOLDEN
-    return { x: cx + Math.cos(a) * 412 * f, y: cy + Math.sin(a) * 360 * f }
+    const a = (i / count) * Math.PI * 2 - Math.PI / 2
+    const wobble = i % 2 === 0 ? 1 : 0.76
+    return { x: cx + Math.cos(a) * 612 * wobble, y: cy + Math.sin(a) * 248 * wobble }
   })
 }
 
@@ -205,17 +210,29 @@ function layoutNetwork(nodes: TeamNode[]) {
     const to = members.filter((m) => m.teamKey === nodes[t + 1].key)
     if (from.length === 0 || to.length === 0) continue
 
+    // Pick the SHORTEST pair that is still long enough to draw as a visible
+    // dash run, falling back to the longest pair if every option is too
+    // short. Taking the plain minimum skipped the link entirely whenever two
+    // teams sat close, which silently broke the chain between them.
+    const minDrawable = (half + 5) * 2 + 40
     let best: [Placed, Placed] | null = null
     let bestD = Infinity
+    let longest: [Placed, Placed] | null = null
+    let longestD = -1
     for (const a of from) {
       for (const b of to) {
         const d = Math.hypot(a.x - b.x, a.y - b.y)
-        if (d < bestD) {
+        if (d > longestD) {
+          longestD = d
+          longest = [a, b]
+        }
+        if (d >= minDrawable && d < bestD) {
           bestD = d
           best = [a, b]
         }
       }
     }
+    best = best ?? longest
     if (!best) continue
 
     const [a, b] = best
@@ -230,7 +247,6 @@ function layoutNetwork(nodes: TeamNode[]) {
     const y1 = a.y + uy * gap
     const x2 = b.x - ux * gap
     const y2 = b.y - uy * gap
-    if (len < gap * 2 + 20) continue
     const bow = (t % 2 === 0 ? 1 : -1) * Math.min(len * 0.2, 70)
     const mx = (x1 + x2) / 2 - uy * bow
     const my = (y1 + y2) / 2 + ux * bow
@@ -316,9 +332,13 @@ function TeamBubbleNetwork({
   const { anchors, members, edges } = useMemo(() => layoutNetwork(nodes), [nodes])
 
   return (
+    /* Full-bleed: the app shell constrains <main> to max-w-6xl, which left
+       the network floating in the middle of a much wider screen. This breaks
+       out of that container so the population actually uses the viewport,
+       capped so it does not become absurdly tall on a very wide monitor. */
     <div
-      className="relative mx-auto w-full"
-      style={{ maxWidth: VIEW_W, aspectRatio: `${VIEW_W} / ${VIEW_H}` }}
+      className="relative left-1/2 w-screen max-w-[1600px] -translate-x-1/2 px-6"
+      style={{ aspectRatio: `${VIEW_W} / ${VIEW_H}` }}
     >
       <svg
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
