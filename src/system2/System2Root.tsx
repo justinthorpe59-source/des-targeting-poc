@@ -37,9 +37,6 @@ export function System2Root() {
           <NavLink to="scenario-library" className={navLinkClass}>
             Scenario library
           </NavLink>
-          <NavLink to="exceptions" className={navLinkClass}>
-            Exceptions / risk flags
-          </NavLink>
         </nav>
       </aside>
       <div className="flex-1">
