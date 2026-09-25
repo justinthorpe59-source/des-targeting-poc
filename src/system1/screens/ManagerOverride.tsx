@@ -492,7 +492,10 @@ export function ManagerOverride() {
 
           {crossCheck && <CrossCheckPanel result={crossCheck} />}
 
-          <div className="rounded-lg border border-slate-200 bg-white p-4">
+          {/* id="notes" is the anchor the roster card's "Notes" button targets,
+              so that button lands on the manager-notes field rather than the
+              top of the override screen. */}
+          <div id="notes" className="scroll-mt-6 rounded-lg border border-slate-200 bg-white p-4">
             <h2 className="text-sm font-semibold text-slate-700">Personal context</h2>
             <p className="mt-1 text-xs text-slate-500">
               Strengths, interests, goals. Informs the explanation and override reasoning — never the formula
