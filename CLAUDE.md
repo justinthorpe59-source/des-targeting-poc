@@ -10,7 +10,7 @@ PA (global consultancy) POC — two-system concept:
 - **System 2: Organisational Operating** (separate, later)
 
 Scope: Design, Engineering & Science (DES) division — Boston, Ireland, London, GITC.
-Population: ~50 synthetic people.
+Population: 60 synthetic people.
 
 ---
 
@@ -53,7 +53,7 @@ Only **Approved** records are included in the snapshot export to System 2.
 
 These are fixed numbers, not examples — build to them exactly so both systems produce consistent, explainable results.
 
-- **Population:** 50 synthetic records, seeded/reproducible (re-running the generator must produce identical output)
+- **Population:** 60 synthetic records, seeded/reproducible (re-running the generator must produce identical output). `POPULATION_SIZE = 60` in `generatePeople.ts` is the source of truth; the committed `people.seed.json` is its output. This read 50 until 25 Sept 2026 — a stale figure left behind by the dataset rework, corrected to match the code rather than regenerating the data, since every verified figure in both systems derives from the 60-record set.
 - **Divisions & baseline (£k):** Design 92, Engineering 100, Science 96
 - **Teams:** 2 per division (e.g. Studio North/South, Platform/Delivery, Research/Applied)
 - **Locations:** Boston, Ireland, London, GITC
@@ -66,7 +66,7 @@ These are fixed numbers, not examples — build to them exactly so both systems 
 
 ## Screens (5 — consolidated 25 Sept 2026, supersedes the original 11) — free navigation, shared state underneath
 
-**This consolidation exists only as a decision right now — the 11 original screen files are all still present in the codebase (`src/system1/screens/`) and have not been merged.** The architectural merge described below is the first job before any visual rebuild work starts. See "Consolidation plan" further down for the concrete file-level work.
+**Built and merged 25 Sept 2026 (PRs #30–#37).** `src/system1/screens/` now holds exactly these 5 files. See "Consolidation plan" further down for what moved where, and for the two pieces of screen 1 below that are described here but deliberately not built yet — the bubble-per-team landing state and the team-level card roster, which belong to the visual rebuild.
 
 All screens read/write the same single data store. An override on Individual Detail must be reflected immediately in Overview totals, the Population list, and the Exceptions queue — these are not disconnected mockups.
 
@@ -86,14 +86,14 @@ Approve action (Proposed → Approved) is folded into Individual Detail (single 
 
 ## Milestone / PR plan
 
-**Note (25 Sept 2026): this list is a historical record of the original 11-screen build — every milestone below is done and merged (see git log). It's now stale against the consolidated 5-screen structure above. Don't use it to plan new work; see "Consolidation plan" further down for what actually needs doing next.**
+**Note (25 Sept 2026): this list is a historical record of the original 11-screen build — every milestone below is done and merged (see git log). It's now stale against the consolidated 5-screen structure above. Don't use it to plan new work. The consolidation that followed it is also done (see "Consolidation plan"); the live phase is now the visual rebuild against `searchlight-visual-spec.md`.**
 
 Each milestone = its own branch + its own PR, reviewed before merging to main.
 
 Each entry below includes its **acceptance signal** — the concrete way to know it's actually done, not just built.
 
 - **M0** — Project setup, shared state, navigation shell, tooling (see below). *Done when:* navigating between two placeholder screens updates a shared value in real time, localStorage persistence + a "Reset to seed data" action both work, playwright-mcp is registered and can inspect the running app, graphify is installed and can answer a query about the codebase, and the personal `frontend-components` skill (set up once, outside this repo) is confirmed active in this project.
-- **M1** — Data model + synthetic dataset (50 people, seeded/reproducible). *Done when:* regenerating the dataset twice produces byte-identical output.
+- **M1** — Data model + synthetic dataset (60 people, seeded/reproducible). *Done when:* regenerating the dataset twice produces byte-identical output.
 - **M2** — Baseline targeting engine. *Done when:* recalculating the same record twice gives the same modelled target and range.
 - **M3** — Overview/home. *Done when:* every number shown matches an independent sum/count over the actual record set, and updates live if the data changes.
 - **M4** — Population view. *Done when:* every combination of division/team/location filter returns exactly the matching records, no more, no fewer.
@@ -168,7 +168,7 @@ System 2 is the tool that tells leadership whether the organisation is actually 
 
 ## Screens (3 — consolidated 25 Sept 2026, supersedes the original 6) — free navigation, shared state within System 2
 
-**As with System 1, this consolidation is a decision only — the 6 original screen files are all still present (`src/system2/screens/`). See "Consolidation plan" below for the file-level merge work, which comes before any visual rebuild.**
+**Built and merged 25 Sept 2026 (PRs #30–#37).** `src/system2/screens/` now holds exactly these 3 files. See "Consolidation plan" below for what moved where.
 
 1. **Executive summary** (absorbs old #6 Exceptions/risk flags as a drill-in) — goal, coverage, forecast, gap, confidence, plus a Top Risks list below the fold using the same accordion/list component as System 1's Exceptions Queue (replaces a standalone Exceptions/Risk Flags screen).
 2. **Division comparison** (absorbs old #3 Team drill-down as an expand-in-place interaction) — coverage/forecast/confidence/status side by side across divisions; clicking a division expands it in place into a nested row of team cards at the same level of detail (replaces a standalone Team drill-down screen).
@@ -176,7 +176,7 @@ System 2 is the tool that tells leadership whether the organisation is actually 
 
 ## Milestone / PR plan
 
-**Note (25 Sept 2026): this list is a historical record of the original 6-screen build — every milestone below is done and merged (see git log; S2-M10 demo polish is complete). It's now stale against the consolidated 3-screen structure above. Don't use it to plan new work; see "Consolidation plan" further down.**
+**Note (25 Sept 2026): this list is a historical record of the original 6-screen build — every milestone below is done and merged (see git log; S2-M10 demo polish is complete). It's now stale against the consolidated 3-screen structure above. Don't use it to plan new work. The consolidation that followed it is also done (see "Consolidation plan"); the live phase is now the visual rebuild against `searchlight-visual-spec.md`.**
 
 Graphify and playwright-mcp are already set up from System 1 — no need to redo M0-level tooling.
 
@@ -196,29 +196,31 @@ Each entry below includes its **acceptance signal**.
 
 ---
 
-## Consolidation plan — do this first, before any visual rebuild work
+## Consolidation plan — DONE (merged 25 Sept 2026, PRs #30–#37)
 
-This is the current top-priority work. It is a pure architectural/routing merge — no visual restyling as part of this pass, that comes after (see "Design direction" and `searchlight-visual-spec.md` below). Branch per merge, PR reviewed before merging, same discipline as the milestone plans above.
+**Status: complete.** The 11 System 1 screens are now 5 and the 6 System 2 screens are now 3, on `main`. Kept here as the record of what moved where, so nobody re-litigates a merge or goes looking for a deleted screen. The next phase is the visual rebuild — see `searchlight-visual-spec.md` and Design direction below.
 
-**System 1 — file-level merges needed** (current files live in `src/system1/screens/`):
-- Merge `Overview.tsx` + `Population.tsx` into one `OverviewPopulation.tsx` (or equivalent) with the bubble-network landing state and team-level drill-in list state described above as two states of one screen, not two routes.
-- Merge `CohortComparison.tsx` into `IndividualDetail.tsx` as a tab/panel; delete the standalone screen and its route once merged.
-- Merge `WhatIfSandbox.tsx`'s recalculation logic into `ManagerOverride.tsx`'s live preview; delete the standalone screen and its route once the preview covers the same ground.
-- Delete `EmployeeView.tsx` and its route (cut from POC — see Screens section above for why).
-- Delete `SnapshotExport.tsx` as a standalone screen/route; fold its function (last-synced status + manual re-export) into `OverviewPopulation.tsx`.
-- Audit/change log: confirm there's no standalone screen already built under a different filename; if there is, delete it — per-person history stays on Individual Detail only.
-- `SignOffQueue.tsx` — clarify whether this is the Exceptions Queue under a different name, or a separate sign-off-gate screen that should fold into Manager Override's accordion cross-check instead. Check before deleting anything.
+**System 1 — what happened:**
+- `Overview.tsx` + `Population.tsx` → `OverviewPopulation.tsx`, one route `/system1/overview`.
+- `SnapshotExport.tsx` → folded into `OverviewPopulation.tsx` as a System 2 sync strip (last-synced status + manual re-export). Its record-by-record preview table was dropped; `buildSnapshot()` is untouched.
+- `CohortComparison.tsx` → deleted outright. The Searchlight pass had already extracted the shared `CohortComparisonPanel` and embedded it on Individual Detail, so the standalone screen was pure duplication.
+- `WhatIfSandbox.tsx` → `FactorSandbox` inside `ManagerOverride.tsx`. The override form already previewed the *final* value live; what moved is recalculation of the *modelled* target from the factors. Added "Use as direct value", so exploring a change and committing it with a reason is one flow.
+- `EmployeeView.tsx` → deleted (cut from POC).
+- **Audit/change log — checked, none existed.** `auditLog` is store state only, rendered inline on Individual Detail. There was no standalone screen under any filename. Nothing was deleted.
+- **`SignOffQueue.tsx` — checked, it was NOT the Exceptions Queue renamed.** Exceptions Queue is a read-only list of live threshold violations recomputed every render; Sign-off Queue was an approval inbox over `Pending Sign-off` records with approve/reject, required notes, and batch entries grouped by `batchId`, calling four store actions nothing else uses. It moved to `components/SignOffSection.tsx` and is hosted by **Exceptions Queue, not Manager Override** — both are reviewer inboxes over the same population, and only the queue can hold mass-adjustment *batch* entries, which have no single person and would have become unreachable on a per-person screen. All 7 inbound `/system1/signoff` links repointed.
 
-**System 2 — file-level merges needed** (current files live in `src/system2/screens/`):
-- Merge whichever file is Exceptions/Risk Flags into `ExecutiveSummary.tsx` as a Top Risks drill-in section; delete the standalone screen and route.
-- Merge `TeamDrillDown.tsx`'s logic into `DivisionComparison.tsx` as an expand-in-place interaction; delete the standalone screen and route.
-- Merge `ScenarioLibrary.tsx` into `ScenarioWorkspace.tsx` as a saved-scenarios panel; delete the standalone screen and route.
+**System 2 — what happened:**
+- `RiskExceptions.tsx` → `components/RiskExceptionsSection.tsx`, the Top Risks section at the foot of `ExecutiveSummary.tsx`.
+- `TeamDrillDown.tsx` → expand-in-place inside `DivisionComparison.tsx`. Teams keep their **DES-wide** rank by absolute gap, computed before nesting, so the S2-M6 ranking signal still holds.
+- `ScenarioLibrary.tsx` → `components/SavedScenariosPanel.tsx` inside `ScenarioWorkspace.tsx`, replacing its simpler saved list.
 
-**For every merge above:** update the app shell's navigation/routing to drop the deleted routes, check nothing else in the codebase links to a route being removed (grep or graphify query first), and re-run the existing acceptance signals for the screens being merged into — a merge must not silently break behaviour that was already verified and working.
+**Verified at merge** (playwright, against the running app, each merge re-running the acceptance signals of the screens it merged into): M3, M4, M5, M6, M7, M8, M9, M13, S2-M4, S2-M5, S2-M6, S2-M7, S2-M8, plus all 11 node verify scripts and a full two-journey run-through with zero console errors. Every `data-testid` from the deleted screens was preserved, so those signals remain runnable.
 
-**Acceptance signal for the consolidation phase as a whole:** the app has exactly 5 System 1 routes and 3 System 2 routes, every deleted screen's functionality is demonstrably still reachable from its new home, and a full run-through of both core journeys (per the existing M14/S2-M10 acceptance criteria) still passes with no functional regressions.
+**Deliberately deferred to the visual phase** (both need `searchlight-visual-spec.md`, which the architectural pass did not open):
+- Overview & Population's landing state is still M4's per-person bubble clusters. The spec's one-uniform-bubble-per-team landing + team-level card roster with checkbox multi-select is **not built yet** — it is the largest genuinely new piece of the visual rebuild.
+- Exceptions Queue and Manager Override still render as tables/panels, not the shared accordion component.
 
-Only once this is done and confirmed working does the visual rebuild phase start — see `searchlight-visual-spec.md` in the repo root for the full screen-by-screen visual spec, and the Design direction section immediately below for the shared system it's built from.
+**Known defect, pre-existing, not caused by the consolidation:** Mass Adjustment fails its own M10 signal — the per-person preview shows *combined revenue* (`combinedRevenueFor`) while applying writes an override on the *modelled target*. Two different quantities; all rows mismatch. Verified byte-identical on pre-consolidation `main`. Being fixed separately.
 
 ## Design direction — Searchlight
 
