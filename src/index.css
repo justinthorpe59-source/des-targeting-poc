@@ -48,6 +48,41 @@
   --color-pa-rose-02: #ffbecf;
   --color-pa-rose-01: #f3d3dc;
 
+  /*
+   * Semantic role tokens (visual rebuild, 25 Sept 2026). These map the
+   * palette above onto the roles searchlight-visual-spec.md names, so a
+   * screen references a role and never a raw colour. Values are the mapping
+   * already shipped across Overview/Population/Exceptions — centralised
+   * here rather than duplicated inline in each screen.
+   *
+   * Workflow states: the spec allocates four, but the model has five —
+   * 'Pending Sign-off' sits between Adjusted and Proposed and is written by
+   * the sign-off gate. It keeps Apricot, reading as "needs attention"
+   * against the neutral -> aqua -> lime progression.
+   */
+  --color-pa-state-modelled: #a2b3c9;
+  --color-pa-state-adjusted: #4ab9d3;
+  --color-pa-state-pending-signoff: #ffc000;
+  --color-pa-state-proposed: #0580a7;
+  --color-pa-state-approved: #6cbd3a;
+
+  /*
+   * Risk statuses: green -> amber -> red per the spec. 'On track' moves from
+   * Aqua to Lime here — the spec calls for a green/amber/red family, and
+   * Aqua reads as a brand colour rather than a health signal.
+   */
+  --color-pa-risk-on-track: #2c8027;
+  --color-pa-risk-at-risk: #ffc000;
+  --color-pa-risk-off-track: #ee2f66;
+  --color-pa-risk-infeasible: #f62b44;
+
+  /*
+   * Radius hierarchy: outer card is exactly 2x the inner chip/button, the
+   * system rule from the spec's card/chip hierarchy note.
+   */
+  --radius-pa-chip: 0.5rem;
+  --radius-pa-card: 1rem;
+
   --font-pa-body: 'Manrope', ui-sans-serif, system-ui, sans-serif;
   --font-pa-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
   --font-pa-mono: 'Space Mono', ui-monospace, 'SFMono-Regular', monospace;
