@@ -11,7 +11,7 @@ import type { Snapshot } from '../system1/engine/buildSnapshot'
  * anyone could accidentally break by wiring a convenient shared selector.
  *
  * Only written by an explicit Export click (src/system1/screens/
- * SnapshotExport.tsx) — never auto-synced from system1Store's live state.
+ * OverviewPopulation.tsx's System 2 sync strip) — never auto-synced from system1Store's live state.
  */
 interface SnapshotState {
   lastSnapshot: Snapshot | null

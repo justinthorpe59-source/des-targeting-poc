@@ -42,9 +42,6 @@ export function System1Root() {
           <NavLink to="employee" className={navLinkClass}>
             Employee view
           </NavLink>
-          <NavLink to="snapshot-export" className={navLinkClass}>
-            Snapshot export
-          </NavLink>
         </nav>
       </aside>
       <div className="flex-1">
