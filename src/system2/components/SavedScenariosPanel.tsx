@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { useSystem2Store } from '../../store/system2Store'
 import { useScenarioStore, type SavedScenario } from '../../store/scenarioStore'
 import { aggregate } from '../engine/aggregation'
@@ -7,9 +6,7 @@ import { computeRiskStatuses } from '../engine/riskStatus'
 import { computeGoals } from '../engine/goals'
 import { runScenario, type ScenarioLevers } from '../engine/scenario'
 import { round1, statusBadgeClass } from '../riskDisplay'
-import { ScreenHeading } from '../../components/searchlight/ScreenHeading'
 import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
-import { SketchSurface } from '../../components/searchlight/SketchIllustrations'
 import { useInitialLoad } from '../../components/searchlight/useInitialLoad'
 
 function describeLevers(levers: ScenarioLevers): string {
@@ -37,13 +34,19 @@ function describeLevers(levers: ScenarioLevers): string {
 }
 
 /**
- * S2-M8: browse, reopen, and compare saved scenarios. Owns none of the
- * calculation — "reopening" runs the same pure runScenario(records, levers)
- * Scenario workspace uses, so results can't go stale. Searchlight design
- * pass added the loader, surface motif and token styling; behaviour is
- * unchanged.
+ * S2-M8's scenario library. Since the 3-screen consolidation this is the
+ * saved-scenarios panel inside Scenario workspace rather than a screen of
+ * its own — building a scenario and comparing it against the ones already
+ * saved is one task, and it was two screens.
+ *
+ * Owns none of the calculation: "reopening" runs the same pure
+ * runScenario(records, levers) the workspace itself uses, so a reopened
+ * scenario can't go stale or drift from what it showed when saved.
+ *
+ * The parent screen owns the no-snapshot empty state, so this renders
+ * nothing when there are no records.
  */
-export function ScenarioLibrary() {
+export function SavedScenariosPanel() {
   const records = useSystem2Store((state) => state.records)
   const scenarios = useScenarioStore((state) => state.scenarios)
   const deleteScenario = useScenarioStore((state) => state.deleteScenario)
@@ -66,20 +69,7 @@ export function ScenarioLibrary() {
     return map
   }, [scenarios, records])
 
-  if (records.length === 0) {
-    return (
-      <section className="space-y-4">
-        <ScreenHeading title="Scenario library">Saved scenarios, reopened and compared side by side.</ScreenHeading>
-        <div className="rounded-lg border border-pa-grey-01 bg-pa-white p-4 font-pa-body text-sm text-pa-grey-03">
-          No snapshot imported yet.{' '}
-          <Link to="/system2/executive-summary" className="font-medium text-pa-aqua-05 underline">
-            Import from System 1
-          </Link>{' '}
-          on Executive summary first.
-        </div>
-      </section>
-    )
-  }
+  if (records.length === 0) return null
 
   function toggleSelected(id: string) {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
@@ -88,23 +78,19 @@ export function ScenarioLibrary() {
   const selectedScenarios = scenarios.filter((s) => selectedIds.includes(s.id))
 
   return (
-    <section className="relative space-y-6">
-      <SketchSurface className="pointer-events-none absolute right-0 top-8 -z-10 h-[360px] w-[520px] max-w-none opacity-[0.06]" />
-
-      <ScreenHeading title="Scenario library">
-        Saved scenarios, reopened and compared side by side. Select scenarios below to add them to the
-        comparison table.
-      </ScreenHeading>
+    <section className="space-y-4">
+      <div>
+        <h2 className="font-pa-display text-sm font-semibold text-pa-grey-04">Saved scenarios</h2>
+        <p className="mt-1 font-pa-body text-xs text-pa-grey-03">
+          Reopened and compared side by side. Select scenarios below to add them to the comparison table.
+        </p>
+      </div>
 
       {loading ? (
         <SearchlightLoader />
       ) : scenarios.length === 0 ? (
         <div className="rounded-lg border border-pa-grey-01 bg-pa-white p-4 font-pa-body text-sm text-pa-grey-03">
-          No scenarios saved yet.{' '}
-          <Link to="/system2/scenario-workspace" className="font-medium text-pa-aqua-05 underline">
-            Build one in Scenario workspace
-          </Link>{' '}
-          and save it to see it here.
+          No scenarios saved yet. Move a lever above, name it, and save to see it here.
         </div>
       ) : (
         <div className="animate-[pa-fade-in_500ms_ease-out] space-y-6">

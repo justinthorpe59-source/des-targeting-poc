@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import type { Division } from '../../system1/data/types'
 import { useSystem2Store } from '../../store/system2Store'
 import { useScenarioStore } from '../../store/scenarioStore'
+import { SavedScenariosPanel } from '../components/SavedScenariosPanel'
 import { aggregate } from '../engine/aggregation'
 import { computeRiskStatuses, type Confidence } from '../engine/riskStatus'
 import { computeGoals } from '../engine/goals'
@@ -114,9 +115,7 @@ function leversFrom(inputs: WorkspaceInputs): ScenarioLevers {
  */
 export function ScenarioWorkspace() {
   const records = useSystem2Store((state) => state.records)
-  const savedScenarios = useScenarioStore((state) => state.scenarios)
   const saveScenario = useScenarioStore((state) => state.saveScenario)
-  const deleteScenario = useScenarioStore((state) => state.deleteScenario)
 
   const baselineAggregation = useMemo(() => aggregate(records), [records])
   const baselineGoals = useMemo(() => computeGoals(baselineAggregation), [baselineAggregation])
@@ -575,26 +574,10 @@ export function ScenarioWorkspace() {
               </button>
             </div>
 
-            {savedScenarios.length > 0 && (
-              <ul data-testid="saved-scenario-list" className="mt-4 divide-y divide-pa-grey-01 font-pa-body text-sm">
-                {savedScenarios.map((s) => (
-                  <li key={s.id} data-testid="saved-scenario-row" data-scenario-id={s.id} className="flex items-center justify-between py-2">
-                    <span>
-                      <span className="font-medium text-pa-grey-04">{s.name}</span>{' '}
-                      <span className="font-pa-mono text-xs text-pa-grey-03">saved {s.savedAt}</span>
-                    </span>
-                    <button
-                      type="button"
-                      data-testid="scenario-delete-button"
-                      onClick={() => deleteScenario(s.id)}
-                      className="text-xs font-medium text-pa-grey-03 hover:text-pa-ingenuity-red"
-                    >
-                      Delete
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <div className="mt-4 border-t border-pa-grey-01 pt-4">
+              <SavedScenariosPanel />
+            </div>
+
           </div>
         </div>
       )}
