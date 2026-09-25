@@ -165,16 +165,10 @@ export function IndividualDetail() {
                 Compare to team/division ↓
               </a>
               <Link
-                to={`/system1/whatif/${person.id}`}
-                className="font-pa-body text-xs font-medium text-pa-aqua-05 hover:text-pa-aqua-04"
-              >
-                Try what-if →
-              </Link>
-              <Link
                 to={`/system1/override/${person.id}`}
                 className="font-pa-body text-xs font-medium text-pa-aqua-05 hover:text-pa-aqua-04"
               >
-                Override →
+                Override / what-if →
               </Link>
             </div>
           </div>
