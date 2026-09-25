@@ -6,8 +6,6 @@ import { IndividualDetail } from './system1/screens/IndividualDetail'
 import { ManagerOverride } from './system1/screens/ManagerOverride'
 import { ExceptionsQueue } from './system1/screens/ExceptionsQueue'
 import { MassAdjustment } from './system1/screens/MassAdjustment'
-import { SignOffQueue } from './system1/screens/SignOffQueue'
-import { EmployeeView } from './system1/screens/EmployeeView'
 import { System2Root } from './system2/System2Root'
 import { ExecutiveSummary } from './system2/screens/ExecutiveSummary'
 import { DivisionComparison } from './system2/screens/DivisionComparison'
@@ -29,9 +27,6 @@ export default function App() {
           <Route path="override/:id" element={<ManagerOverride />} />
           <Route path="exceptions" element={<ExceptionsQueue />} />
           <Route path="mass-adjustment" element={<MassAdjustment />} />
-          <Route path="signoff" element={<SignOffQueue />} />
-          <Route path="employee" element={<EmployeeView />} />
-          <Route path="employee/:id" element={<EmployeeView />} />
         </Route>
         <Route path="/system2" element={<System2Root />}>
           <Route index element={<Navigate to="executive-summary" replace />} />

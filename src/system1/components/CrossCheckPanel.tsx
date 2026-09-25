@@ -27,7 +27,7 @@ export function CrossCheckPanel({ result }: { result: OverrideCrossCheckResult }
           <p data-testid="crosscheck-signoff-banner" className="mt-3 rounded-md bg-amber-50 p-3 text-xs text-amber-800">
             This change still requires sign-off from this person's team leadership group: {result.signOffReasons.join(' ')}{' '}
             Once applied, it&apos;ll appear in the{' '}
-            <Link to="/system1/signoff" className="font-medium underline">
+            <Link to="/system1/exceptions" className="font-medium underline">
               Sign-off Queue →
             </Link>
           </p>
@@ -71,7 +71,7 @@ export function CrossCheckPanel({ result }: { result: OverrideCrossCheckResult }
           </ul>
           <p className="mt-2">
             Once applied, it&apos;ll appear in the{' '}
-            <Link to="/system1/signoff" className="font-medium underline">
+            <Link to="/system1/exceptions" className="font-medium underline">
               Sign-off Queue →
             </Link>
           </p>

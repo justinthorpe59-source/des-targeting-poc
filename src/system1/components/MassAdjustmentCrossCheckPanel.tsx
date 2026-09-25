@@ -67,7 +67,7 @@ export function MassAdjustmentCrossCheckPanel({ result }: { result: MassAdjustme
           </ul>
           <p className="mt-2">
             Once applied, it&apos;ll appear in the{' '}
-            <Link to="/system1/signoff" className="font-medium underline">
+            <Link to="/system1/exceptions" className="font-medium underline">
               Sign-off Queue →
             </Link>
           </p>
@@ -89,7 +89,7 @@ export function MassAdjustmentCrossCheckPanel({ result }: { result: MassAdjustme
           </ul>
           <p className="mt-2">
             Once applied, they&apos;ll appear in the{' '}
-            <Link to="/system1/signoff" className="font-medium underline">
+            <Link to="/system1/exceptions" className="font-medium underline">
               Sign-off Queue →
             </Link>
           </p>

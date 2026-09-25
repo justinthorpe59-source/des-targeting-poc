@@ -133,7 +133,7 @@ export function MassAdjustment() {
             <>
               {' '}
               {lastApplied.signOffCount} of those route to Pending Sign-off —{' '}
-              <Link to="/system1/signoff" className="font-medium underline">
+              <Link to="/system1/exceptions" className="font-medium underline">
                 view the Sign-off Queue →
               </Link>
             </>

@@ -123,7 +123,7 @@ export function IndividualDetail() {
               >
                 This change is pending sign-off from {person.division} / {person.team}&apos;s leadership group — it
                 hasn&apos;t applied as final yet.{' '}
-                <Link to="/system1/signoff" className="font-medium text-pa-grey-04 underline">
+                <Link to="/system1/exceptions" className="font-medium text-pa-grey-04 underline">
                   View the Sign-off Queue →
                 </Link>
               </p>
