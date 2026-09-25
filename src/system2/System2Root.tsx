@@ -28,9 +28,6 @@ export function System2Root() {
           <NavLink to="division-comparison" className={navLinkClass}>
             Division comparison
           </NavLink>
-          <NavLink to="team-drilldown" className={navLinkClass}>
-            Team drill-down
-          </NavLink>
           <NavLink to="scenario-workspace" className={navLinkClass}>
             Scenario workspace
           </NavLink>
