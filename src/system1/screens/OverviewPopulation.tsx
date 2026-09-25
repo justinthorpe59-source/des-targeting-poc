@@ -52,16 +52,16 @@ function initials(name: string): string {
 }
 
 /**
- * The network canvas is drawn in a 160x80 coordinate space that matches the
- * container's 2/1 aspect, so a circle stays a circle and one unit means the
+ * The network canvas is drawn in a 160x90 coordinate space matching the
+ * container's 16/9 aspect, so a circle stays a circle and one unit means the
  * same thing on both axes — which lets the connectors be trimmed back to the
- * bubbles' edges accurately.
+ * nodes' edges accurately.
  */
 const VIEW_W = 160
-const VIEW_H = 80
-/** Bubble is 7rem across on a max-w-4xl (896px) container: 112/896 of the
- *  width, which is 20 units of 160. Half of that is its radius. */
-const BUBBLE_R = 10
+const VIEW_H = 90
+/** Node circle is 6rem across on a max-w-4xl (896px) container: 96/896 of the
+ *  width, which is 17.2 units of 160. Half of that is its radius. */
+const BUBBLE_R = 8.6
 
 /**
  * Deterministic organic ring. Positions are a pure function of index and
@@ -71,15 +71,18 @@ const BUBBLE_R = 10
  * set.
  *
  * An even ring with an alternating radius reads as organic while keeping the
- * bubbles well spread and the centre open, so the connectors between them
- * stay visible. A golden-angle spiral was tried first and clustered the
- * bubbles into one corner at this count.
+ * nodes well spread and the centre open, so the connectors between them stay
+ * visible. A golden-angle spiral was tried first and clustered them into one
+ * corner at this count.
+ *
+ * Half-extents leave room for each node's caption pill, which hangs below the
+ * circle and is wider than it.
  */
 function scatter(count: number) {
   const cx = VIEW_W / 2
   const cy = VIEW_H / 2
-  const halfX = VIEW_W / 2 - BUBBLE_R - 4
-  const halfY = VIEW_H / 2 - BUBBLE_R - 7
+  const halfX = 62
+  const halfY = 27
   if (count === 1) return [{ x: cx, y: cy }]
   return Array.from({ length: count }, (_, i) => {
     const angle = (i / count) * Math.PI * 2 - Math.PI / 2
@@ -94,8 +97,8 @@ function scatter(count: number) {
 /**
  * Consecutive links around the ring — each team joined to its neighbour,
  * forming one continuous path through the population. Each segment is
- * trimmed back by the bubble radius at both ends so the dashes show in the
- * gap instead of disappearing underneath the circles.
+ * trimmed back by the node radius at both ends so the dashes show in the gap
+ * instead of disappearing underneath the circles.
  */
 function ringEdges(points: Array<{ x: number; y: number }>) {
   if (points.length < 2) return []
@@ -115,7 +118,6 @@ function ringEdges(points: Array<{ x: number; y: number }>) {
     const y1 = from.y + uy * gap
     const x2 = to.x - ux * gap
     const y2 = to.y - uy * gap
-    // Bow perpendicular to the segment, scaled to its length.
     const bow = (i % 2 === 0 ? 1 : -1) * Math.min(len * 0.16, 10)
     const mx = (x1 + x2) / 2 - uy * bow
     const my = (y1 + y2) / 2 + ux * bow
@@ -126,6 +128,54 @@ function ringEdges(points: Array<{ x: number; y: number }>) {
       },
     ]
   })
+}
+
+/**
+ * The node's avatar placeholder. The reference puts a headshot here, but a
+ * node is a TEAM of ten, not a person — so this is a deliberately plural
+ * glyph (a small group, not one silhouette), which reads as "people" without
+ * implying the node stands for an individual.
+ */
+function TeamAvatar() {
+  return (
+    <span
+      aria-hidden="true"
+      className="flex h-24 w-24 items-center justify-center rounded-full border border-pa-grey-01 shadow-[0_2px_16px_rgba(2,77,120,0.10)] transition-transform duration-200 ease-out group-hover:scale-105 group-focus-visible:scale-105"
+      style={{ background: 'var(--color-pa-aqua-01)' }}
+    >
+      <svg viewBox="0 0 48 48" className="h-11 w-11" fill="none" stroke="var(--color-pa-aqua-05)" strokeWidth="2.1">
+        {/* back pair, offset behind */}
+        <circle cx="14" cy="19" r="5" opacity="0.55" />
+        <path d="M5 34c0-4.4 4-7.5 9-7.5" strokeLinecap="round" opacity="0.55" />
+        <circle cx="34" cy="19" r="5" opacity="0.55" />
+        <path d="M43 34c0-4.4-4-7.5-9-7.5" strokeLinecap="round" opacity="0.55" />
+        {/* front figure */}
+        <circle cx="24" cy="18" r="7" />
+        <path d="M12 37c0-6 5.4-10 12-10s12 4 12 10" strokeLinecap="round" />
+      </svg>
+    </span>
+  )
+}
+
+/**
+ * The node's caption pill, matching the reference's floating white labels.
+ *
+ * Deliberately NOT the shared StatusPill. The spec locks that component to
+ * two semantic uses — target workflow state and risk status — where the fill
+ * colour IS the meaning. This carries no state at all: it is a neutral label
+ * chip, white on elevation with no semantic colour, so folding it into the
+ * shared component would dilute what a coloured pill signifies everywhere
+ * else. Kept local to this screen; promote it only if a second screen needs
+ * the same thing.
+ */
+function TeamLabel({ team, division, headcount }: { team: string; division: string; headcount: number }) {
+  return (
+    <span className="flex items-baseline gap-1.5 whitespace-nowrap rounded-full border border-pa-grey-01 bg-pa-white px-3 py-1.5 shadow-[0_2px_10px_rgba(2,77,120,0.10)]">
+      <span className="font-pa-body text-xs font-semibold text-pa-grey-04">{team}</span>
+      <span className="font-pa-body text-[11px] text-pa-grey-03">{division}</span>
+      <span className="font-pa-mono text-[11px] font-bold text-pa-aqua-05">{headcount}</span>
+    </span>
+  )
 }
 
 function TeamBubbleNetwork({
@@ -141,7 +191,7 @@ function TeamBubbleNetwork({
   const edges = ringEdges(points)
 
   return (
-    <div className="relative mx-auto mt-4 aspect-[2/1] w-full max-w-4xl">
+    <div className="relative mx-auto mt-4 aspect-[16/9] w-full max-w-4xl">
       <svg
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
         preserveAspectRatio="none"
@@ -180,14 +230,13 @@ function TeamBubbleNetwork({
               animation: 'pa-pop-in 360ms ease-out both',
               animationDelay: `${Math.min(i * 60, 400)}ms`,
             }}
-            className="group absolute flex h-28 w-28 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border border-pa-grey-01 bg-pa-white text-center shadow-[0_2px_16px_rgba(2,77,120,0.08)] transition-transform duration-200 ease-out hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-aqua-04"
+            /* Sized to the circle and centred on the point, so the connector
+               geometry lines up; the caption hangs below without shifting it. */
+            className="group absolute flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-aqua-04 focus-visible:ring-offset-2"
           >
-            <span className="px-3 font-pa-display text-sm font-semibold leading-tight text-pa-grey-04">
-              {node.team}
-            </span>
-            <span className="mt-0.5 font-pa-body text-[11px] text-pa-grey-03">{node.division}</span>
-            <span className="mt-1 font-pa-mono text-[11px] font-bold text-pa-aqua-05">
-              {node.people.length} people
+            <TeamAvatar />
+            <span className="absolute left-1/2 top-full z-10 -translate-x-1/2 -translate-y-2">
+              <TeamLabel team={node.team} division={node.division} headcount={node.people.length} />
             </span>
           </button>
         )
