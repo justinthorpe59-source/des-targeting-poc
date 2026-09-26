@@ -129,6 +129,17 @@ export function IndividualDetail() {
             (avatar + name + grey subtext), then a stat row pairing a large
             value with a secondary value, then a metadata row, then actions.
           */}
+          {/*
+            ONE continuous card for everything above the fold. The reference
+            uses exactly two tiers of surface: a single main card holding
+            identity, stats, attributes and the visual — its internal sections
+            divided by headers and thin rules, NOT by their own borders — and
+            then small standalone cards beneath for the history items. Giving
+            Attributes / Explanation / Personal context each their own bordered
+            box put four competing surfaces on one screen where the reference
+            has one. No content is cut; it is the same fields on fewer
+            surfaces.
+          */}
           <div className="overflow-hidden rounded-pa-card border border-pa-grey-01 bg-pa-white">
             <div className="grid gap-10 p-8 lg:grid-cols-[58fr_42fr]">
               {/* ---- Left zone: identity + data ---- */}
@@ -275,7 +286,6 @@ export function IndividualDetail() {
                 </Link>
               </p>
             )}
-          </div>
 
           {/*
             Attributes — the four locked target factors, one chip each, in a
@@ -292,11 +302,11 @@ export function IndividualDetail() {
             baseline applies rather than scaling it -- so those two chips
             carry a value and no badge, rather than an invented percentage.
           */}
-          <div className="rounded-pa-card border border-pa-grey-01 bg-pa-white p-8">
-            <h2 className="mb-5 font-pa-display text-sm font-semibold text-pa-grey-04">Attributes</h2>
-            <div data-testid="detail-attributes" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:max-w-3xl">
-              <AttributeChip
-                testId="attr-role"
+            <div className="border-t border-pa-grey-01 p-8">
+              <h2 className="mb-5 font-pa-display text-sm font-semibold text-pa-grey-04">Attributes</h2>
+              <div data-testid="detail-attributes" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:max-w-3xl">
+                <AttributeChip
+                  testId="attr-role"
                 label="Role"
                 badge={`${Math.round(person.roleFactor * 100)}%`}
                 value={person.grade}
@@ -307,31 +317,33 @@ export function IndividualDetail() {
                 badge={`${Math.round(person.capacity * 100)}%`}
                 value={`${person.capacity} of full-time`}
               />
-              <AttributeChip testId="attr-location" label="Location" value={person.location} />
-              <AttributeChip testId="attr-discipline" label="Discipline" value={person.division} />
+                <AttributeChip testId="attr-location" label="Location" value={person.location} />
+                <AttributeChip testId="attr-discipline" label="Discipline" value={person.division} />
+              </div>
             </div>
-          </div>
 
-          {/* Explanation */}
-          <div className="rounded-pa-card border border-pa-grey-01 bg-pa-white p-8">
-            <h2 className="mb-3 font-pa-display text-sm font-semibold text-pa-grey-04">Explanation</h2>
-            <p data-testid="detail-explanation" className="mt-2 font-pa-body text-sm leading-relaxed text-pa-grey-04">
-              {explainTarget(person, target)}
-            </p>
-          </div>
+            {/* Explanation — internal section, divided by a rule not a border */}
+            <div className="border-t border-pa-grey-01 p-8">
+              <h2 className="mb-3 font-pa-display text-sm font-semibold text-pa-grey-04">Explanation</h2>
+              <p data-testid="detail-explanation" className="font-pa-body text-sm leading-relaxed text-pa-grey-04">
+                {explainTarget(person, target)}
+              </p>
+            </div>
 
-          {/* Personal context */}
-          <div className="rounded-pa-card border border-pa-grey-01 bg-pa-white p-8">
-            <h2 className="mb-3 font-pa-display text-sm font-semibold text-pa-grey-04">Personal context</h2>
-            {target.notes ? (
-              <p data-testid="detail-notes" className="mt-2 font-pa-body text-sm text-pa-grey-04">
-                {target.notes}
-              </p>
-            ) : (
-              <p data-testid="detail-notes-empty" className="mt-2 font-pa-body text-sm text-pa-grey-03">
-                No notes yet. Managers can add personal context (strengths, interests, goals) from the override screen.
-              </p>
-            )}
+            {/* Personal context — internal section */}
+            <div className="border-t border-pa-grey-01 p-8">
+              <h2 className="mb-3 font-pa-display text-sm font-semibold text-pa-grey-04">Personal context</h2>
+              {target.notes ? (
+                <p data-testid="detail-notes" className="font-pa-body text-sm leading-relaxed text-pa-grey-04">
+                  {target.notes}
+                </p>
+              ) : (
+                <p data-testid="detail-notes-empty" className="font-pa-body text-sm leading-relaxed text-pa-grey-03">
+                  No notes yet. Managers can add personal context (strengths, interests, goals) from the override
+                  screen.
+                </p>
+              )}
+            </div>
           </div>
 
           {/*
