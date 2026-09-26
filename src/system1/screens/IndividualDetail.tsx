@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { SEED_PEOPLE } from '../data/people'
 import { useSystem1Store } from '../../store/system1Store'
 import { explainTarget } from '../engine/explainTarget'
@@ -7,6 +7,7 @@ import { combinedRevenueFor } from '../engine/revenueEngine'
 import { StatusPipeline } from '../components/StatusPipeline'
 import { CohortComparisonPanel } from '../components/CohortComparisonPanel'
 import { StatusPill } from '../../components/searchlight/StatusPill'
+import { ManagerOverrideModal } from './ManagerOverride'
 import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
 import { SketchDistribution } from '../../components/searchlight/SketchIllustrations'
 import { useInitialLoad } from '../../components/searchlight/useInitialLoad'
@@ -108,6 +109,24 @@ export function IndividualDetail() {
   // Declared before the not-found early return below: a hook after a
   // conditional return changes hook order between renders.
   const [detailTab, setDetailTab] = useState<DetailTab>('explanation')
+  /**
+   * Manager Override is a MODAL over this screen, not a route of its own —
+   * the spec's own recommendation, now decided. /system1/override/:id still
+   * resolves, so deep links keep working (the Exceptions Queue's resolve
+   * action and the roster's Notes button both use it); it simply renders
+   * this screen with the modal already open.
+   */
+  const location = useLocation()
+  const navigate = useNavigate()
+  const openedViaRoute = location.pathname.startsWith('/system1/override/')
+  const [overrideOpen, setOverrideOpen] = useState(openedViaRoute)
+
+  function closeOverride() {
+    setOverrideOpen(false)
+    // Leaving the modal from its own URL should land on the person, not a
+    // blank route that no longer renders anything on its own.
+    if (openedViaRoute) navigate(`/system1/person/${id}`, { replace: true })
+  }
   const [showAllHistory, setShowAllHistory] = useState(false)
 
   const person = SEED_PEOPLE.find((p) => p.id === id)
@@ -274,12 +293,14 @@ export function IndividualDetail() {
                       Approve
                     </button>
                   )}
-                  <Link
-                    to={`/system1/override/${person.id}`}
+                  <button
+                    type="button"
+                    data-testid="detail-open-override"
+                    onClick={() => setOverrideOpen(true)}
                     className="rounded-full bg-pa-grey-01 px-4 py-2 font-pa-body text-xs font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-02/60"
                   >
                     Override / what-if
-                  </Link>
+                  </button>
                   <button
                     type="button"
                     data-testid="detail-go-cohort"
@@ -548,6 +569,8 @@ export function IndividualDetail() {
           </div>
         </div>
       )}
+
+      {overrideOpen && <ManagerOverrideModal person={person} target={target} onClose={closeOverride} />}
     </section>
   )
 }
