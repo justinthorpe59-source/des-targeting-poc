@@ -200,6 +200,17 @@ interface System1State {
   rejectSignOff: (personId: string, reason: string, reviewerLabel?: string) => void
   /** Loops rejectSignOff() across a whole mass-adjustment batch. */
   rejectSignOffBatch: (personIds: string[], reason: string, reviewerLabel?: string) => void
+
+  /**
+   * Roster multi-select from Overview & Population's team list state. Lives
+   * in the store, not in the screen, because its whole purpose is to survive
+   * navigation — CLAUDE.md has Mass Adjustment picking up this selection
+   * rather than owning a second population picker.
+   */
+  selectedPersonIds: string[]
+  togglePersonSelected: (personId: string) => void
+  setSelectedPersonIds: (personIds: string[]) => void
+  clearSelection: () => void
 }
 
 export const useSystem1Store = create<System1State>()(
@@ -207,8 +218,20 @@ export const useSystem1Store = create<System1State>()(
     (set, get) => ({
       targets: buildSeedTargets(),
       auditLog: [],
+      selectedPersonIds: [],
 
-      resetToSeed: () => set({ targets: buildSeedTargets(), auditLog: [] }),
+      resetToSeed: () => set({ targets: buildSeedTargets(), auditLog: [], selectedPersonIds: [] }),
+
+      togglePersonSelected: (personId) =>
+        set((state) => ({
+          selectedPersonIds: state.selectedPersonIds.includes(personId)
+            ? state.selectedPersonIds.filter((id) => id !== personId)
+            : [...state.selectedPersonIds, personId],
+        })),
+
+      setSelectedPersonIds: (personIds) => set({ selectedPersonIds: personIds }),
+
+      clearSelection: () => set({ selectedPersonIds: [] }),
 
       addAuditEntry: (entry) =>
         set((state) => ({

@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { SEED_PEOPLE } from '../data/people'
-import { GRADES, GRADE_TABLE, type Grade } from '../data/types'
-import { useSystem1Store, type OverrideType } from '../../store/system1Store'
+import { GRADES, GRADE_TABLE, type Grade, type Person } from '../data/types'
+import { useSystem1Store, type OverrideType, type TargetRecord } from '../../store/system1Store'
 import { calculateModelledTarget } from '../engine/targetingEngine'
 import { LARGE_ADJUSTMENT_THRESHOLD } from '../engine/exceptions'
 import { runOverrideCrossCheck } from '../engine/overrideCrossCheck'
@@ -77,27 +77,27 @@ function FactorSandbox({
   const delta = result.modelled - storedFinal
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
+    <div className="rounded-pa-card border border-pa-grey-01 bg-white p-4">
       <button
         type="button"
         data-testid="whatif-toggle"
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-baseline justify-between text-left"
       >
-        <span className="text-sm font-semibold text-slate-700">What-if — recalculate from the factors</span>
-        <span className="text-xs text-slate-500">{open ? 'Hide' : 'Show'}</span>
+        <span className="text-sm font-semibold text-pa-grey-04">What-if — recalculate from the factors</span>
+        <span className="text-xs text-pa-grey-03">{open ? 'Hide' : 'Show'}</span>
       </button>
 
       {open && (
         <div className="mt-3 space-y-3">
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-pa-grey-03">
             Scenario only — never changes {person.name}&apos;s stored record. Use it to see what the model would
             produce under different factors, then commit a value below with a reason.
           </p>
 
           <div className="grid gap-3 sm:grid-cols-3">
-            <label className="block text-xs font-medium text-slate-500">
-              Capacity <span className="font-mono text-slate-700">{inputs.capacity.toFixed(2)}</span>
+            <label className="block text-xs font-medium text-pa-grey-03">
+              Capacity <span className="font-mono text-pa-grey-04">{inputs.capacity.toFixed(2)}</span>
               <input
                 data-testid="whatif-capacity-slider"
                 type="range"
@@ -113,8 +113,8 @@ function FactorSandbox({
               </span>
             </label>
 
-            <label className="block text-xs font-medium text-slate-500">
-              Economic factor <span className="font-mono text-slate-700">{inputs.economicFactor.toFixed(2)}</span>
+            <label className="block text-xs font-medium text-pa-grey-03">
+              Economic factor <span className="font-mono text-pa-grey-04">{inputs.economicFactor.toFixed(2)}</span>
               <input
                 data-testid="whatif-economic-slider"
                 type="range"
@@ -130,13 +130,13 @@ function FactorSandbox({
               </span>
             </label>
 
-            <label className="block text-xs font-medium text-slate-500">
+            <label className="block text-xs font-medium text-pa-grey-03">
               Grade / role
               <select
                 data-testid="whatif-grade-select"
                 value={inputs.grade}
                 onChange={(e) => setInputs((prev) => ({ ...prev, grade: e.target.value as Grade }))}
-                className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                className="mt-1 w-full rounded-pa-chip border border-pa-grey-02 px-2 py-1.5 text-sm"
               >
                 {GRADES.map((grade) => (
                   <option key={grade} value={grade}>
@@ -150,17 +150,17 @@ function FactorSandbox({
             </label>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-md bg-slate-50 p-3 text-sm">
-            <span className="text-slate-600">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-pa-chip bg-pa-grey-wash p-3 text-sm">
+            <span className="text-pa-grey-03">
               Sandbox target:{' '}
-              <span data-testid="whatif-sandbox-modelled" className="font-semibold tabular-nums text-slate-900">
+              <span data-testid="whatif-sandbox-modelled" className="font-semibold tabular-nums text-pa-grey-04">
                 £{result.modelled}k
               </span>{' '}
-              <span data-testid="whatif-sandbox-range" className="text-xs text-slate-500">
+              <span data-testid="whatif-sandbox-range" className="text-xs text-pa-grey-03">
                 (£{result.rangeLow}k – £{result.rangeHigh}k)
               </span>
             </span>
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-pa-grey-03">
               stored{' '}
               <span data-testid="whatif-stored-modelled" className="font-mono">
                 £{storedFinal}k
@@ -178,7 +178,7 @@ function FactorSandbox({
                 type="button"
                 data-testid="whatif-use-value-button"
                 onClick={() => onUseValue(result.modelled)}
-                className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100"
+                className="rounded-pa-chip border border-pa-grey-02 px-2 py-1 text-xs font-medium text-pa-grey-03 hover:bg-pa-grey-01"
               >
                 Use as direct value
               </button>
@@ -187,7 +187,7 @@ function FactorSandbox({
                   type="button"
                   data-testid="whatif-reset-button"
                   onClick={() => setInputs({ capacity: person.capacity, grade: person.grade, economicFactor: person.economicFactor })}
-                  className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100"
+                  className="rounded-pa-chip border border-pa-grey-02 px-2 py-1 text-xs font-medium text-pa-grey-03 hover:bg-pa-grey-01"
                 >
                   Reset
                 </button>
@@ -211,18 +211,19 @@ function FactorSandbox({
 // change still doesn't block Apply (same "never blocks" ethos), but routes
 // the record to 'Pending Sign-off' instead of 'Adjusted' so it's never
 // silently treated as final.
-export function ManagerOverride() {
-  const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
-  const targets = useSystem1Store((state) => state.targets)
+export function ManagerOverrideModal({
+  person,
+  target,
+  onClose,
+}: {
+  person: Person
+  target: TargetRecord
+  onClose: () => void
+}) {
   const applyOverride = useSystem1Store((state) => state.applyOverride)
   const revertOverride = useSystem1Store((state) => state.revertOverride)
   const updateNotes = useSystem1Store((state) => state.updateNotes)
   const system2Snapshot = useSystem2LiveSnapshot()
-
-  const sortedPeople = [...SEED_PEOPLE].sort((a, b) => a.name.localeCompare(b.name))
-  const person = id ? SEED_PEOPLE.find((p) => p.id === id) : undefined
-  const target = person ? targets[person.id] : undefined
 
   const [overrideType, setOverrideType] = useState<OverrideType>('percent')
   const [percentValue, setPercentValue] = useState(0)
@@ -290,54 +291,71 @@ export function ManagerOverride() {
     setNotesSaved(true)
   }
 
+  // Escape closes, and the body is locked while the modal is open.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKey)
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prev
+    }
+  }, [onClose])
+
   return (
-    <section className="max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-lg font-semibold">Manager override</h1>
-        <p className="mt-1 max-w-md text-sm text-slate-600">
-          Change a person's target. A reason is required — the model never blocks a change, it only flags
-          outliers for your own sense-check.
-        </p>
-      </div>
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-6 font-pa-body"
+      style={{ background: 'rgba(0, 23, 45, 0.45)' }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose()
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="override-modal-title"
+        data-testid="override-modal"
+        className="my-8 w-full max-w-3xl overflow-hidden rounded-pa-card bg-pa-white shadow-[0_24px_64px_rgba(2,77,120,0.24)]"
+      >
+        <div className="flex items-start justify-between gap-6 border-b border-pa-grey-01 px-8 py-6">
+          <div>
+            <h2 id="override-modal-title" className="font-pa-display text-2xl font-semibold text-pa-grey-04">
+              Manager override
+            </h2>
+            <p className="mt-1 font-pa-body text-sm text-pa-grey-03">
+              {person.name} · {person.id} · {person.division} / {person.team}
+            </p>
+          </div>
+          <button
+            type="button"
+            data-testid="override-modal-close"
+            onClick={onClose}
+            aria-label="Close"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-pa-grey-01 font-pa-body text-lg leading-none text-pa-grey-04 transition-colors hover:bg-pa-grey-02/60"
+          >
+            ×
+          </button>
+        </div>
 
-      <label className="flex flex-col gap-1 text-xs font-medium text-slate-500">
-        Person
-        <select
-          data-testid="override-person-select"
-          className="rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-700 focus:border-slate-500 focus:outline-none"
-          value={person?.id ?? ''}
-          onChange={(e) => navigate(`/system1/override/${e.target.value}`)}
-        >
-          <option value="" disabled>
-            Select a person…
-          </option>
-          {sortedPeople.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name} ({p.id})
-            </option>
-          ))}
-        </select>
-      </label>
-
-      {!person || !target ? (
-        <p className="text-sm text-slate-500">Select a person above to make an override.</p>
-      ) : (
-        <>
-          <div className="rounded-lg border border-slate-200 bg-white p-4">
+        <div className="space-y-6 px-8 py-7">
+          <div className="rounded-pa-card border border-pa-grey-01 bg-white p-4">
             <div className="flex items-baseline justify-between">
-              <h2 className="text-sm font-semibold text-slate-700">{person.name}</h2>
-              <span data-testid="override-status" className="text-xs font-medium text-slate-500">
+              <h2 className="text-sm font-semibold text-pa-grey-04">{person.name}</h2>
+              <span data-testid="override-status" className="text-xs font-medium text-pa-grey-03">
                 {target.status}
               </span>
             </div>
-            <div className="mt-1 text-sm text-slate-600">
+            <div className="mt-1 text-sm text-pa-grey-03">
               Modelled target:{' '}
-              <span className="font-medium tabular-nums text-slate-900">£{target.modelled}k</span> (range £
+              <span className="font-medium tabular-nums text-pa-grey-04">£{target.modelled}k</span> (range £
               {target.rangeLow}k – £{target.rangeHigh}k)
             </div>
 
             {target.status === 'Pending Sign-off' && (
-              <p data-testid="override-pending-signoff-banner" className="mt-3 rounded-md bg-amber-50 p-3 text-xs text-amber-800">
+              <p data-testid="override-pending-signoff-banner" className="mt-3 rounded-pa-chip bg-pa-apricot-01 p-3 text-xs text-pa-grey-04">
                 This change is pending sign-off from {person.division} / {person.team}&apos;s leadership group —
                 it hasn&apos;t applied as final yet.{' '}
                 <Link to="/system1/exceptions" className="font-medium underline">
@@ -347,25 +365,25 @@ export function ManagerOverride() {
             )}
 
             {target.override && (
-              <div data-testid="override-current" className="mt-3 rounded-md bg-slate-50 p-3 text-sm">
-                <div className="font-medium text-slate-700">Current override</div>
-                <div className="mt-1 text-slate-600">
+              <div data-testid="override-current" className="mt-3 rounded-pa-chip bg-pa-grey-wash p-3 text-sm">
+                <div className="font-medium text-pa-grey-04">Current override</div>
+                <div className="mt-1 text-pa-grey-03">
                   {target.override.type === 'percent'
                     ? `${target.override.value > 0 ? '+' : ''}${target.override.value}%`
                     : `Direct value`}{' '}
-                  → <span className="font-medium tabular-nums text-slate-900">£{target.override.finalValue}k</span>
+                  → <span className="font-medium tabular-nums text-pa-grey-04">£{target.override.finalValue}k</span>
                 </div>
-                <div className="mt-1 text-slate-500">Reason: {target.override.reason}</div>
+                <div className="mt-1 text-pa-grey-03">Reason: {target.override.reason}</div>
 
                 <div className="mt-3 flex items-end gap-2">
-                  <label className="flex-1 text-xs font-medium text-slate-500">
+                  <label className="flex-1 text-xs font-medium text-pa-grey-03">
                     Reason for reverting
                     <input
                       data-testid="revert-reason-input"
                       type="text"
                       value={revertReason}
                       onChange={(e) => setRevertReason(e.target.value)}
-                      className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                      className="mt-1 w-full rounded-pa-chip border border-pa-grey-02 px-2 py-1.5 text-sm"
                       placeholder="Why are you reverting this?"
                     />
                   </label>
@@ -374,7 +392,7 @@ export function ManagerOverride() {
                     data-testid="revert-button"
                     disabled={revertReason.trim().length === 0}
                     onClick={handleRevert}
-                    className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="rounded-pa-chip border border-pa-grey-02 px-3 py-1.5 text-sm font-medium text-pa-grey-03 hover:bg-pa-grey-01 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     Revert to modelled
                   </button>
@@ -383,15 +401,15 @@ export function ManagerOverride() {
             )}
           </div>
 
-          <div className="rounded-lg border border-slate-200 bg-white p-4">
-            <h2 className="text-sm font-semibold text-slate-700">Explanation</h2>
-            <p data-testid="override-explanation" className="mt-2 text-sm leading-relaxed text-slate-700">
+          <div className="rounded-pa-card border border-pa-grey-01 bg-white p-4">
+            <h2 className="text-sm font-semibold text-pa-grey-04">Explanation</h2>
+            <p data-testid="override-explanation" className="mt-2 text-sm leading-relaxed text-pa-grey-04">
               {explainTarget(person, target)}
             </p>
           </div>
 
-          <div className="rounded-lg border border-slate-200 bg-white p-4">
-            <h2 className="text-sm font-semibold text-slate-700">New override</h2>
+          <div className="rounded-pa-card border border-pa-grey-01 bg-white p-4">
+            <h2 className="text-sm font-semibold text-pa-grey-04">New override</h2>
 
             <div className="mt-3 flex gap-4 text-sm">
               <label className="flex items-center gap-1.5">
@@ -416,68 +434,126 @@ export function ManagerOverride() {
 
             <div className="mt-3">
               {overrideType === 'percent' ? (
-                <label className="block text-xs font-medium text-slate-500">
+                <label className="block text-xs font-medium text-pa-grey-03">
                   Percentage change
                   <input
                     data-testid="override-percent-input"
                     type="number"
                     value={percentValue}
                     onChange={(e) => setPercentValue(Number(e.target.value))}
-                    className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                    className="mt-1 w-full rounded-pa-chip border border-pa-grey-02 px-2 py-1.5 text-sm"
                   />
                 </label>
               ) : (
-                <label className="block text-xs font-medium text-slate-500">
+                <label className="block text-xs font-medium text-pa-grey-03">
                   Direct value (£k)
                   <input
                     data-testid="override-direct-input"
                     type="number"
                     value={directValue}
                     onChange={(e) => setDirectValue(Number(e.target.value))}
-                    className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                    className="mt-1 w-full rounded-pa-chip border border-pa-grey-02 px-2 py-1.5 text-sm"
                   />
                 </label>
               )}
             </div>
 
-            <div className="mt-3 text-sm text-slate-600">
+            <div className="mt-3 text-sm text-pa-grey-03">
               Resulting target:{' '}
-              <span data-testid="override-preview" className="font-semibold tabular-nums text-slate-900">
+              <span data-testid="override-preview" className="font-semibold tabular-nums text-pa-grey-04">
                 £{previewFinal}k
               </span>{' '}
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-pa-grey-03">
                 ({previewDeviationPct > 0 ? '+' : ''}
                 {previewDeviationPct}% from modelled)
               </span>
             </div>
 
             {isLargeAdjustment && (
-              <p data-testid="override-large-adjustment-flag" className="mt-2 text-xs text-amber-700">
+              <p data-testid="override-large-adjustment-flag" className="mt-2 text-xs text-pa-grey-04">
                 This is more than ±20% from the modelled target. Flagged for your own sense-check — it doesn't
                 block applying it.
               </p>
             )}
 
-            <label className="mt-3 block text-xs font-medium text-slate-500">
+            <label className="mt-3 block text-xs font-medium text-pa-grey-03">
               Reason (required)
               <textarea
                 data-testid="override-reason-input"
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 rows={2}
-                className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                className="mt-1 w-full rounded-pa-chip border border-pa-grey-02 px-2 py-1.5 text-sm"
                 placeholder="Why are you making this change?"
               />
             </label>
+
+            {/*
+              The sign-off gate. Deliberately NOT a greyed-out control: the
+              model never blocks a manager, so the action stays fully
+              enabled — what changes is that it routes to leadership instead
+              of applying immediately. The amber "at risk" colour plus
+              explanatory copy carries that distinction, saying why sign-off
+              is needed and who gives it, rather than leaving a dead button
+              and no reason.
+            */}
+            {crossCheck?.requiresSignOff && (
+              <div
+                data-testid="override-signoff-gate"
+                className="mt-4 rounded-pa-card p-4"
+                style={{ background: 'var(--color-pa-apricot-01)' }}
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className="rounded-full px-2.5 py-1 font-pa-body text-[11px] font-semibold"
+                    style={{
+                      background: 'var(--color-pa-state-pending-signoff)',
+                      color: 'var(--color-pa-dark-blue)',
+                    }}
+                  >
+                    Needs sign-off
+                  </span>
+                  <span className="font-pa-body text-sm font-semibold text-pa-grey-04">
+                    This won&apos;t apply straight away.
+                  </span>
+                </div>
+
+                <p className="mt-2 font-pa-body text-sm text-pa-grey-04">
+                  It goes to the{' '}
+                  <span className="font-semibold">
+                    {person.division} / {person.team}
+                  </span>{' '}
+                  leadership group to approve or reject. Nothing is blocked — you can still submit it.
+                </p>
+
+                {crossCheck.signOffReasons.length > 0 && (
+                  <ul
+                    data-testid="override-signoff-reasons"
+                    className="mt-2 list-disc space-y-0.5 pl-5 font-pa-body text-xs text-pa-grey-04"
+                  >
+                    {crossCheck.signOffReasons.map((reason) => (
+                      <li key={reason}>{reason}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
 
             <button
               type="button"
               data-testid="apply-override-button"
               disabled={!canSubmit}
               onClick={handleApply}
-              className="mt-3 rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className={`mt-4 rounded-full px-5 py-2.5 font-pa-body text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                crossCheck?.requiresSignOff
+                  ? 'text-pa-dark-blue'
+                  : 'bg-pa-aqua-05 text-pa-white hover:bg-pa-aqua-04'
+              }`}
+              style={
+                crossCheck?.requiresSignOff ? { background: 'var(--color-pa-state-pending-signoff)' } : undefined
+              }
             >
-              {crossCheck?.requiresSignOff ? 'Apply override (routes to Pending Sign-off)' : 'Apply override'}
+              {crossCheck?.requiresSignOff ? 'Send for sign-off' : 'Apply override'}
             </button>
           </div>
 
@@ -492,9 +568,12 @@ export function ManagerOverride() {
 
           {crossCheck && <CrossCheckPanel result={crossCheck} />}
 
-          <div className="rounded-lg border border-slate-200 bg-white p-4">
-            <h2 className="text-sm font-semibold text-slate-700">Personal context</h2>
-            <p className="mt-1 text-xs text-slate-500">
+          {/* id="notes" is the anchor the roster card's "Notes" button targets,
+              so that button lands on the manager-notes field rather than the
+              top of the override screen. */}
+          <div id="notes" className="scroll-mt-6 rounded-pa-card border border-pa-grey-01 bg-white p-4">
+            <h2 className="text-sm font-semibold text-pa-grey-04">Personal context</h2>
+            <p className="mt-1 text-xs text-pa-grey-03">
               Strengths, interests, goals. Informs the explanation and override reasoning — never the formula
               itself. Write these knowing {person.name} is entitled to read them — transparency by design.
             </p>
@@ -506,20 +585,20 @@ export function ManagerOverride() {
                 setNotesSaved(false)
               }}
               rows={3}
-              className="mt-2 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+              className="mt-2 w-full rounded-pa-chip border border-pa-grey-02 px-2 py-1.5 text-sm"
             />
             <button
               type="button"
               data-testid="save-notes-button"
               disabled={notesSaved}
               onClick={handleSaveNotes}
-              className="mt-2 rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+              className="mt-2 rounded-pa-chip border border-pa-grey-02 px-3 py-1.5 text-sm font-medium text-pa-grey-03 hover:bg-pa-grey-01 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {notesSaved ? 'Saved' : 'Save notes'}
             </button>
           </div>
-        </>
-      )}
-    </section>
+        </div>
+      </div>
+    </div>
   )
 }
