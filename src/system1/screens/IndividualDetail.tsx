@@ -30,8 +30,25 @@ function initials(name: string): string {
  * and their badge slot stays empty rather than being filled with an invented
  * number.
  */
-/** How many change entries show before the rest are put behind a reveal. */
-const HISTORY_PREVIEW = 3
+/** How many change entries show before the rest are put behind a reveal.
+ *  Two, matching the reference's own lower area. */
+const HISTORY_PREVIEW = 2
+
+/**
+ * The lower area shows exactly one panel at a time. Explanation and Personal
+ * context joined Recent updates and Cohort comparison here rather than
+ * standing as permanent blocks above: the reference never shows more than one
+ * thing in this region, and as always-visible sections they doubled the
+ * screen's height for content a manager reads once.
+ */
+type DetailTab = 'explanation' | 'notes' | 'history' | 'cohort'
+
+const DETAIL_TABS: Array<{ id: DetailTab; label: string }> = [
+  { id: 'explanation', label: 'Explanation' },
+  { id: 'notes', label: 'Personal context' },
+  { id: 'history', label: 'Recent updates' },
+  { id: 'cohort', label: 'Cohort comparison' },
+]
 
 function AttributeChip({
   label,
@@ -90,7 +107,7 @@ export function IndividualDetail() {
   const loading = useInitialLoad(true)
   // Declared before the not-found early return below: a hook after a
   // conditional return changes hook order between renders.
-  const [detailTab, setDetailTab] = useState<'history' | 'cohort'>('history')
+  const [detailTab, setDetailTab] = useState<DetailTab>('explanation')
   const [showAllHistory, setShowAllHistory] = useState(false)
 
   const person = SEED_PEOPLE.find((p) => p.id === id)
@@ -276,20 +293,22 @@ export function IndividualDetail() {
                   </button>
                 </div>
 
-                <div className="mt-8">
-                  <StatusPipeline current={target.status} />
+                <div className="mt-7 max-w-md">
+                  <StatusPipeline current={target.status} variant="compact" />
                 </div>
               </div>
 
               {/* ---- Right zone: large square visual ---- */}
               {/* Capped: the spec calls for a full-width hero, but at a
                   full-bleed 1700px the 42% zone becomes a ~670px square that
-                  drags the whole card down. The reference's card is compact,
-                  so the square is bounded and sits right-aligned. */}
+                  drags the whole card down. Trimmed again once Explanation
+                  and Personal context moved into the tabs — with the left
+                  column that much shorter, the previous 340px square left an
+                  obvious void beneath the content. */}
               <div
                 data-testid="detail-hero-visual"
                 aria-hidden="true"
-                className="ml-auto flex aspect-square w-full max-w-[340px] items-center justify-center rounded-pa-card"
+                className="ml-auto flex aspect-square w-full max-w-[268px] items-center justify-center rounded-pa-card"
                 style={{ background: 'var(--color-pa-grey-01)' }}
               >
                 {/* Placeholder, not a chart. Real headshots replace this. */}
@@ -349,29 +368,6 @@ export function IndividualDetail() {
               </div>
             </div>
 
-            {/* Explanation — internal section, divided by a rule not a border */}
-            <div className="border-t border-pa-grey-01 p-8">
-              <h2 className="mb-3 font-pa-display text-sm font-semibold text-pa-grey-04">Explanation</h2>
-              <p data-testid="detail-explanation" className="font-pa-body text-sm leading-relaxed text-pa-grey-04">
-                {explainTarget(person, target)}
-              </p>
-            </div>
-
-            {/* Personal context — internal section */}
-            <div className="border-t border-pa-grey-01 p-8">
-              <h2 className="mb-3 font-pa-display text-sm font-semibold text-pa-grey-04">Personal context</h2>
-              {target.notes ? (
-                <p data-testid="detail-notes" className="font-pa-body text-sm leading-relaxed text-pa-grey-04">
-                  {target.notes}
-                </p>
-              ) : (
-                <p data-testid="detail-notes-empty" className="font-pa-body text-sm leading-relaxed text-pa-grey-03">
-                  No notes yet. Managers can add personal context (strengths, interests, goals) from the override
-                  screen.
-                </p>
-              )}
-            </div>
-
           {/*
             Supporting detail as a TAB PANEL, not a stack.
 
@@ -384,30 +380,74 @@ export function IndividualDetail() {
             needed at a time.
           */}
             <div className="border-t border-pa-grey-01 p-8">
-              <div role="tablist" aria-label="Supporting detail" className="flex gap-1 border-b border-pa-grey-01">
-              {(['history', 'cohort'] as const).map((tab) => {
-                const active = detailTab === tab
-                return (
-                  <button
-                    key={tab}
-                    type="button"
-                    role="tab"
-                    id={`detail-tab-${tab}`}
-                    aria-selected={active}
-                    aria-controls={`detail-panel-${tab}`}
-                    data-testid={`detail-tab-${tab}`}
-                    onClick={() => setDetailTab(tab)}
-                    className={`-mb-px border-b-2 px-4 py-2.5 font-pa-body text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-aqua-04 ${
-                      active
-                        ? 'border-pa-aqua-05 text-pa-grey-04'
-                        : 'border-transparent text-pa-grey-03 hover:text-pa-grey-04'
-                    }`}
+              <div
+                role="tablist"
+                aria-label="Supporting detail"
+                className="flex flex-wrap gap-1 border-b border-pa-grey-01"
+              >
+                {DETAIL_TABS.map(({ id, label }) => {
+                  const active = detailTab === id
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      role="tab"
+                      id={`detail-tab-${id}`}
+                      aria-selected={active}
+                      aria-controls={`detail-panel-${id}`}
+                      data-testid={`detail-tab-${id}`}
+                      onClick={() => setDetailTab(id)}
+                      className={`-mb-px border-b-2 px-4 py-2.5 font-pa-body text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-aqua-04 ${
+                        active
+                          ? 'border-pa-aqua-05 text-pa-grey-04'
+                          : 'border-transparent text-pa-grey-03 hover:text-pa-grey-04'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  )
+                })}
+              </div>
+
+              <div
+                role="tabpanel"
+                id="detail-panel-explanation"
+                aria-labelledby="detail-tab-explanation"
+                hidden={detailTab !== 'explanation'}
+                className="pt-7"
+              >
+                <p
+                  data-testid="detail-explanation"
+                  className="max-w-4xl font-pa-body text-sm leading-relaxed text-pa-grey-04"
+                >
+                  {explainTarget(person, target)}
+                </p>
+              </div>
+
+              <div
+                role="tabpanel"
+                id="detail-panel-notes"
+                aria-labelledby="detail-tab-notes"
+                hidden={detailTab !== 'notes'}
+                className="pt-7"
+              >
+                {target.notes ? (
+                  <p
+                    data-testid="detail-notes"
+                    className="max-w-4xl font-pa-body text-sm leading-relaxed text-pa-grey-04"
                   >
-                    {tab === 'history' ? 'Recent updates & changes' : 'Cohort comparison'}
-                  </button>
-                )
-              })}
-            </div>
+                    {target.notes}
+                  </p>
+                ) : (
+                  <p
+                    data-testid="detail-notes-empty"
+                    className="max-w-4xl font-pa-body text-sm leading-relaxed text-pa-grey-03"
+                  >
+                    No notes yet. Managers can add personal context (strengths, interests, goals) from the override
+                    screen.
+                  </p>
+                )}
+              </div>
 
             <div
               role="tabpanel"
