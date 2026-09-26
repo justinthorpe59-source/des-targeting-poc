@@ -35,9 +35,18 @@ System 1 is a tool that helps a line manager and target owner set a target for e
 
 ## Target states
 
-`Modelled → Adjusted → Proposed → Approved`
+`Modelled → Adjusted → Pending Sign-off → Proposed → Approved`
 
 Only **Approved** records are included in the snapshot export to System 2.
+
+**Corrected 26 Sept 2026.** This read as four states, omitting `Pending
+Sign-off`. That state is real and load-bearing: the real-time cross-check
+routes a failed check or a drastic change into it instead of applying
+immediately, the Exceptions Queue's sign-off section acts on it, and
+`approveSignOff`/`rejectSignOff` move records out of it. It was added by the
+sign-off gate after this line was written and never reflected here. The
+status pill and the Individual Detail progress tracker both carry all five;
+the tracker abbreviates it to "Sign-off" for width.
 
 ## Exceptions queue — validation thresholds
 

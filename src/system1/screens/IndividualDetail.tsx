@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { SEED_PEOPLE } from '../data/people'
 import { useSystem1Store } from '../../store/system1Store'
@@ -43,17 +44,24 @@ function AttributeChip({
   return (
     <div
       data-testid={testId}
-      className="rounded-pa-chip border border-pa-grey-01 bg-pa-white px-4 py-3"
+      className="rounded-pa-chip border border-pa-grey-01 px-5 py-4"
+      /* Tinted fill, not white: on a white card an unfilled chip is invisible
+         as a distinct object. The reference's chips read as small cards. */
+      style={{ background: 'var(--color-pa-grey-wash)' }}
     >
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-start justify-between gap-3">
         <span className="font-pa-body text-xs text-pa-grey-03">{label}</span>
         {badge && (
-          <span data-testid={`${testId}-badge`} className="shrink-0 font-pa-mono text-[11px] text-pa-grey-02">
+          <span
+            data-testid={`${testId}-badge`}
+            className="shrink-0 rounded-full px-2 py-0.5 font-pa-mono text-[11px] font-semibold"
+            style={{ background: 'var(--color-pa-grey-01)', color: 'var(--color-pa-grey-03)' }}
+          >
             {badge}
           </span>
         )}
       </div>
-      <div data-testid={`${testId}-value`} className="mt-1 font-pa-body text-base font-semibold text-pa-grey-04">
+      <div data-testid={`${testId}-value`} className="mt-1.5 font-pa-body text-base font-semibold text-pa-grey-04">
         {value}
       </div>
     </div>
@@ -89,6 +97,7 @@ export function IndividualDetail() {
   }
 
   const personHistory = auditLog.filter((entry) => entry.personId === person.id)
+  const [detailTab, setDetailTab] = useState<'history' | 'cohort'>('history')
 
   return (
     <section className="relative space-y-6">
@@ -103,7 +112,7 @@ export function IndividualDetail() {
       {loading ? (
         <SearchlightLoader />
       ) : (
-        <div className="animate-[pa-fade-in_500ms_ease-out] space-y-6">
+        <div className="animate-[pa-fade-in_500ms_ease-out] space-y-8">
           {/*
             Hero card — two zones per searchlight-visual-spec.md and the
             reference: left ~58% identity + data, right ~42% a large square
@@ -119,7 +128,7 @@ export function IndividualDetail() {
             value with a secondary value, then a metadata row, then actions.
           */}
           <div className="overflow-hidden rounded-pa-card border border-pa-grey-01 bg-pa-white">
-            <div className="grid gap-6 p-6 lg:grid-cols-[58fr_42fr]">
+            <div className="grid gap-10 p-8 lg:grid-cols-[58fr_42fr]">
               {/* ---- Left zone: identity + data ---- */}
               <div className="flex flex-col">
                 {/* identity row */}
@@ -210,16 +219,21 @@ export function IndividualDetail() {
                   )}
                   <Link
                     to={`/system1/override/${person.id}`}
-                    className="rounded-full border border-pa-grey-02 px-4 py-2 font-pa-body text-xs font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-wash"
+                    className="rounded-full bg-pa-grey-01 px-4 py-2 font-pa-body text-xs font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-02/60"
                   >
                     Override / what-if
                   </Link>
-                  <a
-                    href="#cohort"
-                    className="rounded-full border border-pa-grey-02 px-4 py-2 font-pa-body text-xs font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-wash"
+                  <button
+                    type="button"
+                    data-testid="detail-go-cohort"
+                    onClick={() => {
+                      setDetailTab('cohort')
+                      document.getElementById('detail-tab-cohort')?.scrollIntoView({ block: 'center' })
+                    }}
+                    className="rounded-full bg-pa-grey-01 px-4 py-2 font-pa-body text-xs font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-02/60"
                   >
                     Compare to cohort
-                  </a>
+                  </button>
                 </div>
 
                 <div className="mt-8">
@@ -276,9 +290,9 @@ export function IndividualDetail() {
             baseline applies rather than scaling it -- so those two chips
             carry a value and no badge, rather than an invented percentage.
           */}
-          <div>
-            <h2 className="mb-3 font-pa-display text-sm font-semibold text-pa-grey-04">Attributes</h2>
-            <div data-testid="detail-attributes" className="grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="rounded-pa-card border border-pa-grey-01 bg-pa-white p-8">
+            <h2 className="mb-5 font-pa-display text-sm font-semibold text-pa-grey-04">Attributes</h2>
+            <div data-testid="detail-attributes" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:max-w-3xl">
               <AttributeChip
                 testId="attr-role"
                 label="Role"
@@ -297,16 +311,16 @@ export function IndividualDetail() {
           </div>
 
           {/* Explanation */}
-          <div className="rounded-xl border border-pa-grey-01 bg-pa-white p-4">
-            <h2 className="font-pa-display text-sm font-semibold text-pa-grey-04">Explanation</h2>
+          <div className="rounded-pa-card border border-pa-grey-01 bg-pa-white p-8">
+            <h2 className="mb-3 font-pa-display text-sm font-semibold text-pa-grey-04">Explanation</h2>
             <p data-testid="detail-explanation" className="mt-2 font-pa-body text-sm leading-relaxed text-pa-grey-04">
               {explainTarget(person, target)}
             </p>
           </div>
 
           {/* Personal context */}
-          <div className="rounded-xl border border-pa-grey-01 bg-pa-white p-4">
-            <h2 className="font-pa-display text-sm font-semibold text-pa-grey-04">Personal context</h2>
+          <div className="rounded-pa-card border border-pa-grey-01 bg-pa-white p-8">
+            <h2 className="mb-3 font-pa-display text-sm font-semibold text-pa-grey-04">Personal context</h2>
             {target.notes ? (
               <p data-testid="detail-notes" className="mt-2 font-pa-body text-sm text-pa-grey-04">
                 {target.notes}
@@ -319,27 +333,57 @@ export function IndividualDetail() {
           </div>
 
           {/*
-            Change history — two-column history cards per the reference's
-            bottom row: timestamp + source-tag pill on the top line, bold
-            headline, then a 2-3 line body.
+            Supporting detail as a TAB PANEL, not a stack.
 
-            The source tag is real data, not decoration: auditLog records who
-            made each change (Manager, or a named leadership group), which is
-            exactly what the reference's tag slot carries.
+            searchlight-visual-spec.md puts Cohort Comparison on this screen
+            "as a tab/panel" post-consolidation. It was rendering as a
+            permanently-stacked section below the history, so both views were
+            visible at once — which is precisely what a tab is not. The two
+            tabs are the person's change history and their cohort comparison:
+            both are supporting detail about one person, and only one is
+            needed at a time.
           */}
-          <div>
-            <h2 className="mb-3 font-pa-display text-sm font-semibold text-pa-grey-04">
-              Recent updates &amp; changes
-            </h2>
+          <div className="rounded-pa-card border border-pa-grey-01 bg-pa-white p-8">
+            <div role="tablist" aria-label="Supporting detail" className="flex gap-1 border-b border-pa-grey-01">
+              {(['history', 'cohort'] as const).map((tab) => {
+                const active = detailTab === tab
+                return (
+                  <button
+                    key={tab}
+                    type="button"
+                    role="tab"
+                    id={`detail-tab-${tab}`}
+                    aria-selected={active}
+                    aria-controls={`detail-panel-${tab}`}
+                    data-testid={`detail-tab-${tab}`}
+                    onClick={() => setDetailTab(tab)}
+                    className={`-mb-px border-b-2 px-4 py-2.5 font-pa-body text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-aqua-04 ${
+                      active
+                        ? 'border-pa-aqua-05 text-pa-grey-04'
+                        : 'border-transparent text-pa-grey-03 hover:text-pa-grey-04'
+                    }`}
+                  >
+                    {tab === 'history' ? 'Recent updates & changes' : 'Cohort comparison'}
+                  </button>
+                )
+              })}
+            </div>
 
-            {personHistory.length === 0 ? (
-              /* Empty state keeps the card structure rather than collapsing to
-                 a line of text, so the section reads the same shape whether or
-                 not this person has history yet. */
-              <div className="grid gap-4 md:grid-cols-2">
+            <div
+              role="tabpanel"
+              id="detail-panel-history"
+              aria-labelledby="detail-tab-history"
+              hidden={detailTab !== 'history'}
+              className="pt-7"
+            >
+              {personHistory.length === 0 ? (
+                /* Empty state keeps the card structure rather than collapsing
+                   to a line of text, so the section reads the same shape
+                   whether or not this person has history yet. */
                 <div
                   data-testid="detail-history-empty"
-                  className="rounded-pa-card border border-dashed border-pa-grey-02 bg-pa-white p-5"
+                  className="rounded-pa-card border border-dashed border-pa-grey-02 p-7 md:max-w-lg"
+                  style={{ background: 'var(--color-pa-grey-wash)' }}
                 >
                   <div className="flex items-center justify-between gap-3">
                     <span className="font-pa-mono text-xs text-pa-grey-02">No activity yet</span>
@@ -347,51 +391,60 @@ export function IndividualDetail() {
                       —
                     </span>
                   </div>
-                  <h3 className="mt-3 font-pa-display text-base font-semibold text-pa-grey-03">
+                  <h3 className="mt-4 font-pa-display text-base font-semibold text-pa-grey-03">
                     Nothing recorded for {person.name.split(' ')[0]}
                   </h3>
-                  <p className="mt-1.5 font-pa-body text-sm text-pa-grey-03">
+                  <p className="mt-2 font-pa-body text-sm leading-relaxed text-pa-grey-03">
                     This record is still at its modelled value. Adjusting, proposing or approving it will log the
                     change here, with who made it and why.
                   </p>
                 </div>
-                <div className="hidden rounded-pa-card border border-dashed border-pa-grey-01 md:block" />
-              </div>
-            ) : (
-              <div data-testid="detail-history" className="grid gap-4 md:grid-cols-2">
-                {personHistory
-                  .slice()
-                  .reverse()
-                  .map((entry) => (
-                    <article
-                      key={entry.id}
-                      data-testid="detail-history-card"
-                      className="rounded-pa-card border border-pa-grey-01 bg-pa-white p-5"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="font-pa-mono text-xs text-pa-grey-03">{entry.timestamp}</span>
-                        <span
-                          data-testid="detail-history-actor"
-                          className="shrink-0 rounded-full px-2.5 py-1 font-pa-body text-[11px] font-semibold"
-                          style={{
-                            background: 'var(--color-pa-aqua-01)',
-                            color: 'var(--color-pa-aqua-05)',
-                          }}
-                        >
-                          {entry.actor}
-                        </span>
-                      </div>
-                      <h3 className="mt-3 font-pa-display text-base font-semibold text-pa-grey-04">{entry.action}</h3>
-                      <p className="mt-1.5 font-pa-body text-sm leading-relaxed text-pa-grey-03">{entry.detail}</p>
-                    </article>
-                  ))}
-              </div>
-            )}
-          </div>
+              ) : (
+                <div data-testid="detail-history" className="grid gap-5 md:grid-cols-2">
+                  {personHistory
+                    .slice()
+                    .reverse()
+                    .map((entry) => (
+                      <article
+                        key={entry.id}
+                        data-testid="detail-history-card"
+                        className="rounded-pa-card border border-pa-grey-01 p-7"
+                        style={{ background: 'var(--color-pa-grey-wash)' }}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="font-pa-mono text-xs text-pa-grey-03">{entry.timestamp}</span>
+                          <span
+                            data-testid="detail-history-actor"
+                            className="shrink-0 rounded-full px-2.5 py-1 font-pa-body text-[11px] font-semibold"
+                            style={{
+                              background: 'var(--color-pa-aqua-01)',
+                              color: 'var(--color-pa-aqua-05)',
+                            }}
+                          >
+                            {entry.actor}
+                          </span>
+                        </div>
+                        <h3 className="mt-4 font-pa-display text-base font-semibold text-pa-grey-04">
+                          {entry.action}
+                        </h3>
+                        <p className="mt-2 font-pa-body text-sm leading-relaxed text-pa-grey-03">{entry.detail}</p>
+                      </article>
+                    ))}
+                </div>
+              )}
+            </div>
 
-          {/* Embedded cohort comparison — the scroll-down section */}
-          <div id="cohort" className="scroll-mt-6">
-            <CohortComparisonPanel person={person} />
+            <div
+              role="tabpanel"
+              id="detail-panel-cohort"
+              aria-labelledby="detail-tab-cohort"
+              hidden={detailTab !== 'cohort'}
+              className="pt-7"
+            >
+              <div id="cohort" className="scroll-mt-6">
+                <CohortComparisonPanel person={person} />
+              </div>
+            </div>
           </div>
         </div>
       )}
