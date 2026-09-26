@@ -16,7 +16,8 @@ Compiled from the screenshot-derived design pass, 24 Sept 2026. This is a compan
 
 **Status pill component (single shared component, two uses)**
 - Shape: fully rounded (true pill, not rounded-rectangle), solid colour fill (not outline), centred label text.
-- Use 1 — target workflow state: Modelled / Adjusted / Proposed / Approved (4 distinct `[role: state-*]` colours).
+- Use 1 — target workflow state: Modelled / Adjusted / Pending Sign-off / Proposed / Approved (5 distinct `[role: state-*]` colours).
+  - **Corrected 26 Sept 2026.** This said four, omitting `Pending Sign-off`. That state is written by the sign-off gate and acted on by the Exceptions Queue — see CLAUDE.md's Target states. Five colours, not four.
 - Use 2 — risk status: On track / At risk / Off track / Infeasible → green / amber / red gradient family. This same green→amber→red logic also drives the *fill* of the gap/forecast hero visualisation on Executive Summary and Division Comparison — it is not just a label pill there, it's a proportional gradient fill.
 
 **Accordion component (single shared component, two uses)**
