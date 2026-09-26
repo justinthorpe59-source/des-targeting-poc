@@ -28,7 +28,6 @@ import { resetAllDemoData } from '../store/resetAll'
 
 const SYSTEM_1_LINKS = [
   { to: '/system1/overview', label: 'Overview' },
-  { to: '/system1/override', label: 'Override' },
   { to: '/system1/exceptions', label: 'Exceptions' },
   { to: '/system1/mass-adjustment', label: 'Mass adjust' },
 ]

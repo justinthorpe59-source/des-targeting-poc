@@ -3,7 +3,6 @@ import { AppShell } from './shell/AppShell'
 import { System1Root } from './system1/System1Root'
 import { OverviewPopulation } from './system1/screens/OverviewPopulation'
 import { IndividualDetail } from './system1/screens/IndividualDetail'
-import { ManagerOverride } from './system1/screens/ManagerOverride'
 import { ExceptionsQueue } from './system1/screens/ExceptionsQueue'
 import { MassAdjustment } from './system1/screens/MassAdjustment'
 import { System2Root } from './system2/System2Root'
@@ -20,8 +19,12 @@ export default function App() {
           <Route index element={<Navigate to="overview" replace />} />
           <Route path="overview" element={<OverviewPopulation />} />
           <Route path="person/:id" element={<IndividualDetail />} />
-          <Route path="override" element={<ManagerOverride />} />
-          <Route path="override/:id" element={<ManagerOverride />} />
+          {/* Manager Override is a modal over Individual Detail, not a screen
+              of its own. This route still resolves so deep links keep working:
+              it renders Individual Detail with the modal already open. The
+              person-less /override route is gone — an override with no subject
+              has nothing to show. */}
+          <Route path="override/:id" element={<IndividualDetail />} />
           <Route path="exceptions" element={<ExceptionsQueue />} />
           <Route path="mass-adjustment" element={<MassAdjustment />} />
         </Route>
