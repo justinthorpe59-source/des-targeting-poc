@@ -34,8 +34,9 @@ const STATE_TONE: Record<TargetStatus, PillTone> = {
 const RISK_TONE: Record<RiskStatus, PillTone> = {
   'On track': { fill: 'var(--color-pa-risk-on-track)', text: 'var(--color-pa-white)' },
   'At risk': { fill: 'var(--color-pa-risk-at-risk)', text: 'var(--color-pa-dark-blue)' },
-  'Off track': { fill: 'var(--color-pa-risk-off-track)', text: 'var(--color-pa-white)' },
-  Infeasible: { fill: 'var(--color-pa-risk-infeasible)', text: 'var(--color-pa-white)' },
+  // Dark Blue, not white, on the two reds — see the contrast note above.
+  'Off track': { fill: 'var(--color-pa-risk-off-track)', text: 'var(--color-pa-dark-blue)' },
+  Infeasible: { fill: 'var(--color-pa-risk-infeasible)', text: 'var(--color-pa-dark-blue)' },
 }
 
 export function StatusPill({

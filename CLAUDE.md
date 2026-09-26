@@ -209,6 +209,8 @@ Each entry below includes its **acceptance signal**.
 
 **Status: complete.** The 11 System 1 screens are now 5 and the 6 System 2 screens are now 3, on `main`. Kept here as the record of what moved where, so nobody re-litigates a merge or goes looking for a deleted screen. The next phase is the visual rebuild — see `searchlight-visual-spec.md` and Design direction below.
 
+**Route count, corrected 26 Sept 2026.** The consolidation's acceptance signal was "exactly 5 System 1 routes and 3 System 2 routes", and it was met at merge. The visual rebuild then changed it deliberately: System 1 is now **4 screen components across 5 route paths**. Manager Override became a modal over Individual Detail — the visual spec's own recommendation, decided rather than drifted into. `/system1/override/:id` still resolves, so the Exceptions Queue's resolve action and the roster's Notes button keep working; it renders Individual Detail with the modal already open. The person-less `/system1/override` route and its top-nav link are gone, since an override with no subject has nothing to show. All five consolidated screens still exist and are all still reachable — one of them simply isn't a route of its own. Not a regression; the record just needed correcting.
+
 **System 1 — what happened:**
 - `Overview.tsx` + `Population.tsx` → `OverviewPopulation.tsx`, one route `/system1/overview`.
 - `SnapshotExport.tsx` → folded into `OverviewPopulation.tsx` as a System 2 sync strip (last-synced status + manual re-export). Its record-by-record preview table was dropped; `buildSnapshot()` is untouched.
