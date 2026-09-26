@@ -81,6 +81,9 @@ export function IndividualDetail() {
   const proposeRecord = useSystem1Store((state) => state.proposeRecord)
   const approveRecord = useSystem1Store((state) => state.approveRecord)
   const loading = useInitialLoad(true)
+  // Declared before the not-found early return below: a hook after a
+  // conditional return changes hook order between renders.
+  const [detailTab, setDetailTab] = useState<'history' | 'cohort'>('history')
 
   const person = SEED_PEOPLE.find((p) => p.id === id)
   const target = person ? targets[person.id] : undefined
@@ -97,7 +100,6 @@ export function IndividualDetail() {
   }
 
   const personHistory = auditLog.filter((entry) => entry.personId === person.id)
-  const [detailTab, setDetailTab] = useState<'history' | 'cohort'>('history')
 
   return (
     <section className="relative space-y-6">
