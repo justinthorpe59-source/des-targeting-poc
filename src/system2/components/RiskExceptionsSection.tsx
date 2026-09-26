@@ -1,13 +1,14 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useSystem2Store } from '../../store/system2Store'
 import { useScenarioStore } from '../../store/scenarioStore'
 import { aggregate } from '../engine/aggregation'
-import { computeRiskStatuses } from '../engine/riskStatus'
+import { computeRiskStatuses, type RiskStatus } from '../engine/riskStatus'
 import { computeGoals } from '../engine/goals'
 import { detectRiskExceptions, type RiskExceptionType } from '../engine/riskExceptions'
-import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
-import { useInitialLoad } from '../../components/searchlight/useInitialLoad'
+import type { Division } from '../../system1/data/types'
+import { round1 } from '../riskDisplay'
+import { StatusPill } from '../../components/searchlight/StatusPill'
 
 const TYPE_LABELS: Record<RiskExceptionType, string> = {
   'missing-forecast-data': 'Missing forecast data',
@@ -16,62 +17,102 @@ const TYPE_LABELS: Record<RiskExceptionType, string> = {
   'large-unexplained-gap': 'Large unexplained gap',
 }
 
-// Severity-differentiated per the PA palette (Searchlight design pass) — the
-// two hard-fail types in Ingenuity Red, low-confidence in Apricot, and the
-// untested-gap flag in Rose. Replaces the old red/amber/purple set (purple
-// isn't a PA colour).
-const TYPE_BADGE_CLASS: Record<RiskExceptionType, string> = {
-  'missing-forecast-data': 'bg-[#fdecee] text-pa-ingenuity-red',
-  infeasible: 'bg-[#fdecee] text-pa-ingenuity-red',
-  'low-confidence-high-reliance': 'bg-pa-apricot-02 text-pa-grey-04',
-  'large-unexplained-gap': 'bg-pa-rose-01 text-pa-rose-04',
+/** Flag chip tones on the PA palette, severity-differentiated. */
+const TYPE_TONE: Record<RiskExceptionType, { fill: string; text: string }> = {
+  'missing-forecast-data': { fill: 'var(--color-pa-rose-01)', text: 'var(--color-pa-rose-04)' },
+  infeasible: { fill: 'var(--color-pa-rose-01)', text: 'var(--color-pa-rose-04)' },
+  'low-confidence-high-reliance': { fill: 'var(--color-pa-apricot-02)', text: 'var(--color-pa-grey-04)' },
+  'large-unexplained-gap': { fill: 'var(--color-pa-aqua-02)', text: 'var(--color-pa-aqua-05)' },
 }
 
-const FILTER_OPTIONS: Array<RiskExceptionType | 'All'> = [
-  'All',
-  'missing-forecast-data',
-  'infeasible',
-  'low-confidence-high-reliance',
-  'large-unexplained-gap',
-]
+/**
+ * Flags whose detail sentence only restates the flag's own name — "expected
+ * achievement can't reach the goal even at maximum feasible capacity" IS
+ * what "Infeasible" means. Printing both put the same boilerplate on nearly
+ * every row. The chip carries it; the sentence is dropped. The other two
+ * flags' details each carry a figure that genuinely differs per group, so
+ * those are kept.
+ */
+const DETAIL_RESTATES_CHIP: RiskExceptionType[] = ['infeasible', 'missing-forecast-data']
+
+interface RiskRow {
+  groupKey: string
+  label: string
+  level: 'division' | 'team'
+  types: RiskExceptionType[]
+  details: string[]
+  gap: number
+  status: RiskStatus
+}
 
 /**
- * S2-M9's risk/exception flags. Since the 3-screen consolidation this is the
- * Top Risks drill-in section at the foot of Executive Summary rather than a
- * screen of its own — the sponsor's front door is where "where does the real
- * risk sit?" gets answered, so the flags belong under the headline figures
- * that provoke the question.
+ * The single Top Risks list at the foot of Executive Summary.
  *
- * detectRiskExceptions() is still the only place these thresholds are
- * implemented — this adds no detection logic, just a filtered list. The
- * parent screen owns the empty state (no snapshot imported), so this renders
- * nothing when there are no records.
+ * This used to be two lists: a "Top risk drivers" card list (team, gap,
+ * status) and, directly beneath it, a dense GROUP/LEVEL/FLAGS/DETAIL/ACTION
+ * table over the same teams. They duplicated each other, and the table
+ * repeated one boilerplate sentence in almost every row. Consolidated here
+ * into one list, per the spec, which asks for a single Top Risks list in the
+ * stat-tile / list-card language rather than a spreadsheet.
+ *
+ * What the table contributed and the cards did not — the specific flags, and
+ * the one line of detail that actually differs per group — is folded into
+ * the same row-card. Everything generic is gone.
+ *
+ * detectRiskExceptions() is still the only place the four locked thresholds
+ * are implemented; gap and status come from the same aggregation the rest of
+ * the screen reads, so the two can never disagree.
  */
 export function RiskExceptionsSection() {
   const records = useSystem2Store((state) => state.records)
   const savedScenarios = useScenarioStore((state) => state.scenarios)
-  const [typeFilter, setTypeFilter] = useState<RiskExceptionType | 'All'>('All')
-  const loading = useInitialLoad(records.length > 0)
 
   const aggregation = useMemo(() => aggregate(records), [records])
   const goals = useMemo(() => computeGoals(aggregation), [aggregation])
-  const riskStatuses = useMemo(() => computeRiskStatuses(records, aggregation, goals), [records, aggregation, goals])
+  const riskStatuses = useMemo(
+    () => computeRiskStatuses(records, aggregation, goals),
+    [records, aggregation, goals],
+  )
   const flagsByGroup = useMemo(
     () => detectRiskExceptions({ aggregation, riskStatuses, savedScenarios }),
     [aggregation, riskStatuses, savedScenarios],
   )
 
-  const rows = useMemo(() => {
-    const entries = [...flagsByGroup.entries()]
-      .map(([groupKey, flags]) => ({
+  const rows = useMemo<RiskRow[]>(() => {
+    const out: RiskRow[] = []
+    for (const [groupKey, flags] of flagsByGroup) {
+      if (flags.length === 0) continue
+      const level = flags[0].level
+      const asDivision = groupKey as Division
+      const rollup =
+        level === 'division' ? aggregation.byDivision.get(asDivision) : aggregation.byTeam.get(groupKey)
+      const goal = level === 'division' ? goals.byDivision.get(asDivision) : goals.byTeam.get(groupKey)
+      const risk =
+        level === 'division' ? riskStatuses.byDivision.get(asDivision) : riskStatuses.byTeam.get(groupKey)
+      if (!rollup || goal === undefined || !risk) continue
+
+      out.push({
         groupKey,
-        level: flags[0].level,
-        flags: typeFilter === 'All' ? flags : flags.filter((f) => f.type === typeFilter),
-      }))
-      .filter((row) => row.flags.length > 0)
-    entries.sort((a, b) => a.groupKey.localeCompare(b.groupKey))
-    return entries
-  }, [flagsByGroup, typeFilter])
+        label: groupKey.replace('::', ' / '),
+        level,
+        /* Drop an "Infeasible" chip when the status pill on the same row
+           already says Infeasible — the chip and the pill are literally the
+           same word, and printing both was the boilerplate problem again,
+           one level down. Other flag types say something the status does
+           not, so they stay. */
+        types: flags
+          .map((f) => f.type)
+          .filter((t) => !(t === 'infeasible' && risk.status === 'Infeasible')),
+        details: flags
+          .filter((f) => !DETAIL_RESTATES_CHIP.includes(f.type))
+          .map((f) => f.detail),
+        gap: goal - rollup.expectedAchievement,
+        status: risk.status,
+      })
+    }
+    // Biggest contributors first — the ranking the old card list provided.
+    return out.sort((a, b) => Math.abs(b.gap) - Math.abs(a.gap))
+  }, [flagsByGroup, aggregation, goals, riskStatuses])
 
   if (records.length === 0) return null
 
@@ -80,89 +121,65 @@ export function RiskExceptionsSection() {
       <div>
         <h2 className="font-pa-display text-base font-semibold text-pa-grey-04">Top risks</h2>
         <p className="mt-1 max-w-2xl font-pa-body text-sm text-pa-grey-03">
-          Divisions/teams that violate a locked threshold — missing forecast data, infeasible, low
-          confidence with high reliance, or a large gap no scenario has tested yet. Flagged for review
-          only; nothing here is ever blocked.
+          Divisions and teams that violate a locked threshold, ranked by their contribution to the gap. Flagged
+          for review only — nothing here is ever blocked.
         </p>
       </div>
 
-      {loading ? (
-        <SearchlightLoader />
+      {rows.length === 0 ? (
+        <p data-testid="s2-exceptions-empty" className="font-pa-body text-sm text-pa-grey-03">
+          Nothing flagged right now.
+        </p>
       ) : (
-        <div className="animate-[pa-fade-in_500ms_ease-out] space-y-6">
-          <div className="flex flex-wrap items-end gap-4">
-            <label className="flex flex-col gap-1 font-pa-body text-xs font-medium text-pa-grey-03">
-              Type
-              <select
-                data-testid="s2-exceptions-type-filter"
-                className="rounded-md border border-pa-grey-02 bg-pa-white px-2 py-1.5 font-pa-body text-sm text-pa-grey-04 focus:border-pa-aqua-04 focus:outline-none"
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value as RiskExceptionType | 'All')}
-              >
-                {FILTER_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt === 'All' ? 'All types' : TYPE_LABELS[opt]}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <span data-testid="s2-exceptions-count" className="ml-auto font-pa-body text-sm text-pa-grey-03">
-              {rows.length} flagged group{rows.length === 1 ? '' : 's'}
-            </span>
-          </div>
+        <div data-testid="s2-exceptions-rows" className="flex flex-col gap-2">
+          {rows.map((row) => (
+            <div
+              key={row.groupKey}
+              data-testid="s2-exceptions-row"
+              data-group-key={row.groupKey}
+              data-level={row.level}
+              className="rounded-pa-card px-6 py-4"
+              style={{ background: 'var(--color-pa-grey-01)' }}
+            >
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <span className="font-pa-body text-sm font-semibold text-pa-grey-04">{row.label}</span>
+                <span className="font-pa-body text-xs text-pa-grey-03">
+                  {row.level === 'division' ? 'Division' : 'Team'}
+                </span>
+                <span className="font-pa-body text-xs text-pa-grey-03">
+                  {row.gap >= 0 ? 'short of goal by' : 'above goal by'}{' '}
+                  <span className="font-pa-mono font-semibold text-pa-grey-04">
+                    £{round1(Math.abs(row.gap))}k
+                  </span>
+                </span>
 
-          <div className="overflow-x-auto rounded-lg border border-pa-grey-01 bg-pa-white">
-            <table className="min-w-full divide-y divide-pa-grey-01 font-pa-body text-sm">
-              <thead className="bg-pa-grey-wash text-left text-xs font-medium uppercase tracking-wide text-pa-grey-03">
-                <tr>
-                  <th className="px-3 py-2">Group</th>
-                  <th className="px-3 py-2">Level</th>
-                  <th className="px-3 py-2">Flags</th>
-                  <th className="px-3 py-2">Detail</th>
-                  <th className="px-3 py-2 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody data-testid="s2-exceptions-rows" className="divide-y divide-pa-grey-01">
-                {rows.map(({ groupKey, level, flags }) => (
-                  <tr key={groupKey} data-testid="s2-exceptions-row" data-group-key={groupKey} data-level={level}>
-                    <td className="px-3 py-2 font-medium text-pa-grey-04">{groupKey.replace('::', ' / ')}</td>
-                    <td className="px-3 py-2 text-pa-grey-03">{level === 'division' ? 'Division' : 'Team'}</td>
-                    <td className="px-3 py-2">
-                      <div className="flex flex-wrap gap-1">
-                        {flags.map((flag, i) => (
-                          <span key={i} className={`rounded-full px-2 py-0.5 text-xs font-medium ${TYPE_BADGE_CLASS[flag.type]}`}>
-                            {TYPE_LABELS[flag.type]}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-3 py-2 text-xs text-pa-grey-03">
-                      <ul className="space-y-0.5">
-                        {flags.map((flag, i) => (
-                          <li key={i}>{flag.detail}</li>
-                        ))}
-                      </ul>
-                    </td>
-                    <td className="px-3 py-2 text-right">
-                      <Link
-                        to="/system2/division-comparison"
-                        className="text-xs font-medium text-pa-aqua-05 hover:text-pa-aqua-04"
-                      >
-                        {level === 'division' ? 'Division comparison →' : 'Find in divisions →'}
-                      </Link>
-                    </td>
-                  </tr>
+                {row.types.map((type) => (
+                  <span
+                    key={type}
+                    className="rounded-full px-2.5 py-1 font-pa-body text-[11px] font-semibold"
+                    style={{ background: TYPE_TONE[type].fill, color: TYPE_TONE[type].text }}
+                  >
+                    {TYPE_LABELS[type]}
+                  </span>
                 ))}
-                {rows.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="px-3 py-6 text-center font-pa-body text-sm text-pa-grey-03">
-                      No flagged groups{typeFilter !== 'All' ? ` of type "${TYPE_LABELS[typeFilter]}"` : ''}.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+
+                <span className="ml-auto flex shrink-0 items-center gap-4">
+                  <StatusPill risk={row.status} />
+                  <Link
+                    to="/system2/division-comparison"
+                    className="font-pa-body text-xs font-semibold text-pa-aqua-05 hover:text-pa-aqua-04"
+                  >
+                    {row.level === 'division' ? 'Compare →' : 'Find →'}
+                  </Link>
+                </span>
+              </div>
+
+              {/* Only the detail that actually differs per group survives. */}
+              {row.details.length > 0 && (
+                <p className="mt-2 font-pa-body text-xs text-pa-grey-03">{row.details.join(' · ')}</p>
+              )}
+            </div>
+          ))}
         </div>
       )}
     </section>
