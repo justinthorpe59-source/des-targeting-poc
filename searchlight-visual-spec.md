@@ -2,7 +2,18 @@
 
 Compiled from the screenshot-derived design pass, 24 Sept 2026. This is a companion to the locked functional spec (CLAUDE.md) — read both before building any screen.
 
-**Rule for Claude Code:** every `[role: x]` placeholder below must resolve against the PA colour/typography token file already in this repo. Do not invent a hex value or px size for any placeholder — if a token doesn't exist yet for a role, stop and flag it rather than approximating.
+**Rule for Claude Code:** every `[role: x]` placeholder below must resolve against the PA colour/typography token file already in this repo (`src/index.css`). Do not invent a hex value or px size for any placeholder — if a token doesn't exist yet for a role, stop and flag it rather than approximating.
+
+**What "screenshot reference" means here** *(clarified 26 Sept 2026)*
+- The references are **images from other products** that informed the design pass — not mockups of Searchlight screens. A reference shows a *visual language* to adopt, not content to copy.
+- Consequence: the reference's own data is never a source. Its trait count, its per-node granularity, its field labels belong to that product. **CLAUDE.md governs what the data is and what each element represents; the image governs only how it looks.** Two real errors came from missing this — an 8-cell Attributes grid transcribed from 8 NFT traits when the locked factor list is four, and one bubble per person when the model calls for one per team.
+- This markdown is a *summary* of those images. For any screen not marked "no screenshot reference exists", read the image alongside this text: layout, spacing, proportion and composition come from the image; token mapping, explicit overrides and named rejects come from here.
+
+**Precedence, when the two disagree**
+1. Layout, spacing, proportion, composition, relative hierarchy → **the screenshot**.
+2. Colour and type values, the named rejects, and anywhere this doc says the source material was inconsistent → **this doc**.
+3. Behaviour, data, and what an element represents → **CLAUDE.md**, regardless of the image.
+4. A genuine conflict between 1 and 2 → **stop and flag it**, do not pick silently.
 
 ---
 
@@ -11,8 +22,16 @@ Compiled from the screenshot-derived design pass, 24 Sept 2026. This is a compan
 **Navigation**
 - Top navigation bar, not a sidebar. Logo/wordmark left, primary nav links inline, utility icons (search/notifications) + profile right. Bar background is visually distinct (inverse/dark) from the page body beneath it.
 
+**Page width — full bleed** *(added 26 Sept 2026)*
+- The nav bar and the page body both run the full viewport width on every screen. The shell imposes no max-width.
+- Content that would be unreadable at that measure keeps its **own** max-width — a paragraph set across 1700px is unreadable, so the constraint belongs on the text, not on the container. Same for any element with a natural size (e.g. a square visual): cap the element, not the page.
+
 **Card/chip hierarchy**
 - Two corner-radius sizes establish structure: outer "hero"/card radius ≈ 2× the inner chip/button radius. Treat this ratio as the system rule — one reference screen showed a flatter ratio; that was an inconsistency in the source material, not a second valid pattern.
+
+**Surfaces and nesting** *(added 26 Sept 2026, learned on Individual Detail)*
+- Prefer **few surfaces**. The reference's pattern is one main container per screen region, with internal sections divided by a header and a thin rule — not a separate bordered box per section. Giving every section its own border, radius and ring of page background produces competing surfaces and reads as clutter.
+- Pieces nested **inside** a card — chips, item cards — should read as distinct through a **soft fill plus a hint of elevation**, not a border. A second boxed edge inside a card competes with the card's own.
 
 **Status pill component (single shared component, two uses)**
 - Shape: fully rounded (true pill, not rounded-rectangle), solid colour fill (not outline), centred label text.
@@ -57,15 +76,65 @@ Compiled from the screenshot-derived design pass, 24 Sept 2026. This is a compan
 - **Open / not yet specified:** bubble layout algorithm (force-directed vs fixed grid) — propose, don't invent silently. Pagination behaviour for large teams in the list state — not decided.
 
 ### 2. Individual Detail
-- Full-width hero card, two zones: left ≈58% (identity + data), right ≈42% (visual).
-- Left zone, top-to-bottom: identity row (avatar + name + subtext), stat row (large value + label, paired with a secondary value + label), metadata row (small value + label).
-- Right zone: large square visual. **Undecided — needs Justin's call before build:** cohort-comparison chart, or a plain avatar/photo placeholder.
-- Below hero: "Attributes" section, 2×2 chip grid — one chip per target factor (role, capacity, location, discipline), four chips total. Chip anatomy per the reference: muted label top-left, small percentage badge top-right, bold value below, each in its own bordered box.
-  - **Corrected 26 Sept 2026.** This line previously said "strict 4-column × 2-row chip grid", i.e. 8 cells. That was transcribed from the reference image, which carries 8 NFT traits, and was never reconciled with CLAUDE.md's locked factor list — which is exactly four, "only these". Eight cells and "one chip per target factor" could not both be true. Four chips, 2×2.
+
+**Built 26 Sept 2026.** This section has been rewritten to describe what was
+actually built, after several rounds of review against the reference. Where
+it now differs from the original draft, the reason is given inline so the
+change is not mistaken for drift.
+
+**One continuous card.** The whole screen is a single container — not a main
+card plus separate cards beneath. Internal sections are divided by a thin
+rule and a section header, never by their own border, radius or ring of page
+background. *Changed from the original draft, which implied separate
+sections: the reference uses one surface here, and five competing bordered
+boxes was the result of following the draft literally.*
+
+**Always visible** (this is the reference's density — nothing more):
+- Identity row: small round avatar, bold name, grey subtext (`id · grade · division / team`), status pill right.
+- Stat row: a large value + label paired with a secondary value + label.
+- Action buttons: filled primary, soft-filled secondaries. Not outlined — the reference's secondary is a fill.
+- A **compact status indicator only**: a slim single-line progress bar, no step numbers, no connecting nodes, no per-step labels. *The full labelled 5-step tracker was tried and removed — it occupied as much vertical height as the entire Attributes section to convey what the status pill beside it already conveys. `StatusPipeline` retains a `full` variant for Manager Override, where a transition is actually being made.*
+- Attributes grid (below).
+- The square visual (below).
+
+**Right zone — resolved, was "needs Justin's call":** a plain **avatar/photo
+placeholder**, not a cohort-comparison chart. Cohort Comparison is already on
+this screen as its own tab, so a chart in the hero would duplicate it.
+
+**Square sizing.** The zones are ≈58/42, but the square is **capped** (268px)
+rather than taking a raw 42%. At a full-bleed ~1700px viewport an uncapped
+42% produces a ~670px square that drags the card down and leaves a void
+beside it. The cap is tuned so the square and the left column measure equal.
+
+**Attributes** — 2×2 chip grid, one chip per target factor (role, capacity,
+location, discipline), four chips total. Sits inside the single card as an
+internal section, not as a separate box.
+  - **Corrected 26 Sept 2026.** This previously said "strict 4-column × 2-row chip grid", i.e. 8 cells. That was transcribed from the reference image, which carries 8 NFT traits, and was never reconciled with CLAUDE.md's locked factor list — exactly four, "only these". Eight cells and "one chip per target factor" could not both be true.
+  - Chip anatomy per the reference: muted label top-left, small **pill-shaped** percentage badge with a soft fill top-right, bold value below.
   - The badge shows each factor's real multiplier read as a percentage (capacity 0.69 → 69%, role 0.95 → 95%). Location and discipline have **no** badge: they select which baseline applies rather than scaling it, so there is no percentage to show and none should be invented.
-- Below that: two-column row of history cards — timestamp + source-tag pill (top row), bold headline, 2–3 line body. This is the change-history log for this person.
-- Also lives on this screen (per consolidation): Cohort Comparison as a tab/panel, not a separate screen.
-- **Not yet designed at all:** the plain-language factor explanation text block the functional spec requires ("why this target differs from peers"). No screenshot reference covers this — needs original design work.
+
+**Lower area — one tab group, one panel at a time.** Tabs, in order:
+`Explanation` / `Personal context` / `Recent updates` / `Cohort comparison`,
+defaulting to Explanation.
+  - *Explanation and Personal context were permanent blocks in the original draft. They became tabs because the reference never shows more than one thing in this region, and as always-visible sections they roughly doubled the screen's height for content a manager reads once.*
+  - **Recent updates**: two-column history cards — timestamp + source-tag pill on the top line, bold headline, 2–3 line body. The tag is the audit actor, real data. Defaults to **2 entries**, matching the reference, with a "Show all N changes" reveal.
+  - Consecutive identical entries (same action *and* same detail) collapse. Only consecutive ones, so a genuine later repeat after some other change still reads as its own event.
+  - **Cohort comparison** lives here per the consolidation, never as a separate screen.
+
+**Nesting treatment.** Pieces nested inside the card — attribute chips,
+history cards — read through a soft fill plus a hint of elevation, **not** a
+border. A second boxed edge inside the card competes with the card's own.
+
+**Deliberately absent.** There is no caption line under the stat row. One was
+built and removed: location is an Attributes chip, the modelled figure is the
+stat row's secondary label (and the Explanation names it when there is no
+override), and the override reason is the body of its own history card. It
+restated three things rather than adding a fourth.
+
+**Still not designed:** the plain-language factor explanation text block the
+functional spec requires ("why this target differs from peers"). It now has a
+home — the Explanation tab — but the copy itself is still the engine's
+generated sentence, not designed content. No screenshot reference covers it.
 
 ### 3. Manager Override
 *No screenshot reference exists for this screen — functional requirements are locked, visual layout is not.*
@@ -127,8 +196,8 @@ Compiled from the screenshot-derived design pass, 24 Sept 2026. This is a compan
 
 These need an answer (from Justin, or a proposal from Claude Code flagged as a judgement call, not a silent decision) before their screen can be built to the same standard as the rest:
 
-1. Individual Detail's right-hero visual (cohort chart vs. avatar)
-2. Individual Detail's plain-language explanation block — undesigned
+1. ~~Individual Detail's right-hero visual (cohort chart vs. avatar)~~ — **resolved 26 Sept 2026: avatar/photo placeholder.** A chart would duplicate the Cohort comparison tab already on the screen.
+2. Individual Detail's plain-language explanation block — **still undesigned.** It has a home (the Explanation tab) but the copy is the engine's generated sentence, not designed content.
 3. Manager Override — overall layout beyond the now-specified cross-check accordion (panel vs. standalone route, sign-off gate visual treatment)
 4. Mass Adjustment — full visual layout
 5. Bubble-network sizing/positioning logic on Overview & Population
