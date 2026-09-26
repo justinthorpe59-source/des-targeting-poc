@@ -7,7 +7,6 @@ import { computeRiskStatuses } from '../engine/riskStatus'
 import type { RiskStatus } from '../engine/riskStatus'
 import { computeGoals } from '../engine/goals'
 import { round1 } from '../riskDisplay'
-import { StatusPill } from '../../components/searchlight/StatusPill'
 import { RiskExceptionsSection } from '../components/RiskExceptionsSection'
 import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
 import { SketchDistribution } from '../../components/searchlight/SketchIllustrations'
@@ -372,42 +371,14 @@ export function ExecutiveSummary() {
           </div>
 
           <div className="space-y-8 pt-16">
-          <div>
-            <h2 className="font-pa-display text-base font-semibold text-pa-grey-04">Top risk drivers</h2>
-            {/*
-              List rows, not a table. The spec asks this section to reuse the
-              stat-tile / list-card language the rest of the system uses; a
-              TEAM / GAP / STATUS header row is spreadsheet grammar and reads
-              as a different product.
-            */}
-            <div data-testid="s2-exec-top-drivers" className="mt-4 flex flex-col gap-2">
-              {topDrivers.map((driver) => (
-                <div
-                  key={driver.teamKey}
-                  data-testid="s2-exec-driver-row"
-                  className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-pa-card px-6 py-4"
-                  style={{ background: 'var(--color-pa-grey-01)' }}
-                >
-                  <span className="font-pa-body text-sm font-semibold text-pa-grey-04">
-                    {driver.teamKey.replace('::', ' / ')}
-                  </span>
-                  <span className="font-pa-body text-xs text-pa-grey-03">
-                    {driver.gap >= 0 ? 'short of goal by' : 'above goal by'}{' '}
-                    <span className="font-pa-mono font-semibold text-pa-grey-04">
-                      £{round1(Math.abs(driver.gap))}k
-                    </span>
-                  </span>
-                  <span className="ml-auto shrink-0">
-                    <StatusPill risk={driver.status} />
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-            <div className="border-t border-pa-grey-01 pt-6">
-              <RiskExceptionsSection />
-            </div>
+          {/*
+            "Top risk drivers" used to live here as its own card list, with
+            the risk/exception table directly beneath it over the same teams.
+            The spec calls for ONE Top Risks list; the two have been merged
+            into RiskExceptionsSection below, which now carries the gap and
+            status the cards provided plus the specific flags the table did.
+          */}
+            <RiskExceptionsSection />
           </div>
         </div>
       )}
