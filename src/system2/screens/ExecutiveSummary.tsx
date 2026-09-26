@@ -6,7 +6,8 @@ import { aggregate } from '../engine/aggregation'
 import { computeRiskStatuses } from '../engine/riskStatus'
 import type { RiskStatus } from '../engine/riskStatus'
 import { computeGoals } from '../engine/goals'
-import { round1, statusBadgeClass } from '../riskDisplay'
+import { round1 } from '../riskDisplay'
+import { StatusPill } from '../../components/searchlight/StatusPill'
 import { RiskExceptionsSection } from '../components/RiskExceptionsSection'
 import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
 import { SketchDistribution } from '../../components/searchlight/SketchIllustrations'
@@ -51,7 +52,9 @@ function StatTile({
   testId: string
 }) {
   return (
-    <div className="rounded-pa-card px-6 py-5" style={{ background: 'var(--color-pa-grey-wash)' }}>
+    /* Grey 01 for the same reason as the hero card: Grey wash is the page
+       colour, so a Grey-wash tile is invisible as a container. */
+    <div className="rounded-pa-card px-6 py-5" style={{ background: 'var(--color-pa-grey-01)' }}>
       <p className="font-pa-body text-sm font-semibold text-pa-grey-04">{label}</p>
       <span className="mt-3 block text-pa-grey-03" aria-hidden="true">
         {icon}
@@ -198,7 +201,7 @@ export function ExecutiveSummary() {
     <section className="relative">
       {/* Large, low-opacity distribution-curve motif behind the content
           column — texture, not a corner decoration. */}
-      <SketchDistribution className="pointer-events-none absolute left-1/2 top-16 -z-10 h-[420px] w-[860px] max-w-none -translate-x-1/2 opacity-[0.06]" />
+      <SketchDistribution className="pointer-events-none absolute left-1/2 top-24 -z-10 h-[560px] w-[1100px] max-w-none -translate-x-1/2 opacity-[0.16]" />
 
       {/* Header: org name + one-line grey subtitle left, single icon right. */}
       <header className="flex items-start justify-between gap-6">
@@ -257,7 +260,11 @@ export function ExecutiveSummary() {
                 data-testid="s2-exec-forecast-hero"
                 data-status={desWideRisk.status}
                 className="relative overflow-hidden rounded-pa-card"
-                style={{ background: 'var(--color-pa-grey-wash)' }}
+                /* Grey 01, not Grey wash: the page itself is Grey wash, so a
+                   Grey-wash card had no visible edge — the unfilled remainder
+                   vanished into the page and "Target FY26." read as though it
+                   had drifted outside the card when it was inside all along. */
+                style={{ background: 'var(--color-pa-grey-01)' }}
               >
                 {/* Proportional fill: its WIDTH is the forecast ratio and its
                     HUE is the risk status, so the one mark carries both. */}
@@ -367,34 +374,34 @@ export function ExecutiveSummary() {
           <div className="space-y-8 pt-16">
           <div>
             <h2 className="font-pa-display text-base font-semibold text-pa-grey-04">Top risk drivers</h2>
-            <div className="mt-2 overflow-x-auto rounded-lg border border-pa-grey-01 bg-pa-white">
-              <table className="min-w-full divide-y divide-pa-grey-01 font-pa-body text-sm">
-                <thead className="bg-pa-grey-wash text-left text-xs font-medium uppercase tracking-wide text-pa-grey-03">
-                  <tr>
-                    <th className="px-3 py-2">Team</th>
-                    <th className="px-3 py-2 text-right">Gap</th>
-                    <th className="px-3 py-2">Status</th>
-                  </tr>
-                </thead>
-                <tbody data-testid="s2-exec-top-drivers">
-                  {topDrivers.map((driver) => (
-                    <tr key={driver.teamKey} data-testid="s2-exec-driver-row" className="border-t border-pa-grey-01">
-                      <td className="px-3 py-2 font-medium text-pa-grey-04">{driver.teamKey.replace('::', ' / ')}</td>
-                      <td className="px-3 py-2 text-right font-pa-mono tabular-nums text-pa-grey-04">
-                        {driver.gap >= 0 ? '−' : '+'}£{round1(Math.abs(driver.gap))}k
-                      </td>
-                      <td className="px-3 py-2">
-                        <span
-                          data-status={driver.status}
-                          className={`inline-block rounded px-2 py-0.5 text-xs font-semibold ${statusBadgeClass(driver.status)}`}
-                        >
-                          {driver.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            {/*
+              List rows, not a table. The spec asks this section to reuse the
+              stat-tile / list-card language the rest of the system uses; a
+              TEAM / GAP / STATUS header row is spreadsheet grammar and reads
+              as a different product.
+            */}
+            <div data-testid="s2-exec-top-drivers" className="mt-4 flex flex-col gap-2">
+              {topDrivers.map((driver) => (
+                <div
+                  key={driver.teamKey}
+                  data-testid="s2-exec-driver-row"
+                  className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-pa-card px-6 py-4"
+                  style={{ background: 'var(--color-pa-grey-01)' }}
+                >
+                  <span className="font-pa-body text-sm font-semibold text-pa-grey-04">
+                    {driver.teamKey.replace('::', ' / ')}
+                  </span>
+                  <span className="font-pa-body text-xs text-pa-grey-03">
+                    {driver.gap >= 0 ? 'short of goal by' : 'above goal by'}{' '}
+                    <span className="font-pa-mono font-semibold text-pa-grey-04">
+                      £{round1(Math.abs(driver.gap))}k
+                    </span>
+                  </span>
+                  <span className="ml-auto shrink-0">
+                    <StatusPill risk={driver.status} />
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
 
