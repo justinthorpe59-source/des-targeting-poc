@@ -30,6 +30,9 @@ function initials(name: string): string {
  * and their badge slot stays empty rather than being filled with an invented
  * number.
  */
+/** How many change entries show before the rest are put behind a reveal. */
+const HISTORY_PREVIEW = 3
+
 function AttributeChip({
   label,
   badge,
@@ -44,10 +47,14 @@ function AttributeChip({
   return (
     <div
       data-testid={testId}
-      className="rounded-pa-chip border border-pa-grey-01 px-5 py-4"
-      /* Tinted fill, not white: on a white card an unfilled chip is invisible
-         as a distinct object. The reference's chips read as small cards. */
-      style={{ background: 'var(--color-pa-grey-wash)' }}
+      className="rounded-pa-chip px-5 py-4"
+      /* Soft fill plus a hint of elevation, no border: the chip should read as
+         a distinct object inside the card without introducing a second boxed
+         edge competing with the card's own. */
+      style={{
+        background: 'var(--color-pa-grey-wash)',
+        boxShadow: '0 1px 3px rgba(2, 77, 120, 0.06)',
+      }}
     >
       <div className="flex items-start justify-between gap-3">
         <span className="font-pa-body text-xs text-pa-grey-03">{label}</span>
@@ -84,6 +91,7 @@ export function IndividualDetail() {
   // Declared before the not-found early return below: a hook after a
   // conditional return changes hook order between renders.
   const [detailTab, setDetailTab] = useState<'history' | 'cohort'>('history')
+  const [showAllHistory, setShowAllHistory] = useState(false)
 
   const person = SEED_PEOPLE.find((p) => p.id === id)
   const target = person ? targets[person.id] : undefined
@@ -100,6 +108,22 @@ export function IndividualDetail() {
   }
 
   const personHistory = auditLog.filter((entry) => entry.personId === person.id)
+
+  /**
+   * Newest first, with consecutive identical entries collapsed. Repeating the
+   * same action with the same detail produces rows that look like separate
+   * information but are not — most often a demo artefact of the same action
+   * being applied twice, but equally possible in real use. Only CONSECUTIVE
+   * duplicates collapse, so a genuine later repeat after some other change
+   * still shows as its own event.
+   */
+  const history: typeof personHistory = []
+  for (const entry of [...personHistory].reverse()) {
+    const prev = history[history.length - 1]
+    if (prev && prev.action === entry.action && prev.detail === entry.detail) continue
+    history.push(entry)
+  }
+  const visibleHistory = showAllHistory ? history : history.slice(0, HISTORY_PREVIEW)
 
   return (
     <section className="relative space-y-6">
@@ -202,11 +226,14 @@ export function IndividualDetail() {
                   </div>
                 </div>
 
-                {/* metadata row — small value + label */}
-                <div className="mt-6 font-pa-body text-xs text-pa-grey-03">
-                  {person.location} · modelled £{target.modelled}k
-                  {target.override ? ` · reason: ${target.override.reason}` : ''}
-                </div>
+                {/*
+                  The caption line that used to sit here is gone. Every part
+                  of it was already on screen: location is an Attributes chip,
+                  the modelled figure is the stat row's secondary label (and
+                  the Explanation names it when there is no override), and the
+                  override reason is the body of its own history card. It was
+                  restating three things rather than adding a fourth.
+                */}
 
                 {/* actions */}
                 <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -344,7 +371,6 @@ export function IndividualDetail() {
                 </p>
               )}
             </div>
-          </div>
 
           {/*
             Supporting detail as a TAB PANEL, not a stack.
@@ -357,8 +383,8 @@ export function IndividualDetail() {
             both are supporting detail about one person, and only one is
             needed at a time.
           */}
-          <div className="rounded-pa-card border border-pa-grey-01 bg-pa-white p-8">
-            <div role="tablist" aria-label="Supporting detail" className="flex gap-1 border-b border-pa-grey-01">
+            <div className="border-t border-pa-grey-01 p-8">
+              <div role="tablist" aria-label="Supporting detail" className="flex gap-1 border-b border-pa-grey-01">
               {(['history', 'cohort'] as const).map((tab) => {
                 const active = detailTab === tab
                 return (
@@ -390,14 +416,17 @@ export function IndividualDetail() {
               hidden={detailTab !== 'history'}
               className="pt-7"
             >
-              {personHistory.length === 0 ? (
+              {history.length === 0 ? (
                 /* Empty state keeps the card structure rather than collapsing
                    to a line of text, so the section reads the same shape
                    whether or not this person has history yet. */
                 <div
                   data-testid="detail-history-empty"
-                  className="rounded-pa-card border border-dashed border-pa-grey-02 p-7 md:max-w-lg"
-                  style={{ background: 'var(--color-pa-grey-wash)' }}
+                  className="rounded-pa-card p-7 md:max-w-lg"
+                  style={{
+                    background: 'var(--color-pa-grey-wash)',
+                    boxShadow: '0 1px 3px rgba(2, 77, 120, 0.06)',
+                  }}
                 >
                   <div className="flex items-center justify-between gap-3">
                     <span className="font-pa-mono text-xs text-pa-grey-02">No activity yet</span>
@@ -415,15 +444,18 @@ export function IndividualDetail() {
                 </div>
               ) : (
                 <div data-testid="detail-history" className="grid gap-5 md:grid-cols-2">
-                  {personHistory
-                    .slice()
-                    .reverse()
-                    .map((entry) => (
+                  {visibleHistory.map((entry) => (
                       <article
                         key={entry.id}
                         data-testid="detail-history-card"
-                        className="rounded-pa-card border border-pa-grey-01 p-7"
-                        style={{ background: 'var(--color-pa-grey-wash)' }}
+                        className="rounded-pa-card p-7"
+                        /* Soft fill + a hint of elevation instead of a border:
+                           these need to read as distinct objects inside the
+                           card without adding a second boxed edge. */
+                        style={{
+                          background: 'var(--color-pa-grey-wash)',
+                          boxShadow: '0 1px 3px rgba(2, 77, 120, 0.06)',
+                        }}
                       >
                         <div className="flex items-center justify-between gap-3">
                           <span className="font-pa-mono text-xs text-pa-grey-03">{entry.timestamp}</span>
@@ -446,6 +478,19 @@ export function IndividualDetail() {
                     ))}
                 </div>
               )}
+
+              {history.length > HISTORY_PREVIEW && (
+                <button
+                  type="button"
+                  data-testid="detail-history-toggle"
+                  onClick={() => setShowAllHistory((v) => !v)}
+                  className="mt-5 rounded-full bg-pa-grey-01 px-4 py-2 font-pa-body text-xs font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-02/60"
+                >
+                  {showAllHistory
+                    ? 'Show fewer'
+                    : `Show all ${history.length} changes`}
+                </button>
+              )}
             </div>
 
             <div
@@ -455,8 +500,9 @@ export function IndividualDetail() {
               hidden={detailTab !== 'cohort'}
               className="pt-7"
             >
-              <div id="cohort" className="scroll-mt-6">
-                <CohortComparisonPanel person={person} />
+                <div id="cohort" className="scroll-mt-6">
+                  <CohortComparisonPanel person={person} />
+                </div>
               </div>
             </div>
           </div>
