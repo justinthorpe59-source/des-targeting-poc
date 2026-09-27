@@ -180,15 +180,52 @@ generated sentence, not designed content. No screenshot reference covers it.
 - Reuses the Top Risks list component from Executive Summary, scoped to whichever division/team is expanded.
 
 ### 8. Scenario Workspace
-**Deliberate register break — applies to this screen only.** Monospace bracketed section labels (e.g. `[ N.04/11 ]`), dotted-grid background texture, thin full-width rule lines, isometric line-icons, single high-contrast accent colour on white/black. Do not let this register bleed into any other screen, and do not apply the pill/card language from other screens here.
-- Section pattern: bracketed index + chevron + label, thin rule extending full width from it, small pill action button top-right of the section.
-- Large two-line heading; a slash mark immediately before the first word and after the last word of the second line.
-- **4-column row = the four scenario examples** (not the four levers): "Raise the bar" (goal +5%), "Division B capacity dip" (capacity lever), "Team-wide stretch" (+10% population adjustment on a selected team), "Confidence check" (lowered confidence for a cohort). Baseline sits alongside as the default comparison state, not a fifth column.
-  - Each column: numbered label ("// 002"), 2-line description, segmented progress indicator (solid fill = active/complete, dotted = remaining), bold short label, isometric line-icon bottom-aligned.
-  - Active column is distinguished by colour only — number and label shift to accent colour, progress bar fully solid. No background fill or border change.
-- **Second block, two-column layout:**
-  - Left (~45%): dark terminal-style panel showing the selected scenario's config as a **human-readable structured diff** (e.g. `goal: £10.0m → £10.5m`, `capacity[Division B]: 0.85 → 0.78`) — styled in monospace/terminal aesthetic but is NOT real code. Corner tick-mark frame, filename-style label top-left, "Copy" pill top-right.
-  - Right (~55%): heading + button + vertical list of saved/named scenarios (including Baseline). Active item gets a short vertical accent bar + full-opacity text; inactive items are greyed with no accent bar and no visible description.
+**Register superseded 27 Sept 2026.** This section previously locked a deliberate
+register break for this screen only — monospace bracketed labels (`[ N.04/11 ]`),
+dotted-grid texture, thin rules, isometric line-icons, a dark terminal diff panel.
+That is **no longer what this screen is.** A reference screenshot was supplied on
+27 Sept with the explicit instruction that it is the design to replicate, not
+inspiration, and that it supersedes the engineering-console register. The screen
+now uses the same light card language as the rest of the app, which also removes
+the one place the design deliberately contradicted itself. The old register is
+kept nowhere — do not reintroduce it.
+
+- Two-line section heading: bold first line in Grey 04, lighter second line in
+  Grey 03, in brackets or as a subtitle (`Scenario Workspace / (Test before you
+  commit)`). Circular prev/next pair top-right of each section — forward is a
+  filled Dark Blue circle with a white arrow, back is a white circle with a thin
+  Grey 02 border.
+- **Row of four white cards = the four scenario examples** (not the four levers):
+  "Raise the bar" (goal +5%), "<Division> capacity dip" (capacity lever),
+  "Team-wide stretch" (+10% population adjustment), "Confidence check" (confidence
+  lowered for a division). Baseline sits in the saved row as the default
+  comparison state, never as a fifth numbered card.
+  - Each card: bold title, two-line grey description, and a rounded Grey 01 badge
+    bottom-left holding a single-weight line icon.
+  - Active card is distinguished by elevation only — a deeper shadow, no border
+    or fill change.
+- **Numbered pagination strip** beneath the row, sitting on a thin full-width
+  rule: `01`–`04`, active is a filled Dark Blue pill with white monospace text,
+  inactive are white pills with a thin border. Selecting a pill and clicking a
+  card are the same action.
+- **Saved scenarios row:** a horizontally-scrolling carousel of white cards using
+  the same card-and-arrow pattern, Baseline first, then each saved scenario with
+  its save date. The section's arrows scroll the rail rather than moving the
+  selection.
+- **Diff panel** below both rows, fed by whichever card is selected in either
+  row: one white card, two columns — "What changes" (the lever config as
+  `before → after`) and "What it does" (expected achievement, gap, confidence,
+  forecast ratio, same shape). Monospace for the figures, not for the labels. Not
+  a dark terminal, and not syntax-highlighted.
+  - The outcome column is **scoped to the lever's own group**, not fixed to
+    DES-wide — lever 4 never cascades to parent rollups, so a division-scoped
+    override reported at DES-wide reads as changing nothing at all. The column
+    header names the group it is showing.
+
+**Colour is mapped, never copied.** The reference's black is Dark Blue (#00172d),
+the darkest token in the PA palette; its card radius resolves to
+`--radius-pa-card` (16px), already inside the reference's 16-20px range. No hex
+was introduced for this screen.
 
 ---
 
