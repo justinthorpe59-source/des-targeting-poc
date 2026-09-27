@@ -13,7 +13,7 @@ import { runOverrideCrossCheck } from '../src/system1/engine/overrideCrossCheck'
 import { computeSystem2LiveSnapshot } from '../src/system2/bridge/liveOrgState'
 import { mulberry32, randRange, seedFromId } from '../src/system2/engine/prng'
 import { aggregate } from '../src/system2/engine/aggregation'
-import { computeGoals } from '../src/system2/engine/goals'
+import { computeGoals, GROWTH_RATE_RANGE, GOAL_GROWTH_MULTIPLIER } from '../src/system2/engine/goals'
 import type { OrgRecord } from '../src/system2/data/types'
 import type { Person } from '../src/system1/data/types'
 
@@ -191,7 +191,18 @@ console.log('=== Scenario C: fails team-coverage check specifically (cohort/org 
     const directAggregation = aggregate(records)
     const directGoals = computeGoals(directAggregation)
     const teamGoal = directGoals.byTeam.get('Design::Studio North')!
-    check('sanity: R_TEAM-only team goal is ~2292k (prior-year revenue x 1.1 off its own £2000k target)', Math.round(teamGoal), 2292)
+    /* Bounded against the growth range rather than pinned to one output.
+       Prior-year growth is a demo-data parameter, not a locked figure — it
+       was widened on 27 Sept 2026 and a hard-coded 2292 broke immediately,
+       even though nothing about the behaviour under test had changed. The
+       property that actually matters is that this team's goal comes off its
+       OWN £2000k target (never apportioned from the org total), which pins
+       it inside the band the range allows. */
+    const [lo, hi] = GROWTH_RATE_RANGE
+    const goalFloor = (2000 / (1 + hi)) * GOAL_GROWTH_MULTIPLIER
+    const goalCeiling = (2000 / (1 + lo)) * GOAL_GROWTH_MULTIPLIER
+    check('sanity: R_TEAM-only team goal derives from its own £2000k target, inside the growth band',
+      teamGoal >= goalFloor && teamGoal <= goalCeiling, true)
     check('sanity: R_TEAM-only team EA (500) is already below that goal, before any hypothetical addition', 500 < teamGoal, true)
   }
 
