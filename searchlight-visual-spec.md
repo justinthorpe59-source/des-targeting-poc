@@ -173,11 +173,34 @@ generated sentence, not designed content. No screenshot reference covers it.
 - Footer: thin full-width rule, small caption left, page-index right. **Confirm before building:** the page-index element (e.g. "01/12") reads as a print/report artefact — decide if it's meaningful in an app context or should be dropped.
 
 ### 7. Division Comparison
-*Draft only — no screenshot reference, proposal to build from, not a locked spec.*
-- Same header treatment as Executive Summary, for visual continuity between the two sponsor-facing screens.
-- Row of division cards (Boston / Ireland / London / GITC), same visual weight as Executive Summary's small stat tiles but wider. Each card: division name + location tag, coverage ratio, forecast ratio (same green/amber/red gradient treatment as Executive Summary), confidence.
-- Click expands the card in place (not a new screen) into a nested row of team cards beneath it, one level down, same coverage/forecast/confidence trio at the same visual weight.
-- Reuses the Top Risks list component from Executive Summary, scoped to whichever division/team is expanded.
+**Built 27 Sept 2026.** Was marked "draft only, no screenshot reference" — built to
+this section as the brief, with two corrections recorded below. It replaced two bar
+charts above a dense 8-column table; each chart restated a figure now printed on the
+card it sat above, so both were dropped rather than restyled.
+
+- Same header treatment as Executive Summary (org name, one-line grey subtitle, single
+  line-icon right), for continuity between the two sponsor-facing screens.
+- **Row of division cards — three, not four.** This section previously listed them as
+  "Boston / Ireland / London / GITC". **Those are the four locations, not divisions.**
+  DES has three divisions (Design, Engineering, Science) and every one of them spans
+  all four locations, so the "division name + location tag" this section also asked for
+  cannot exist either — a division has no single location. Corrected to three division
+  cards with no location tag.
+- Each card sits on Grey 01 at `--radius-pa-card`, the weight of Executive Summary's
+  stat tiles but wider: division name, status pill, the forecast ratio as a
+  proportional bar whose **width is the ratio and hue is the risk status** (the same
+  green/amber/red gradient device as the Executive Summary hero), then coverage,
+  confidence, goal and headcount.
+- Clicking a card expands teams **in place** — one division open at a time. The team
+  cards render full-width beneath the whole row, not nested inside one grid cell: a
+  three-column grid cannot hold a second row under a single card without collapsing
+  the grid or squeezing the team cards into a third of the width.
+- Team cards carry the same trio at the same visual weight, plus their **DES-wide**
+  rank by absolute gap — computed across every team before nesting, so S2-M6's ranking
+  signal survives the grouping.
+- Top Risks (the Executive Summary component) renders beneath, **scoped** to the
+  expanded division and its teams via a `scopeKey` prop; with nothing expanded it shows
+  the full DES-wide list, exactly as Executive Summary does.
 
 ### 8. Scenario Workspace
 **Register superseded 27 Sept 2026.** This section previously locked a deliberate

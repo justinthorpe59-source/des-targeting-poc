@@ -63,7 +63,7 @@ interface RiskRow {
  * are implemented; gap and status come from the same aggregation the rest of
  * the screen reads, so the two can never disagree.
  */
-export function RiskExceptionsSection() {
+export function RiskExceptionsSection({ scopeKey }: { scopeKey?: string } = {}) {
   const records = useSystem2Store((state) => state.records)
   const savedScenarios = useScenarioStore((state) => state.scenarios)
 
@@ -110,19 +110,29 @@ export function RiskExceptionsSection() {
         status: risk.status,
       })
     }
+    /* Division Comparison passes the expanded division's key so the list
+       narrows to that division and the teams under it — the spec's "scoped
+       to whichever division/team is expanded". Executive Summary passes
+       nothing and keeps the full DES-wide list. */
+    const scoped = scopeKey
+      ? out.filter((row) => row.groupKey === scopeKey || row.groupKey.startsWith(`${scopeKey}::`))
+      : out
+
     // Biggest contributors first — the ranking the old card list provided.
-    return out.sort((a, b) => Math.abs(b.gap) - Math.abs(a.gap))
-  }, [flagsByGroup, aggregation, goals, riskStatuses])
+    return scoped.sort((a, b) => Math.abs(b.gap) - Math.abs(a.gap))
+  }, [flagsByGroup, aggregation, goals, riskStatuses, scopeKey])
 
   if (records.length === 0) return null
 
   return (
     <section className="space-y-4">
       <div>
-        <h2 className="font-pa-display text-base font-semibold text-pa-grey-04">Top risks</h2>
+        <h2 className="font-pa-display text-base font-semibold text-pa-grey-04">
+          Top risks{scopeKey ? ` · ${scopeKey.replace('::', ' / ')}` : ''}
+        </h2>
         <p className="mt-1 max-w-2xl font-pa-body text-sm text-pa-grey-03">
-          Divisions and teams that violate a locked threshold, ranked by their contribution to the gap. Flagged
-          for review only — nothing here is ever blocked.
+          {scopeKey ? 'This division and its teams' : 'Divisions and teams'} that violate a locked threshold,
+          ranked by their contribution to the gap. Flagged for review only — nothing here is ever blocked.
         </p>
       </div>
 
