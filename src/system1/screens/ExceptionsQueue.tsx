@@ -103,6 +103,24 @@ function CheckLine({ label, status, detail }: { label: string; status: 'pass' | 
   )
 }
 
+/**
+ * Shown when a sign-off record has no organisational cross-check attached —
+ * System 2 had nothing imported when the gate fired, so only the
+ * drastic-percentage trigger could apply.
+ *
+ * Both sign-off row variants need this. The batch panel used to omit it and
+ * jump straight to the individual breakdown, so the same condition explained
+ * itself on one row type and silently on the other.
+ */
+function NoOrgDataLine() {
+  return (
+    <p data-testid="signoff-no-org-data" className="font-pa-body text-sm text-pa-grey-03">
+      Organisational data wasn&apos;t available when this was flagged — only the drastic-percentage-change
+      trigger applied.
+    </p>
+  )
+}
+
 function ContextChecks({ context }: { context: SignOffContext }) {
   const rows = [
     { key: 'team', label: 'Team total', check: context.team },
@@ -117,10 +135,7 @@ function ContextChecks({ context }: { context: SignOffContext }) {
           <CheckLine key={r.key} label={r.label} status={r.check!.status} detail={r.check!.detail} />
         ))
       ) : (
-        <p className="font-pa-body text-sm text-pa-grey-03">
-          Organisational data wasn&apos;t available when this was flagged — only the drastic-percentage-change
-          trigger applied.
-        </p>
+        <NoOrgDataLine />
       )}
       {context.reasons.length > 0 && (
         <ul className="mt-2 list-disc space-y-0.5 pl-5 font-pa-body text-xs text-pa-grey-04">
@@ -275,16 +290,20 @@ export function ExceptionsQueue() {
           ),
           content: (
             <div>
-              {context.aggregateGroups && context.aggregateGroups.length > 0 && (
-                <div className="mb-4">
-                  <div className="mb-1 font-pa-body text-[11px] font-medium uppercase tracking-wide text-pa-grey-03">
-                    Aggregate effect — the whole batch applied together
-                  </div>
-                  {context.aggregateGroups.map((group) => (
-                    <CheckLine key={group.key} label={group.label} status={group.status} detail={group.detail} />
-                  ))}
-                </div>
-              )}
+              <div className="mb-4">
+                {context.aggregateGroups && context.aggregateGroups.length > 0 ? (
+                  <>
+                    <div className="mb-1 font-pa-body text-[11px] font-medium uppercase tracking-wide text-pa-grey-03">
+                      Aggregate effect — the whole batch applied together
+                    </div>
+                    {context.aggregateGroups.map((group) => (
+                      <CheckLine key={group.key} label={group.label} status={group.status} detail={group.detail} />
+                    ))}
+                  </>
+                ) : (
+                  <NoOrgDataLine />
+                )}
+              </div>
 
               <div className="mb-1 font-pa-body text-[11px] font-medium uppercase tracking-wide text-pa-grey-03">
                 Individual breakdown · {context.batchIndividualPassCount ?? '—'} of{' '}
