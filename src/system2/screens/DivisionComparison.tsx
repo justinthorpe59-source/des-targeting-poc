@@ -202,8 +202,8 @@ export function DivisionComparison() {
                      card. Top-aligning the content keeps the row level. */
                   className="flex flex-col items-stretch rounded-pa-card px-6 py-5 text-left transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-aqua-04"
                   style={{
-                    background: 'var(--color-pa-grey-01)',
-                    boxShadow: isOpen ? '0 6px 24px rgba(0,23,45,0.12)' : undefined,
+                    background: 'var(--color-pa-white)',
+                    boxShadow: isOpen ? 'var(--shadow-pa-card-raised)' : 'var(--shadow-pa-card)',
                   }}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -272,8 +272,7 @@ export function DivisionComparison() {
                     data-testid="s2-team-drilldown-row"
                     data-team-key={teamKey}
                     data-rank={rank}
-                    className="rounded-pa-card px-6 py-5"
-                    style={{ background: 'var(--color-pa-grey-01)' }}
+                    className="rounded-pa-card bg-pa-white px-6 py-5 shadow-pa-card"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <p className="font-pa-body text-sm font-semibold text-pa-grey-04">

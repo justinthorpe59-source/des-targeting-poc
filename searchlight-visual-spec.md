@@ -201,6 +201,60 @@ no longer pin an output that a demo-data parameter is free to change.
 
 ---
 
+## Page background and card elevation — locked 27 Sept 2026
+
+Applies to every card and panel in both systems.
+
+### The page background was already the near-white token
+
+The brief asked for the page to move to an ice-white/near-white PA token.
+**It was already on it.** The shell has used `--color-pa-grey-wash`
+(`#f9fafc`) throughout; the only token closer to white in the PA palette is
+`--color-pa-white` (`#ffffff`) itself, which a page cannot be if white cards
+are to read against it. No hex was invented and no closer token exists, so
+the page background is unchanged.
+
+What read as "light grey" was the **cards**, not the page. Several screens
+filled their cards with `--color-pa-grey-01` (`#e8ecf2`) to manufacture an
+edge — a workaround for the earlier "invisible container" problem, where a
+white card on a near-white page had no visible boundary. That grey fill is
+what the eye was picking up.
+
+### Cards are now separated by elevation, not fill
+
+Card surfaces are white, distinguished by a shadow rather than by a grey fill
+or a hairline border. Three shared tokens, in `src/index.css`:
+
+| Token | Value | Used for |
+| --- | --- | --- |
+| `--shadow-pa-card` | `0 2px 10px rgba(0,23,45,0.06)` | every resting card |
+| `--shadow-pa-card-hover` | `0 4px 16px rgba(0,23,45,0.1)` | hover on an interactive card |
+| `--shadow-pa-card-raised` | `0 6px 24px rgba(0,23,45,0.14)` | selected / expanded |
+
+Tinted with the palette's own Dark Blue (`#00172d`) rather than neutral black,
+so the shadow sits in the same colour family as everything else. The values
+are the Scenario Workspace treatment the reference screenshot set, promoted
+from inline classes to tokens so every card points at one definition.
+
+Applied to all 8 screens. `--color-pa-grey-01` is still used, but only for
+*nested* surfaces inside a card (attribute chips, icon badges, the accordion's
+circular control) — never to give a top-level card its edge.
+
+The accordion's collapsed row moved from a Grey 01 pill to white + resting
+shadow, with the expanded row on the raised shadow, so the two states now
+differ by elevation rather than by fill. Its circular control is Grey 01 in
+both states; it used to invert to white on the collapsed row, which would now
+be white-on-white.
+
+`CrossCheckPanel` was also migrated off the pre-Searchlight `slate-*` palette
+it had been left on. Zero `slate-` classes remain anywhere.
+
+Verified by measuring computed styles on all 8 screens: page
+`rgb(249,250,252)`, every `rounded-pa-card` surface white with a shadow, and
+**zero** cards indistinguishable from the page.
+
+---
+
 ## System 1 — Individual Targeting
 
 ### 1. Overview & Population

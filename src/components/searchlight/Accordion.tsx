@@ -64,10 +64,9 @@ export function Accordion({
                Rows are separated by a gap, not butted into a single list. */
             className={`overflow-hidden transition-all ${
               isOpen
-                ? 'rounded-pa-card bg-pa-white shadow-[0_4px_20px_rgba(2,77,120,0.10)]'
-                : 'rounded-full'
+                ? 'rounded-pa-card bg-pa-white shadow-pa-card-raised'
+                : 'rounded-full bg-pa-white shadow-pa-card'
             }`}
-            style={isOpen ? undefined : { background: 'var(--color-pa-grey-01)' }}
           >
             <button
               type="button"
@@ -89,13 +88,11 @@ export function Accordion({
               </span>
               <span
                 aria-hidden="true"
-                /* White circle on the tinted collapsed row, tinted circle on
-                   the white expanded row — the reference inverts it so the
-                   control always reads against its own surface. */
+                /* Both row states are white surfaces now (the collapsed
+                   row used to be a Grey 01 pill), so the circle is tinted in
+                   both — a white circle on a white row has no edge at all. */
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-pa-body text-lg leading-none text-pa-grey-04 transition-colors"
-                style={{
-                  background: isOpen ? 'var(--color-pa-grey-01)' : 'var(--color-pa-white)',
-                }}
+                style={{ background: 'var(--color-pa-grey-01)' }}
               >
                 {isOpen ? '×' : '+'}
               </span>

@@ -25,7 +25,7 @@ export function CohortComparisonPanel({ person }: { person: Person }) {
   const personValue = combinedRevenueFor(person)
 
   return (
-    <div className="rounded-xl border border-pa-grey-01 bg-pa-white p-4">
+    <div className="rounded-pa-card bg-pa-white shadow-pa-card p-4">
       <h2 className="font-pa-display text-sm font-semibold text-pa-grey-04">
         Cohort comparison — {person.division} / {person.team}
       </h2>

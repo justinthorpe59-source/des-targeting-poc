@@ -6,7 +6,7 @@ import { CheckStatusRow } from './CheckStatusRow'
 export function MassAdjustmentCrossCheckPanel({ result }: { result: MassAdjustmentCrossCheckResult }) {
   if (!result.hasOrgData) {
     return (
-      <div className="rounded-pa-card bg-pa-white p-8 font-pa-body">
+      <div className="rounded-pa-card bg-pa-white p-8 font-pa-body shadow-pa-card">
         <h2 className="text-sm font-semibold text-pa-grey-04">Real-time cross-check</h2>
         <p data-testid="mass-crosscheck-no-data" className="mt-2 text-sm text-pa-grey-03">
           Organisational data not yet available — cross-check skipped.
@@ -22,7 +22,7 @@ export function MassAdjustmentCrossCheckPanel({ result }: { result: MassAdjustme
   }
 
   return (
-    <div className="rounded-pa-card bg-pa-white p-8 font-pa-body">
+    <div className="rounded-pa-card bg-pa-white p-8 font-pa-body shadow-pa-card">
       <h2 className="text-sm font-semibold text-pa-grey-04">Real-time cross-check</h2>
 
       <p data-testid="mass-crosscheck-summary" className="mt-2 text-sm text-pa-grey-03">

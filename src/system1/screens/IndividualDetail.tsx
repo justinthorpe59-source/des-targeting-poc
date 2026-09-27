@@ -202,7 +202,7 @@ export function IndividualDetail() {
             has one. No content is cut; it is the same fields on fewer
             surfaces.
           */}
-          <div className="overflow-hidden rounded-pa-card border border-pa-grey-01 bg-pa-white">
+          <div className="overflow-hidden rounded-pa-card bg-pa-white shadow-pa-card">
             <div className="grid gap-10 p-8 lg:grid-cols-[58fr_42fr]">
               {/* ---- Left zone: identity + data ---- */}
               <div className="flex flex-col">

@@ -80,7 +80,7 @@ function FactorSandbox({
   const delta = result.modelled - storedFinal
 
   return (
-    <div className="rounded-pa-card border border-pa-grey-01 bg-white p-4">
+    <div className="rounded-pa-card bg-pa-white shadow-pa-card p-4">
       <button
         type="button"
         data-testid="whatif-toggle"
@@ -347,7 +347,7 @@ export function ManagerOverrideModal({
         </div>
 
         <div className="space-y-6 px-8 py-7">
-          <div className="rounded-pa-card border border-pa-grey-01 bg-white p-4">
+          <div className="rounded-pa-card bg-pa-white shadow-pa-card p-4">
             <div className="flex items-baseline justify-between">
               <h2 className="text-sm font-semibold text-pa-grey-04">{person.name}</h2>
               <span data-testid="override-status" className="text-xs font-medium text-pa-grey-03">
@@ -413,14 +413,14 @@ export function ManagerOverrideModal({
             )}
           </div>
 
-          <div className="rounded-pa-card border border-pa-grey-01 bg-white p-4">
+          <div className="rounded-pa-card bg-pa-white shadow-pa-card p-4">
             <h2 className="text-sm font-semibold text-pa-grey-04">Explanation</h2>
             <p data-testid="override-explanation" className="mt-2 text-sm leading-relaxed text-pa-grey-04">
               {explainTarget(person, target)}
             </p>
           </div>
 
-          <div className="rounded-pa-card border border-pa-grey-01 bg-white p-4">
+          <div className="rounded-pa-card bg-pa-white shadow-pa-card p-4">
             <h2 className="text-sm font-semibold text-pa-grey-04">New override</h2>
 
             <div className="mt-3 flex gap-4 text-sm">
@@ -582,7 +582,7 @@ export function ManagerOverrideModal({
           {/* id="notes" is the anchor the roster card's "Notes" button targets,
               so that button lands on the manager-notes field rather than the
               top of the override screen. */}
-          <div id="notes" className="scroll-mt-6 rounded-pa-card border border-pa-grey-01 bg-white p-4">
+          <div id="notes" className="scroll-mt-6 rounded-pa-card bg-pa-white shadow-pa-card p-4">
             <h2 className="text-sm font-semibold text-pa-grey-04">Personal context</h2>
             <p className="mt-1 text-xs text-pa-grey-03">
               Strengths, interests, goals. Informs the explanation and override reasoning — never the formula

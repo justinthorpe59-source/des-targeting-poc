@@ -55,7 +55,7 @@ function StatTile({
   return (
     /* Grey 01 for the same reason as the hero card: Grey wash is the page
        colour, so a Grey-wash tile is invisible as a container. */
-    <div className="rounded-pa-card px-6 py-5" style={{ background: 'var(--color-pa-grey-01)' }}>
+    <div className="rounded-pa-card bg-pa-white px-6 py-5 shadow-pa-card">
       <p className="font-pa-body text-sm font-semibold text-pa-grey-04">{label}</p>
       <span className="mt-3 block text-pa-grey-03" aria-hidden="true">
         {icon}
@@ -100,7 +100,7 @@ export function ExecutiveSummary() {
           </p>
         </div>
 
-        <div className="rounded-lg border border-pa-grey-01 bg-pa-white p-4">
+        <div className="rounded-pa-card bg-pa-white shadow-pa-card p-4">
           <div className="font-pa-body text-xs text-pa-grey-03">Available to import (System 1&apos;s last export)</div>
           <div data-testid="s2-available-count" className="mt-1 font-pa-mono text-2xl font-bold tabular-nums text-pa-grey-04">
             {lastSnapshot ? lastSnapshot.recordCount : '—'}
@@ -242,7 +242,7 @@ export function ExecutiveSummary() {
                     key={division}
                     data-testid="s2-exec-goal-split"
                     className="rounded-pa-chip px-2.5 py-1 font-pa-body text-xs text-pa-grey-03"
-                    style={{ background: 'var(--color-pa-grey-01)' }}
+                    style={{ background: 'var(--color-pa-white)', boxShadow: 'var(--shadow-pa-card)' }}
                   >
                     {formatPercent(pct)} {division}
                   </span>
@@ -265,7 +265,7 @@ export function ExecutiveSummary() {
                    Grey-wash card had no visible edge — the unfilled remainder
                    vanished into the page and "Target FY26." read as though it
                    had drifted outside the card when it was inside all along. */
-                style={{ background: 'var(--color-pa-grey-01)' }}
+                style={{ background: 'var(--color-pa-white)', boxShadow: 'var(--shadow-pa-card)' }}
               >
                 {/* Proportional fill: its WIDTH is the forecast ratio and its
                     HUE is the risk status, so the one mark carries both. */}

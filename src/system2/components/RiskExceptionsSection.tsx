@@ -148,8 +148,7 @@ export function RiskExceptionsSection({ scopeKey }: { scopeKey?: string } = {}) 
               data-testid="s2-exceptions-row"
               data-group-key={row.groupKey}
               data-level={row.level}
-              className="rounded-pa-card px-6 py-4"
-              style={{ background: 'var(--color-pa-grey-01)' }}
+              className="rounded-pa-card bg-pa-white px-6 py-4 shadow-pa-card"
             >
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                 <span className="font-pa-body text-sm font-semibold text-pa-grey-04">{row.label}</span>

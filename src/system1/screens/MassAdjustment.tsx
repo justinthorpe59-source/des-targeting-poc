@@ -160,7 +160,7 @@ export function MassAdjustment() {
         {selected.length === 0 ? (
           <div
             data-testid="mass-no-selection"
-            className="rounded-pa-card bg-pa-white px-8 py-10 text-center"
+            className="rounded-pa-card bg-pa-white px-8 py-10 text-center shadow-pa-card"
           >
             <p className="font-pa-body text-base font-semibold text-pa-grey-04">Nobody selected yet.</p>
             <p className="mx-auto mt-2 max-w-md font-pa-body text-sm text-pa-grey-03">
@@ -176,7 +176,7 @@ export function MassAdjustment() {
           </div>
         ) : (
           <>
-            <div className="rounded-pa-card bg-pa-white p-8">
+            <div className="rounded-pa-card bg-pa-white p-8 shadow-pa-card">
               <div className="flex flex-wrap items-baseline justify-between gap-3">
                 <h2 className="font-pa-display text-sm font-semibold text-pa-grey-04">Selected population</h2>
                 <button
@@ -215,7 +215,7 @@ export function MassAdjustment() {
             </div>
 
             {/* ---- The change ---- */}
-            <div className="rounded-pa-card bg-pa-white p-8">
+            <div className="rounded-pa-card bg-pa-white p-8 shadow-pa-card">
               <h2 className="font-pa-display text-sm font-semibold text-pa-grey-04">The change</h2>
 
               <label className="mt-4 block font-pa-body text-xs font-medium text-pa-grey-03">
@@ -272,7 +272,7 @@ export function MassAdjustment() {
             </div>
 
             {/* ---- Per-person preview: the same quantity that gets applied ---- */}
-            <div className="rounded-pa-card bg-pa-white p-8">
+            <div className="rounded-pa-card bg-pa-white p-8 shadow-pa-card">
               <h2 className="font-pa-display text-sm font-semibold text-pa-grey-04">
                 Before and after, per person
               </h2>
@@ -326,7 +326,7 @@ export function MassAdjustment() {
             {crossCheck && <MassAdjustmentCrossCheckPanel result={crossCheck} />}
 
             {/* ---- Reason + confirm ---- */}
-            <div className="rounded-pa-card bg-pa-white p-8">
+            <div className="rounded-pa-card bg-pa-white p-8 shadow-pa-card">
               <label className="block font-pa-body text-xs font-medium text-pa-grey-03">
                 Reason (required)
                 <textarea

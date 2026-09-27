@@ -68,9 +68,9 @@ function checkItems(result: OverrideCrossCheckResult): AccordionItem[] {
 export function CrossCheckPanel({ result }: { result: OverrideCrossCheckResult }) {
   if (!result.hasOrgData) {
     return (
-      <div className="rounded-lg border border-slate-200 bg-white p-4">
-        <h2 className="text-sm font-semibold text-slate-700">Real-time cross-check</h2>
-        <p data-testid="crosscheck-no-data" className="mt-2 text-sm text-slate-500">
+      <div className="rounded-pa-card bg-pa-white p-4 shadow-pa-card">
+        <h2 className="text-sm font-semibold text-pa-grey-04">Real-time cross-check</h2>
+        <p data-testid="crosscheck-no-data" className="mt-2 text-sm text-pa-grey-03">
           Organisational data not yet available — cross-check skipped.
         </p>
         {result.requiresSignOff && (
@@ -87,8 +87,8 @@ export function CrossCheckPanel({ result }: { result: OverrideCrossCheckResult }
   }
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
-      <h2 className="text-sm font-semibold text-slate-700">Real-time cross-check</h2>
+    <div className="rounded-pa-card bg-pa-white p-4 shadow-pa-card">
+      <h2 className="text-sm font-semibold text-pa-grey-04">Real-time cross-check</h2>
       <div className="mt-2">
         <Accordion testId="crosscheck-panel" items={checkItems(result)} />
       </div>

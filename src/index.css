@@ -83,6 +83,22 @@
   --radius-pa-chip: 0.5rem;
   --radius-pa-card: 1rem;
 
+  /*
+   * Card elevation (27 Sept 2026). The page sits on Grey wash (#f9fafc),
+   * the nearest near-white in the PA palette — the next step is pure white,
+   * which a page must not be if white cards are to read against it. Cards
+   * are therefore separated by ELEVATION rather than by a grey fill: a white
+   * surface plus one of these shadows, instead of the Grey 01 wash several
+   * screens were using to manufacture an edge.
+   *
+   * Tinted with the palette's own Dark Blue (#00172d) rather than neutral
+   * black, so the shadow sits in the same colour family as everything else.
+   * Values match the Scenario Workspace treatment the reference set.
+   */
+  --shadow-pa-card: 0 2px 10px rgba(0, 23, 45, 0.06);
+  --shadow-pa-card-hover: 0 4px 16px rgba(0, 23, 45, 0.1);
+  --shadow-pa-card-raised: 0 6px 24px rgba(0, 23, 45, 0.14);
+
   --font-pa-body: 'Manrope', ui-sans-serif, system-ui, sans-serif;
   --font-pa-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
   --font-pa-mono: 'Space Mono', ui-monospace, 'SFMono-Regular', monospace;

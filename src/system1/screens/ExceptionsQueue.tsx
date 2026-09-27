@@ -510,7 +510,7 @@ export function ExceptionsQueue() {
         {items.length === 0 ? (
           <p
             data-testid="exceptions-empty"
-            className="rounded-pa-card bg-pa-white p-8 text-center font-pa-body text-sm text-pa-grey-03"
+            className="rounded-pa-card bg-pa-white p-8 text-center shadow-pa-card font-pa-body text-sm text-pa-grey-03"
           >
             Nothing flagged{typeFilter !== 'All' ? ` of type “${TYPE_LABELS[typeFilter]}”` : ''} right now.
           </p>

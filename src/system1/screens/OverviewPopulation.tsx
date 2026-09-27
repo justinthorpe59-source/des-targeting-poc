@@ -408,7 +408,7 @@ function PersonCard({
       data-testid="person-card"
       data-person-id={person.id}
       data-selected={selected ? 'true' : 'false'}
-      className={`flex flex-col rounded-pa-card border bg-pa-white p-4 transition-colors ${
+      className={`flex flex-col rounded-pa-card border bg-pa-white p-4 shadow-pa-card transition-colors ${
         selected ? 'border-pa-aqua-04 ring-1 ring-pa-aqua-04' : 'border-pa-grey-01'
       }`}
     >
@@ -556,7 +556,7 @@ function System2SyncStrip() {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-pa-card border border-pa-grey-01 bg-pa-white px-4 py-3">
+    <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-pa-card bg-pa-white shadow-pa-card px-4 py-3">
       <div>
         <div className="font-pa-body text-[11px] font-medium uppercase tracking-wide text-pa-grey-03">
           Last synced with System 2
@@ -714,7 +714,7 @@ export function OverviewPopulation() {
           <System2SyncStrip />
 
           {/* Headline metrics */}
-          <div className="grid grid-cols-2 divide-x divide-y divide-pa-grey-01 overflow-hidden rounded-pa-card border border-pa-grey-01 bg-pa-white sm:grid-cols-4 sm:divide-y-0">
+          <div className="grid grid-cols-2 divide-x divide-y divide-pa-grey-01 overflow-hidden rounded-pa-card bg-pa-white shadow-pa-card sm:grid-cols-4 sm:divide-y-0">
             <MetricCell
               label="Population"
               testId="stat-population"
@@ -825,7 +825,7 @@ export function OverviewPopulation() {
               {teamNodes.length === 0 ? (
                 <p
                   data-testid="network-empty"
-                  className="rounded-pa-card border border-pa-grey-01 bg-pa-white p-6 text-center font-pa-body text-sm text-pa-grey-03"
+                  className="rounded-pa-card bg-pa-white shadow-pa-card p-6 text-center font-pa-body text-sm text-pa-grey-03"
                 >
                   No teams have anyone in {locationFilter}.
                 </p>
@@ -873,7 +873,7 @@ export function OverviewPopulation() {
                 />
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 rounded-pa-card border border-pa-grey-01 bg-pa-white px-4 py-2.5">
+              <div className="flex flex-wrap items-center gap-3 rounded-pa-card bg-pa-white shadow-pa-card px-4 py-2.5">
                 <span data-testid="roster-selected-count" className="font-pa-body text-sm text-pa-grey-04">
                   <span className="font-pa-mono font-bold">{selectedPersonIds.length}</span> selected for mass
                   adjustment
@@ -910,7 +910,7 @@ export function OverviewPopulation() {
               {roster.length === 0 ? (
                 <p
                   data-testid="roster-empty"
-                  className="rounded-pa-card border border-pa-grey-01 bg-pa-white p-6 text-center font-pa-body text-sm text-pa-grey-03"
+                  className="rounded-pa-card bg-pa-white shadow-pa-card p-6 text-center font-pa-body text-sm text-pa-grey-03"
                 >
                   Nobody on this team matches “{search}”.
                 </p>

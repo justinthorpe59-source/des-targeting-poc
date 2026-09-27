@@ -462,8 +462,8 @@ export function ScenarioWorkspace() {
                 onClick={() => setSelectedId(preset.id)}
                 className={`flex h-52 flex-col rounded-pa-card bg-pa-white p-6 text-left transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-aqua-04 ${
                   active
-                    ? 'shadow-[0_6px_24px_rgba(0,23,45,0.14)]'
-                    : 'shadow-[0_2px_10px_rgba(0,23,45,0.06)] hover:shadow-[0_4px_16px_rgba(0,23,45,0.10)]'
+                    ? 'shadow-pa-card-raised'
+                    : 'shadow-pa-card hover:shadow-pa-card-hover'
                 }`}
               >
                 <span className="font-pa-display text-xl font-semibold leading-snug text-pa-grey-04">
@@ -531,8 +531,8 @@ export function ScenarioWorkspace() {
                 onClick={() => setSelectedId(card.id)}
                 className={`flex h-36 w-64 shrink-0 snap-start flex-col justify-end rounded-pa-card bg-pa-white p-5 text-left transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-aqua-04 ${
                   active
-                    ? 'shadow-[0_6px_24px_rgba(0,23,45,0.14)]'
-                    : 'shadow-[0_2px_10px_rgba(0,23,45,0.06)] hover:shadow-[0_4px_16px_rgba(0,23,45,0.10)]'
+                    ? 'shadow-pa-card-raised'
+                    : 'shadow-pa-card hover:shadow-pa-card-hover'
                 }`}
               >
                 <span className="font-pa-body text-xs text-pa-grey-03">{card.meta}</span>
@@ -575,7 +575,7 @@ export function ScenarioWorkspace() {
       <div
         data-testid="scenario-diff"
         data-selected-id={selectedId}
-        className="rounded-pa-card bg-pa-white p-8 shadow-[0_2px_10px_rgba(0,23,45,0.06)]"
+        className="rounded-pa-card bg-pa-white p-8 shadow-pa-card"
       >
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
