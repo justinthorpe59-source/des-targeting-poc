@@ -9,6 +9,7 @@ import { runScenario, type ScenarioLevers } from '../engine/scenario'
 import { statusBadgeClass } from '../riskDisplay'
 import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
 import { useInitialLoad } from '../../components/searchlight/useInitialLoad'
+import { formatMoney, formatPercent } from '../../shared/format'
 
 /**
  * S2-M7/M8 Scenario Workspace, rebuilt 27 Sept 2026 against the supplied
@@ -56,10 +57,6 @@ const CONFIDENCE_DIVISION: Division = 'Design'
 const CAPACITY_DIP_MULTIPLIER = 0.9
 const POPULATION_STRETCH_PERCENT = 10
 const GOAL_RAISE_PERCENT = 5
-
-function money(k: number): string {
-  return k >= 1000 ? `£${(k / 1000).toFixed(2)}m` : `£${Math.round(k)}k`
-}
 
 type IconName = 'bar' | 'dip' | 'stretch' | 'confidence'
 
@@ -332,7 +329,7 @@ export function ScenarioWorkspace() {
     const l = selectedLevers
 
     if (l.goal !== undefined) {
-      rows.push({ label: 'Organisational goal', before: money(baselineGoals.desWide), after: money(l.goal) })
+      rows.push({ label: 'Organisational goal', before: formatMoney(baselineGoals.desWide), after: formatMoney(l.goal) })
     }
     if (l.capacityChange) {
       const { scope, multiplier } = l.capacityChange
@@ -366,8 +363,8 @@ export function ScenarioWorkspace() {
       if (expectedAchievement !== undefined) {
         rows.push({
           label: `Expected achievement · ${where}`,
-          before: money(baselineAggregation.desWide.expectedAchievement),
-          after: money(expectedAchievement),
+          before: formatMoney(baselineAggregation.desWide.expectedAchievement),
+          after: formatMoney(expectedAchievement),
         })
       }
     }
@@ -387,13 +384,13 @@ export function ScenarioWorkspace() {
     return [
       {
         label: 'Expected achievement',
-        before: money(before.rollup.expectedAchievement),
-        after: money(after.rollup.expectedAchievement),
+        before: formatMoney(before.rollup.expectedAchievement),
+        after: formatMoney(after.rollup.expectedAchievement),
       },
       {
         label: 'Gap to goal',
-        before: money(before.goal - before.rollup.expectedAchievement),
-        after: money(after.goal - after.rollup.expectedAchievement),
+        before: formatMoney(before.goal - before.rollup.expectedAchievement),
+        after: formatMoney(after.goal - after.rollup.expectedAchievement),
       },
       {
         label: 'Confidence',
@@ -402,8 +399,8 @@ export function ScenarioWorkspace() {
       },
       {
         label: 'Forecast ratio',
-        before: `${Math.round((before.risk?.forecastRatio ?? 0) * 100)}%`,
-        after: `${Math.round((after.risk?.forecastRatio ?? 0) * 100)}%`,
+        before: formatPercent((before.risk?.forecastRatio ?? 0) * 100),
+        after: formatPercent((after.risk?.forecastRatio ?? 0) * 100),
       },
     ]
   }, [before, after])

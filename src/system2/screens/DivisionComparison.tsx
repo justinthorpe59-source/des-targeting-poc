@@ -4,11 +4,12 @@ import { useSystem2Store } from '../../store/system2Store'
 import { aggregate } from '../engine/aggregation'
 import { computeRiskStatuses, type RiskStatus } from '../engine/riskStatus'
 import { computeGoals } from '../engine/goals'
-import { round1, statusBadgeClass } from '../riskDisplay'
+import {statusBadgeClass} from '../riskDisplay'
 import { RiskExceptionsSection } from '../components/RiskExceptionsSection'
 import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
 import { SketchScatter } from '../../components/searchlight/SketchIllustrations'
 import { useInitialLoad } from '../../components/searchlight/useInitialLoad'
+import { formatMoney, formatPercent } from '../../shared/format'
 
 /**
  * S2-M5/M6: coverage, forecast, confidence and status side by side across
@@ -65,7 +66,7 @@ function ForecastBar({ ratio, status, testId }: { ratio: number; status: RiskSta
         />
       </div>
       <p className="mt-2 font-pa-display text-3xl font-medium leading-none tracking-tight text-pa-grey-04">
-        <span data-testid={testId}>{round1(pct)}%</span>
+        <span data-testid={testId}>{formatPercent(pct)}</span>
       </p>
       <p className="mt-1 font-pa-body text-[11px] uppercase tracking-[0.1em] text-pa-grey-03">Forecast</p>
     </div>
@@ -221,11 +222,11 @@ export function DivisionComparison() {
                   </div>
 
                   <div className="mt-5 grid grid-cols-2 gap-4">
-                    <MetricPair label="Coverage" value={`${round1(coverage)}%`} />
+                    <MetricPair label="Coverage" value={formatPercent(coverage)} />
                     <MetricPair label="Confidence" value={risk.confidence} sub="(simulated)" />
                     <MetricPair
                       label="Goal"
-                      value={`£${round1(goal)}k`}
+                      value={formatMoney(goal)}
                       testId="s2-division-comparison-goal"
                     />
                     <MetricPair label="Headcount" value={`${rollup.headcount}`} />
@@ -296,10 +297,10 @@ export function DivisionComparison() {
                     <div className="mt-5 grid grid-cols-2 gap-4">
                       <MetricPair
                         label="Coverage"
-                        value={`${round1(goal > 0 ? (rollup.target / goal) * 100 : 0)}%`}
+                        value={formatPercent(goal > 0 ? (rollup.target / goal) * 100 : 0)}
                       />
                       <MetricPair label="Confidence" value={risk.confidence} sub="(simulated)" />
-                      <MetricPair label="Expected" value={`£${round1(rollup.expectedAchievement)}k`} />
+                      <MetricPair label="Expected" value={formatMoney(rollup.expectedAchievement)} />
                       <MetricPair label="Headcount" value={`${rollup.headcount}`} />
                     </div>
 
@@ -307,13 +308,13 @@ export function DivisionComparison() {
                       <span className="font-pa-body text-[11px] uppercase tracking-[0.1em] text-pa-grey-03">
                         Goal{' '}
                         <span data-testid="s2-team-drilldown-goal" className="font-pa-mono normal-case text-pa-grey-04">
-                          £{round1(goal)}k
+                          {formatMoney(goal)}
                         </span>
                       </span>
                       <span className="font-pa-body text-[11px] uppercase tracking-[0.1em] text-pa-grey-03">
                         Gap{' '}
                         <span data-testid="s2-team-drilldown-gap" className="font-pa-mono normal-case text-pa-grey-04">
-                          {gap >= 0 ? '−' : '+'}£{round1(Math.abs(gap))}k
+                          {gap >= 0 ? '−' : '+'}{formatMoney(Math.abs(gap))}
                         </span>
                       </span>
                     </div>

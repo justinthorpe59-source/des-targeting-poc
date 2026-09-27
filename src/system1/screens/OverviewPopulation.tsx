@@ -13,6 +13,8 @@ import { StatusPill } from '../../components/searchlight/StatusPill'
 import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
 import { SketchNetwork } from '../../components/searchlight/SketchIllustrations'
 import { useInitialLoad } from '../../components/searchlight/useInitialLoad'
+import { formatMoney, formatFlatPercent } from '../../shared/format'
+import { calculateRevenue } from '../engine/revenueEngine'
 
 const STATUS_ORDER: TargetStatus[] = ['Modelled', 'Adjusted', 'Pending Sign-off', 'Proposed', 'Approved']
 
@@ -437,11 +439,36 @@ function PersonCard({
         <span className="mt-2">{status && <StatusPill state={status} testId="person-card-status" />}</span>
       </div>
 
-      <div className="mt-3 flex items-baseline justify-between border-t border-pa-grey-01 pt-3">
-        <span className="font-pa-body text-xs text-pa-grey-03">Current target</span>
-        <span data-testid="person-card-target" className="font-pa-mono text-sm font-bold text-pa-grey-04">
-          £{target}k
-        </span>
+      {/* Utilisation leads — it is the only target most of this population
+          carries. The modelled figure below is the workflow value the
+          override acts on, which is a different quantity again. */}
+      <div className="mt-3 border-t border-pa-grey-01 pt-3">
+        <div className="flex items-baseline justify-between">
+          <span className="font-pa-body text-xs text-pa-grey-03">Utilisation target</span>
+          <span data-testid="person-card-utilisation" className="font-pa-mono text-sm font-bold text-pa-grey-04">
+            {formatFlatPercent(person.utilisationTarget)}
+          </span>
+        </div>
+        <div className="mt-1 flex items-baseline justify-between">
+          <span className="font-pa-body text-[11px] text-pa-grey-03">Billable</span>
+          <span data-testid="person-card-billable" className="font-pa-mono text-[11px] text-pa-grey-03">
+            {formatMoney(calculateRevenue(person).billableRevenue)}
+          </span>
+        </div>
+        {person.salesTarget !== null && (
+          <div className="mt-1 flex items-baseline justify-between">
+            <span className="font-pa-body text-[11px] text-pa-grey-03">Sales target</span>
+            <span data-testid="person-card-sales" className="font-pa-mono text-[11px] text-pa-grey-03">
+              {formatMoney(person.salesTarget)}
+            </span>
+          </div>
+        )}
+        <div className="mt-1 flex items-baseline justify-between">
+          <span className="font-pa-body text-[11px] text-pa-grey-03">Modelled</span>
+          <span data-testid="person-card-target" className="font-pa-mono text-[11px] text-pa-grey-03">
+            {formatMoney(target)}
+          </span>
+        </div>
       </div>
 
       <div className="mt-3 flex gap-2 border-t border-pa-grey-01 pt-3">
@@ -698,18 +725,18 @@ export function OverviewPopulation() {
             <MetricCell
               label="Aggregate current target"
               testId="stat-aggregate-current"
-              value={`£${stats.aggregateCurrent.toLocaleString()}k`}
+              value={formatMoney(stats.aggregateCurrent)}
               sub={
                 hasOverrides
-                  ? `£${stats.aggregateModelled.toLocaleString()}k modelled before overrides`
-                  : `vs £${stats.aggregateBaseline.toLocaleString()}k combined baseline`
+                  ? `${formatMoney(stats.aggregateModelled)} modelled before overrides`
+                  : `vs ${formatMoney(stats.aggregateBaseline)} combined baseline`
               }
               rule="var(--color-pa-aqua-04)"
             />
             <MetricCell
               label="Aggregate modelled target"
               testId="stat-aggregate-modelled"
-              value={`£${stats.aggregateModelled.toLocaleString()}k`}
+              value={formatMoney(stats.aggregateModelled)}
               sub="unaffected by overrides"
               rule="var(--color-pa-aqua-03)"
             />
@@ -832,7 +859,7 @@ export function OverviewPopulation() {
                   </h1>
                   <p className="font-pa-body text-sm text-pa-grey-03">
                     {openTeam.division} · {openTeam.people.length} people ·{' '}
-                    <span className="font-pa-mono">£{openTeam.combinedRevenue.toLocaleString()}k</span> combined
+                    <span className="font-pa-mono">{formatMoney(openTeam.combinedRevenue)}</span> combined
                   </p>
                 </div>
 

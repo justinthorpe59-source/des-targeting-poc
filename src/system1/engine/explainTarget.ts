@@ -1,5 +1,6 @@
 import type { Person } from '../data/types'
 import type { TargetRecord } from '../../store/system1Store'
+import { formatMoney } from '../../shared/format'
 
 /**
  * The single explanation-text implementation. Individual Detail (M5) and
@@ -13,11 +14,11 @@ import type { TargetRecord } from '../../store/system1Store'
  */
 export function explainTarget(person: Person, target: TargetRecord): string {
   return (
-    `${person.division}'s baseline for this role is £${person.baseline}k. ` +
+    `${person.division}'s baseline for this role is ${formatMoney(person.baseline)}. ` +
     `Adjusted for your capacity (${person.capacity} of full-time), your role factor ` +
     `(${person.roleFactor} for ${person.grade}), and the current economic ` +
-    `factor (${person.economicFactor}), the modelled target is £${target.modelled}k — expressed as a range of ` +
-    `£${target.rangeLow}k to £${target.rangeHigh}k (±15%) rather than a single fixed number, since this is a ` +
+    `factor (${person.economicFactor}), the modelled target is ${formatMoney(target.modelled)} — expressed as a range of ` +
+    `${formatMoney(target.rangeLow)} to ${formatMoney(target.rangeHigh)} (±15%) rather than a single fixed number, since this is a ` +
     `starting point for a conversation, not a formula-only decision.`
   )
 }

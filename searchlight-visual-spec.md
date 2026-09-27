@@ -61,6 +61,72 @@ Compiled from the screenshot-derived design pass, 24 Sept 2026. This is a compan
 
 ---
 
+## Number formatting and individual target order — locked 27 Sept 2026
+
+Two global rules, applying to every screen in both systems.
+
+### Currency and percentages
+
+All formatting goes through `src/shared/format.ts`. No screen formats a
+figure inline. Before this, every screen had its own habit and they disagreed
+at scale boundaries — `£${n.toLocaleString()}k` printed "£5,820k" and
+"£17,820k" for figures that are £5.8m and £17.8m, while Executive Summary's
+hero used a separate two-decimal millions format.
+
+| Range | Format | Example |
+| --- | --- | --- |
+| below £1,000 | full number | `£820` |
+| £1,000 – £999,999 | thousands, no decimal | `£582k` |
+| £1,000,000 and above | millions, one decimal | `£17.8m` |
+
+Banding is decided on the **rounded** figure, so a value that rounds up across
+a boundary moves band with it: 999.6k renders `£1.0m`, never `£1000k`.
+Boundary cases are pinned in `scripts/verify-format.ts` (`npm run
+verify:format`).
+
+Percentages carry **one decimal place** (`87.4%`), except figures that are a
+defined flat rate rather than a measurement, which stay whole: the 65%/85%
+utilisation targets, the ±20% large-adjustment threshold, grade role factors,
+and percentages the user typed into an adjustment field.
+
+**Known trade-off, accepted:** one decimal at £m scale means a change under
+~£50k on a multi-million total renders as no visible change. A 0.5% mass
+adjustment on £5.8m shows `£5.8m → £5.8m`. The net-change line still states
+the real delta (`+£20k (+0.3%)`), so the figure is never lost — but the
+headline pair alone will not show it.
+
+### Individual target display order
+
+For everyone below Managing Consultant, the only target they carry is
+**utilisation**, as a percentage. It is the lead figure — first, and most
+prominent — everywhere an individual's target appears. The monetary
+equivalent (day rate × utilisation × working days) stays visible as a
+supporting figure, never the lead.
+
+Managing Consultant and above additionally carry a sales target. Utilisation
+still leads; the sales target gets its **own clearly labelled figure** and is
+never folded into the utilisation-derived monetary one.
+
+That last point corrected a real defect, not just an ordering: these screens
+printed `combinedRevenueFor(person)`, which is billable **plus** sales added
+together. For a Partner that single number silently merged two targets of
+different kinds. The supporting figure is now billable revenue alone.
+
+Applied via `IndividualTargetLead` / `IndividualTargetInline`
+(`src/system1/components/IndividualTarget.tsx`) on Individual Detail, Manager
+Override, Mass Adjustment, Overview & Population's roster cards, and the
+Exceptions Queue's per-person rows.
+
+**Note the third quantity.** None of the above is the *modelled target*
+(baseline × capacity × role × economic). That is what the override and
+sign-off workflow acts on, and it is unchanged. On Manager Override, Mass
+Adjustment and the Exceptions Queue's sign-off rows, utilisation leads as
+context while the modelled before/after remains the figure actually being
+changed — those screens label it `modelled` explicitly so the two are not
+confused.
+
+---
+
 ## System 1 — Individual Targeting
 
 ### 1. Overview & Population

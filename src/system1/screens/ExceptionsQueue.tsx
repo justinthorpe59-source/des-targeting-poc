@@ -5,6 +5,10 @@ import type { Person } from '../data/types'
 import { useSystem1Store, type SignOffContext, type TargetRecord } from '../../store/system1Store'
 import { detectExceptions, type ExceptionFlag, type ExceptionType } from '../engine/exceptions'
 import { Accordion, type AccordionItem } from '../../components/searchlight/Accordion'
+import { formatMoney } from '../../shared/format'
+import { formatFlatPercent } from '../../shared/format'
+import { calculateRevenue } from '../engine/revenueEngine'
+import { IndividualTargetInline } from '../components/IndividualTarget'
 
 /**
  * M9's exceptions queue, plus the Sign-off Queue folded in by the 5-screen
@@ -324,8 +328,9 @@ export function ExceptionsQueue() {
                       className="flex flex-wrap items-baseline gap-x-2 border-b border-pa-grey-01 py-2 last:border-0"
                     >
                       <span className="font-medium text-pa-grey-04">{r.person.name}</span>
+                      <IndividualTargetInline person={r.person} />
                       <span className="font-pa-mono text-pa-grey-03">
-                        £{r.target.modelled}k → £{r.target.override?.finalValue}k
+                        modelled {formatMoney(r.target.modelled)} → {formatMoney(r.target.override?.finalValue ?? 0)}
                       </span>
                       <span
                         className="ml-auto shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold"
@@ -380,7 +385,7 @@ export function ExceptionsQueue() {
               <Severity type="pending-signoff" />
             </>
           ),
-          meta: `${row.person.id} · ${scope} · £${row.target.modelled}k → £${row.target.override?.finalValue}k`,
+          meta: `${row.person.id} · ${scope} · ${formatFlatPercent(row.person.utilisationTarget)} utilisation · modelled ${formatMoney(row.target.modelled)} → ${formatMoney(row.target.override?.finalValue ?? 0)}`,
           content: (
             <div>
               <ContextChecks context={row.context} />
@@ -418,7 +423,7 @@ export function ExceptionsQueue() {
             <Severity type={worst} />
           </>
         ),
-        meta: `${person.id} · ${person.division} / ${person.team}`,
+        meta: `${person.id} · ${person.division} / ${person.team} · ${formatFlatPercent(person.utilisationTarget)} utilisation · ${formatMoney(calculateRevenue(person).billableRevenue)} billable${person.salesTarget !== null ? ` · ${formatMoney(person.salesTarget)} sales target` : ''}`,
         content: (
           <div>
             <div className="mb-1 font-pa-body text-[11px] font-medium uppercase tracking-wide text-pa-grey-03">

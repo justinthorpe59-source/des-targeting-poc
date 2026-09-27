@@ -3,7 +3,8 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { SEED_PEOPLE } from '../data/people'
 import { useSystem1Store } from '../../store/system1Store'
 import { explainTarget } from '../engine/explainTarget'
-import { combinedRevenueFor } from '../engine/revenueEngine'
+import { IndividualTargetLead } from '../components/IndividualTarget'
+import { formatMoney } from '../../shared/format'
 import { StatusPipeline } from '../components/StatusPipeline'
 import { CohortComparisonPanel } from '../components/CohortComparisonPanel'
 import { StatusPill } from '../../components/searchlight/StatusPill'
@@ -11,6 +12,7 @@ import { ManagerOverrideModal } from './ManagerOverride'
 import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
 import { SketchDistribution } from '../../components/searchlight/SketchIllustrations'
 import { useInitialLoad } from '../../components/searchlight/useInitialLoad'
+import { formatPercent } from '../../shared/format'
 
 function initials(name: string): string {
   return name
@@ -227,14 +229,16 @@ export function IndividualDetail() {
                   </span>
                 </div>
 
-                {/* stat row — large value paired with a secondary value */}
-                <div className="mt-7 grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  <div>
-                    <div data-testid="detail-modelled" className="font-pa-mono text-4xl font-bold leading-none text-pa-grey-04">
-                      £{combinedRevenueFor(person)}k
-                    </div>
-                    <div className="mt-1.5 font-pa-body text-sm text-pa-grey-03">Revenue contribution</div>
-                  </div>
+                {/* Stat row. Utilisation leads — for everyone below Managing
+                    Consultant it is their only target; the monetary figure
+                    supports it rather than replacing it. A third cell appears
+                    for the grades that also carry a sales target. */}
+                <div
+                  className={`mt-7 grid grid-cols-1 gap-6 ${
+                    person.salesTarget !== null ? 'sm:grid-cols-3' : 'sm:grid-cols-2'
+                  }`}
+                >
+                  <IndividualTargetLead person={person} />
                   <div>
                     {target.override ? (
                       <>
@@ -242,10 +246,10 @@ export function IndividualDetail() {
                           data-testid="detail-override"
                           className="font-pa-mono text-4xl font-bold leading-none text-pa-grey-04"
                         >
-                          £{target.override.finalValue}k
+                          {formatMoney(target.override.finalValue)}
                         </div>
                         <div className="mt-1.5 font-pa-body text-sm text-pa-grey-03">
-                          Adjusted from £{target.modelled}k
+                          Adjusted from {formatMoney(target.modelled)}
                         </div>
                       </>
                     ) : (
@@ -254,7 +258,7 @@ export function IndividualDetail() {
                           data-testid="detail-range"
                           className="font-pa-mono text-4xl font-bold leading-none text-pa-grey-04"
                         >
-                          £{target.rangeLow}k–{target.rangeHigh}k
+                          {formatMoney(target.rangeLow)}–{formatMoney(target.rangeHigh)}
                         </div>
                         <div className="mt-1.5 font-pa-body text-sm text-pa-grey-03">Target range</div>
                       </>
@@ -381,7 +385,7 @@ export function IndividualDetail() {
               <AttributeChip
                 testId="attr-capacity"
                 label="Capacity"
-                badge={`${Math.round(person.capacity * 100)}%`}
+                badge={formatPercent(person.capacity * 100)}
                 value={`${person.capacity} of full-time`}
               />
                 <AttributeChip testId="attr-location" label="Location" value={person.location} />

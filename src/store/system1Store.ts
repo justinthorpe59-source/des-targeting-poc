@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { SEED_PEOPLE } from '../system1/data/people'
 import { calculateModelledTarget } from '../system1/engine/targetingEngine'
+import { formatMoney } from '../shared/format'
 
 /**
  * System 1's shared store. Population data (src/system1/data/people.ts) is
@@ -265,8 +266,8 @@ export const useSystem1Store = create<System1State>()(
           action: source === 'mass' ? 'Mass adjustment applied' : 'Override applied',
           detail:
             (type === 'percent'
-              ? `${value > 0 ? '+' : ''}${value}% → £${finalValue}k. Reason: ${reason}`
-              : `Set to £${finalValue}k. Reason: ${reason}`) +
+              ? `${value > 0 ? '+' : ''}${value}% → ${formatMoney(finalValue)}. Reason: ${reason}`
+              : `Set to ${formatMoney(finalValue)}. Reason: ${reason}`) +
             (requiresSignOff ? ' [Routed to Pending Sign-off by the real-time cross-check.]' : ''),
         })
       },
@@ -290,7 +291,7 @@ export const useSystem1Store = create<System1State>()(
           personId,
           actor: 'Manager',
           action: 'Override reverted',
-          detail: `Back to modelled £${existing.modelled}k. Reason: ${reason}`,
+          detail: `Back to modelled ${formatMoney(existing.modelled)}. Reason: ${reason}`,
         })
       },
 
@@ -396,7 +397,7 @@ export const useSystem1Store = create<System1State>()(
           personId,
           actor: reviewerLabel,
           action: 'Sign-off rejected',
-          detail: `Reverted to modelled £${existing.modelled}k. Reason: ${reason}`,
+          detail: `Reverted to modelled ${formatMoney(existing.modelled)}. Reason: ${reason}`,
         })
       },
 

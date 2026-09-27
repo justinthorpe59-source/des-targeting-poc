@@ -8,6 +8,9 @@ import { MassAdjustmentCrossCheckPanel } from '../components/MassAdjustmentCross
 import { useSystem1Store } from '../../store/system1Store'
 import { useSystem2LiveSnapshot } from '../../system2/bridge/useSystem2LiveState'
 import { StatusPill } from '../../components/searchlight/StatusPill'
+import { formatMoney } from '../../shared/format'
+import { formatSignedPercent } from '../../shared/format'
+import { IndividualTargetInline } from '../components/IndividualTarget'
 
 /** People listed before the rest go behind a reveal. */
 const PREVIEW_ROWS = 6
@@ -79,7 +82,7 @@ export function MassAdjustment() {
   const totalBefore = preview.reduce((sum, row) => sum + row.before, 0)
   const totalAfter = preview.reduce((sum, row) => sum + row.after, 0)
   const netChange = totalAfter - totalBefore
-  const netChangePct = totalBefore === 0 ? 0 : Math.round((netChange / totalBefore) * 100)
+  const netChangePct = totalBefore === 0 ? 0 : (netChange / totalBefore) * 100
 
   const crossCheck = useMemo(() => {
     if (eligible.length === 0) return null
@@ -232,7 +235,7 @@ export function MassAdjustment() {
                     Total target before
                   </div>
                   <div data-testid="mass-total-before" className="font-pa-mono text-xl font-bold text-pa-grey-04">
-                    £{totalBefore.toLocaleString()}k
+                    {formatMoney(totalBefore)}
                   </div>
                 </div>
                 <div>
@@ -240,7 +243,7 @@ export function MassAdjustment() {
                     Total target after
                   </div>
                   <div data-testid="mass-total-after" className="font-pa-mono text-xl font-bold text-pa-grey-04">
-                    £{totalAfter.toLocaleString()}k
+                    {formatMoney(totalAfter)}
                   </div>
                 </div>
                 <div>
@@ -259,10 +262,9 @@ export function MassAdjustment() {
                             : 'var(--color-pa-grey-04)',
                     }}
                   >
-                    {netChange >= 0 ? '+' : '−'}£{Math.abs(netChange).toLocaleString()}k
+                    {netChange >= 0 ? '+' : '−'}{formatMoney(Math.abs(netChange))}
                     <span className="ml-1.5 font-pa-body text-xs font-medium text-pa-grey-03">
-                      ({netChangePct >= 0 ? '+' : ''}
-                      {netChangePct}%)
+                      ({formatSignedPercent(netChangePct)})
                     </span>
                   </div>
                 </div>
@@ -291,13 +293,18 @@ export function MassAdjustment() {
                     <span className="font-pa-body text-xs text-pa-grey-03">
                       {person.division} / {person.team}
                     </span>
+                    {/* Utilisation leads, but it is NOT what this screen
+                        changes — the before/after below is the modelled
+                        target, the figure the adjustment actually moves. */}
+                    <IndividualTargetInline person={person} />
                     <span className="ml-auto flex items-center gap-3 font-pa-mono text-sm">
-                      <span className="text-pa-grey-03">£{before}k</span>
+                      <span className="text-pa-grey-02">modelled</span>
+                      <span className="text-pa-grey-03">{formatMoney(before)}</span>
                       <span aria-hidden="true" className="text-pa-grey-02">
                         →
                       </span>
                       <span data-testid="mass-preview-after" className="font-bold text-pa-grey-04">
-                        £{after}k
+                        {formatMoney(after)}
                       </span>
                     </span>
                   </div>

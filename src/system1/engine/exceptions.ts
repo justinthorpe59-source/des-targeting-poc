@@ -2,6 +2,7 @@ import type { Person } from '../data/types'
 import type { TargetRecord } from '../../store/system1Store'
 import { finalTargetFor } from './finalTarget'
 import { buildTeamAverageMap } from './cohortAverages'
+import { formatMoney, formatPercent, formatSignedPercent } from '../../shared/format'
 
 /**
  * Shared exceptions detector — the same function Overview's count and (at
@@ -76,7 +77,7 @@ export function detectExceptions({ people, targets }: DetectExceptionsInput): Ma
           flags.push({
             personId: person.id,
             type: 'extreme-value',
-            detail: `final target £${finalTarget}k is ${Math.round(deviation * 100)}% from team average £${Math.round(teamAverage)}k`,
+            detail: `final target ${formatMoney(finalTarget)} is ${formatPercent(deviation * 100)} from team average ${formatMoney(teamAverage)}`,
           })
         }
       }
@@ -87,7 +88,7 @@ export function detectExceptions({ people, targets }: DetectExceptionsInput): Ma
           flags.push({
             personId: person.id,
             type: 'large-adjustment',
-            detail: `override moved the target ${Math.round(adjustmentPct * 100)}% from modelled £${target.modelled}k to £${target.override.finalValue}k`,
+            detail: `override moved the target ${formatSignedPercent(adjustmentPct * 100)} from modelled ${formatMoney(target.modelled)} to ${formatMoney(target.override.finalValue)}`,
           })
         }
       }

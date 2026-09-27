@@ -10,6 +10,9 @@ import { buildIndividualSignOffContext } from '../engine/buildSignOffContext'
 import { useSystem2LiveSnapshot } from '../../system2/bridge/useSystem2LiveState'
 import { explainTarget } from '../engine/explainTarget'
 import { CrossCheckPanel } from '../components/CrossCheckPanel'
+import { formatMoney } from '../../shared/format'
+import { formatSignedPercent } from '../../shared/format'
+import { IndividualTargetInline } from '../components/IndividualTarget'
 
 const CAPACITY_MIN = 0.3
 const CAPACITY_MAX = 1.3
@@ -154,16 +157,16 @@ function FactorSandbox({
             <span className="text-pa-grey-03">
               Sandbox target:{' '}
               <span data-testid="whatif-sandbox-modelled" className="font-semibold tabular-nums text-pa-grey-04">
-                £{result.modelled}k
+                {formatMoney(result.modelled)}
               </span>{' '}
               <span data-testid="whatif-sandbox-range" className="text-xs text-pa-grey-03">
-                (£{result.rangeLow}k – £{result.rangeHigh}k)
+                ({formatMoney(result.rangeLow)} – {formatMoney(result.rangeHigh)})
               </span>
             </span>
             <span className="text-xs text-pa-grey-03">
               stored{' '}
               <span data-testid="whatif-stored-modelled" className="font-mono">
-                £{storedFinal}k
+                {formatMoney(storedFinal)}
               </span>
               {isTweaked && (
                 <>
@@ -251,7 +254,10 @@ export function ManagerOverrideModal({
     target && overrideType === 'percent'
       ? Math.round(target.modelled * (1 + percentValue / 100))
       : Math.round(directValue)
-  const previewDeviationPct = target ? Math.round(((previewFinal - target.modelled) / target.modelled) * 100) : 0
+  const previewDeviationRaw = target ? ((previewFinal - target.modelled) / target.modelled) * 100 : 0
+  /* The gate still compares the ROUNDED figure, exactly as before — the
+     formatting pass changed how this is displayed, not when it triggers. */
+  const previewDeviationPct = Math.round(previewDeviationRaw)
   const isLargeAdjustment = Math.abs(previewDeviationPct) > LARGE_ADJUSTMENT_THRESHOLD * 100
   const canSubmit = reason.trim().length > 0
 
@@ -348,10 +354,16 @@ export function ManagerOverrideModal({
                 {target.status}
               </span>
             </div>
-            <div className="mt-1 text-sm text-pa-grey-03">
+            {/* Utilisation first — for most of this population it is
+                their only target. The modelled figure beneath is what this
+                modal actually overrides. */}
+            <div className="mt-2">
+              <IndividualTargetInline person={person} testId="override-target-profile" />
+            </div>
+            <div className="mt-2 text-sm text-pa-grey-03">
               Modelled target:{' '}
-              <span className="font-medium tabular-nums text-pa-grey-04">£{target.modelled}k</span> (range £
-              {target.rangeLow}k – £{target.rangeHigh}k)
+              <span className="font-medium tabular-nums text-pa-grey-04">{formatMoney(target.modelled)}</span> (range{' '}
+              {formatMoney(target.rangeLow)} – {formatMoney(target.rangeHigh)})
             </div>
 
             {target.status === 'Pending Sign-off' && (
@@ -371,7 +383,7 @@ export function ManagerOverrideModal({
                   {target.override.type === 'percent'
                     ? `${target.override.value > 0 ? '+' : ''}${target.override.value}%`
                     : `Direct value`}{' '}
-                  → <span className="font-medium tabular-nums text-pa-grey-04">£{target.override.finalValue}k</span>
+                  → <span className="font-medium tabular-nums text-pa-grey-04">{formatMoney(target.override.finalValue)}</span>
                 </div>
                 <div className="mt-1 text-pa-grey-03">Reason: {target.override.reason}</div>
 
@@ -461,11 +473,10 @@ export function ManagerOverrideModal({
             <div className="mt-3 text-sm text-pa-grey-03">
               Resulting target:{' '}
               <span data-testid="override-preview" className="font-semibold tabular-nums text-pa-grey-04">
-                £{previewFinal}k
+                {formatMoney(previewFinal)}
               </span>{' '}
               <span className="text-xs text-pa-grey-03">
-                ({previewDeviationPct > 0 ? '+' : ''}
-                {previewDeviationPct}% from modelled)
+                ({formatSignedPercent(previewDeviationRaw)} from modelled)
               </span>
             </div>
 

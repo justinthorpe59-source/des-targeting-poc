@@ -7,8 +7,8 @@ import { computeRiskStatuses, type RiskStatus } from '../engine/riskStatus'
 import { computeGoals } from '../engine/goals'
 import { detectRiskExceptions, type RiskExceptionType } from '../engine/riskExceptions'
 import type { Division } from '../../system1/data/types'
-import { round1 } from '../riskDisplay'
 import { StatusPill } from '../../components/searchlight/StatusPill'
+import { formatMoney } from '../../shared/format'
 
 const TYPE_LABELS: Record<RiskExceptionType, string> = {
   'missing-forecast-data': 'Missing forecast data',
@@ -159,7 +159,7 @@ export function RiskExceptionsSection({ scopeKey }: { scopeKey?: string } = {}) 
                 <span className="font-pa-body text-xs text-pa-grey-03">
                   {row.gap >= 0 ? 'short of goal by' : 'above goal by'}{' '}
                   <span className="font-pa-mono font-semibold text-pa-grey-04">
-                    £{round1(Math.abs(row.gap))}k
+                    {formatMoney(Math.abs(row.gap))}
                   </span>
                 </span>
 

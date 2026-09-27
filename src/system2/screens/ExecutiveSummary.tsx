@@ -6,10 +6,12 @@ import { aggregate } from '../engine/aggregation'
 import { computeRiskStatuses } from '../engine/riskStatus'
 import type { RiskStatus } from '../engine/riskStatus'
 import { computeGoals } from '../engine/goals'
-import { round1 } from '../riskDisplay'
+import {} from '../riskDisplay'
 import { RiskExceptionsSection } from '../components/RiskExceptionsSection'
 import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
 import { SketchDistribution } from '../../components/searchlight/SketchIllustrations'
+import { formatMoney } from '../../shared/format'
+import { formatPercent } from '../../shared/format'
 
 /**
  * S2-M4: the sponsor-facing front door — goal, coverage, forecast, gap,
@@ -231,7 +233,7 @@ export function ExecutiveSummary() {
                 data-testid="s2-exec-goal"
                 className="mt-4 font-pa-display text-[5.5rem] font-medium leading-[0.95] tracking-tight text-pa-grey-04"
               >
-                £{(goal / 1000).toFixed(2)}m
+                {formatMoney(goal)}
               </p>
 
               <div className="mt-6 flex flex-wrap gap-2">
@@ -242,14 +244,14 @@ export function ExecutiveSummary() {
                     className="rounded-pa-chip px-2.5 py-1 font-pa-body text-xs text-pa-grey-03"
                     style={{ background: 'var(--color-pa-grey-01)' }}
                   >
-                    {round1(pct)}% {division}
+                    {formatPercent(pct)} {division}
                   </span>
                 ))}
               </div>
 
               <p className="mt-6 max-w-sm font-pa-body text-sm leading-relaxed text-pa-grey-03">
                 Prior-year revenue plus 10%, computed per team and rolled up — never apportioned down from the
-                DES-wide figure. £{round1(goal)}k across {records.length} approved records.
+                DES-wide figure. {formatMoney(goal)} across {records.length} approved records.
               </p>
             </div>
 
@@ -293,14 +295,14 @@ export function ExecutiveSummary() {
                       className="mt-3 font-pa-display text-5xl font-medium leading-none tracking-tight"
                       style={{ color: hero.onFill }}
                     >
-                      {round1(forecastPct)}%
+                      {formatPercent(forecastPct)}
                     </p>
                     <p
                       data-testid="s2-exec-gap"
                       className="mt-2 font-pa-body text-sm font-medium"
                       style={{ color: hero.onFill }}
                     >
-                      {gap >= 0 ? '−' : '+'}£{round1(Math.abs(gap))}k {gap >= 0 ? 'short of' : 'above'} goal
+                      {gap >= 0 ? '−' : '+'}{formatMoney(Math.abs(gap))} {gap >= 0 ? 'short of' : 'above'} goal
                     </p>
                   </div>
                   <p className="shrink-0 font-pa-body text-sm text-pa-grey-03">Target FY26.</p>
@@ -311,7 +313,7 @@ export function ExecutiveSummary() {
                 <StatTile
                   label="Coverage."
                   testId="s2-exec-coverage"
-                  value={`${round1(coverage)}%`}
+                  value={formatPercent(coverage)}
                   caption="Allocated targets vs goal"
                   icon={
                     <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.4">
@@ -340,14 +342,14 @@ export function ExecutiveSummary() {
                   with it rather than being dropped. */}
               {desWideRisk.status === 'On track' ? (
                 <p data-testid="s2-exec-risk-statement" className="font-pa-body text-sm text-pa-grey-04">
-                  On track to meet the £{round1(goal)}k goal — forecasting £{round1(expected)}k.
+                  On track to meet the {formatMoney(goal)} goal — forecasting {formatMoney(expected)}.
                 </p>
               ) : (
                 <p data-testid="s2-exec-risk-statement" className="font-pa-body text-sm text-pa-grey-04">
                   <span data-testid="s2-exec-status" data-status={desWideRisk.status} className="font-semibold">
                     {desWideRisk.status}
                   </span>{' '}
-                  — we risk missing the £{round1(goal)}k goal{gap > 0 ? ` by £${round1(gap)}k` : ''}
+                  — we risk missing the {formatMoney(goal)} goal{gap > 0 ? ` by ${formatMoney(gap)}` : ''}
                   {joinedDrivers ? `, due to ${joinedDrivers}` : ''}.
                 </p>
               )}
