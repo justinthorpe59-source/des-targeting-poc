@@ -20,7 +20,8 @@
     "verify:override-cross-check": "tsx scripts/verify-override-cross-check.ts",
     "verify:mass-adjustment-cross-check": "tsx scripts/verify-mass-adjustment-cross-check.ts",
     "verify:signoff-context": "tsx scripts/verify-signoff-context.ts",
-    "verify:format": "tsx scripts/verify-format.ts"
+    "verify:format": "tsx scripts/verify-format.ts",
+    "generate:snapshot-seed": "tsx scripts/generate-snapshot-seed.ts"
   },
   "dependencies": {
     "gsap": "^3.15.0",

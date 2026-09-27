@@ -365,11 +365,31 @@ export function ExecutiveSummary() {
           {/* Footer rule: caption left. The reference's right-hand page index
               ("01 / 12") is deliberately dropped — a print-report artefact
               with nothing to paginate against in a live app. */}
-          <div className="flex items-center justify-between border-t border-pa-grey-01 pt-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-pa-grey-01 pt-4">
             <p className="font-pa-body text-[11px] uppercase tracking-[0.12em] text-pa-grey-03">
               {records.length} record{records.length === 1 ? '' : 's'} imported from System 1
               {importedAt ? ` · ${importedAt}` : ''}
             </p>
+
+            {/*
+              The import control used to live ONLY inside the empty state's
+              early return. Seeding the store meant that block never rendered
+              again, which silently made the real import path unreachable —
+              the hand-off the demo is supposed to show. It lives here now, in
+              the populated state, so importing a fresh export is always one
+              click away.
+            */}
+            <button
+              type="button"
+              data-testid="s2-import-button"
+              disabled={!lastSnapshot}
+              onClick={() => lastSnapshot && importSnapshot(lastSnapshot)}
+              className="rounded-pa-chip border border-pa-grey-02 bg-pa-white px-3.5 py-1.5 font-pa-body text-[11px] font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-01 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {lastSnapshot
+                ? `Re-import from System 1 (${lastSnapshot.recordCount})`
+                : 'Nothing exported to import'}
+            </button>
           </div>
 
           <div className="space-y-8 pt-16">

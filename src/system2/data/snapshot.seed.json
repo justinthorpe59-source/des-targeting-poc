@@ -1,0 +1,607 @@
+{
+  "exportedAt": "2026-09-27T00:00:00.000Z",
+  "sourceSystem": "System 1 — Individual Targeting",
+  "recordCount": 60,
+  "records": [
+    {
+      "id": "P001",
+      "division": "Design",
+      "team": "Studio North",
+      "location": "Boston",
+      "gradeCode": 2,
+      "roleTitle": "Consultant Analyst",
+      "target": 126,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P002",
+      "division": "Engineering",
+      "team": "Platform",
+      "location": "Ireland",
+      "gradeCode": 1,
+      "roleTitle": "Analyst",
+      "target": 86,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P003",
+      "division": "Science",
+      "team": "Research",
+      "location": "London",
+      "gradeCode": 2,
+      "roleTitle": "Consultant Analyst",
+      "target": 112,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P004",
+      "division": "Design",
+      "team": "Studio South",
+      "location": "GITC",
+      "gradeCode": 3,
+      "roleTitle": "Consultant",
+      "target": 159,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P005",
+      "division": "Engineering",
+      "team": "Delivery",
+      "location": "Boston",
+      "gradeCode": 4,
+      "roleTitle": "Senior Consultant",
+      "target": 173,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P006",
+      "division": "Science",
+      "team": "Applied",
+      "location": "Ireland",
+      "gradeCode": 3,
+      "roleTitle": "Consultant",
+      "target": 145,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P007",
+      "division": "Design",
+      "team": "Studio North",
+      "location": "London",
+      "gradeCode": 3,
+      "roleTitle": "Consultant",
+      "target": 159,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P008",
+      "division": "Engineering",
+      "team": "Platform",
+      "location": "GITC",
+      "gradeCode": 2,
+      "roleTitle": "Consultant Analyst",
+      "target": 126,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P009",
+      "division": "Science",
+      "team": "Research",
+      "location": "Boston",
+      "gradeCode": 6,
+      "roleTitle": "Managing Consultant",
+      "target": 469,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P010",
+      "division": "Design",
+      "team": "Studio South",
+      "location": "Ireland",
+      "gradeCode": 6,
+      "roleTitle": "Managing Consultant",
+      "target": 534,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P011",
+      "division": "Engineering",
+      "team": "Delivery",
+      "location": "London",
+      "gradeCode": 5,
+      "roleTitle": "Principal Consultant",
+      "target": 234,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P012",
+      "division": "Science",
+      "team": "Applied",
+      "location": "GITC",
+      "gradeCode": 3,
+      "roleTitle": "Consultant",
+      "target": 150,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P013",
+      "division": "Design",
+      "team": "Studio North",
+      "location": "Boston",
+      "gradeCode": 6,
+      "roleTitle": "Managing Consultant",
+      "target": 470,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P014",
+      "division": "Engineering",
+      "team": "Platform",
+      "location": "Ireland",
+      "gradeCode": 2,
+      "roleTitle": "Consultant Analyst",
+      "target": 131,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P015",
+      "division": "Science",
+      "team": "Research",
+      "location": "London",
+      "gradeCode": 8,
+      "roleTitle": "Partner",
+      "target": 848,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P016",
+      "division": "Design",
+      "team": "Studio South",
+      "location": "GITC",
+      "gradeCode": 5,
+      "roleTitle": "Principal Consultant",
+      "target": 234,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P017",
+      "division": "Engineering",
+      "team": "Delivery",
+      "location": "Boston",
+      "gradeCode": 6,
+      "roleTitle": "Managing Consultant",
+      "target": 479,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P018",
+      "division": "Science",
+      "team": "Applied",
+      "location": "Ireland",
+      "gradeCode": 2,
+      "roleTitle": "Consultant Analyst",
+      "target": 122,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P019",
+      "division": "Design",
+      "team": "Studio North",
+      "location": "London",
+      "gradeCode": 5,
+      "roleTitle": "Principal Consultant",
+      "target": 224,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P020",
+      "division": "Engineering",
+      "team": "Platform",
+      "location": "GITC",
+      "gradeCode": 5,
+      "roleTitle": "Principal Consultant",
+      "target": 229,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P021",
+      "division": "Science",
+      "team": "Research",
+      "location": "Boston",
+      "gradeCode": 3,
+      "roleTitle": "Consultant",
+      "target": 159,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P022",
+      "division": "Design",
+      "team": "Studio South",
+      "location": "Ireland",
+      "gradeCode": 1,
+      "roleTitle": "Analyst",
+      "target": 75,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P023",
+      "division": "Engineering",
+      "team": "Delivery",
+      "location": "London",
+      "gradeCode": 6,
+      "roleTitle": "Managing Consultant",
+      "target": 477,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P024",
+      "division": "Science",
+      "team": "Applied",
+      "location": "GITC",
+      "gradeCode": 1,
+      "roleTitle": "Analyst",
+      "target": 75,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P025",
+      "division": "Design",
+      "team": "Studio North",
+      "location": "Boston",
+      "gradeCode": 3,
+      "roleTitle": "Consultant",
+      "target": 140,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P026",
+      "division": "Engineering",
+      "team": "Platform",
+      "location": "Ireland",
+      "gradeCode": 3,
+      "roleTitle": "Consultant",
+      "target": 159,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P027",
+      "division": "Science",
+      "team": "Research",
+      "location": "London",
+      "gradeCode": 2,
+      "roleTitle": "Consultant Analyst",
+      "target": 126,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P028",
+      "division": "Design",
+      "team": "Studio South",
+      "location": "GITC",
+      "gradeCode": 3,
+      "roleTitle": "Consultant",
+      "target": 145,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P029",
+      "division": "Engineering",
+      "team": "Delivery",
+      "location": "Boston",
+      "gradeCode": 3,
+      "roleTitle": "Consultant",
+      "target": 140,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P030",
+      "division": "Science",
+      "team": "Applied",
+      "location": "Ireland",
+      "gradeCode": 7,
+      "roleTitle": "Associate Partner",
+      "target": 621,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P031",
+      "division": "Design",
+      "team": "Studio North",
+      "location": "London",
+      "gradeCode": 4,
+      "roleTitle": "Senior Consultant",
+      "target": 196,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P032",
+      "division": "Engineering",
+      "team": "Platform",
+      "location": "GITC",
+      "gradeCode": 1,
+      "roleTitle": "Analyst",
+      "target": 82,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P033",
+      "division": "Science",
+      "team": "Research",
+      "location": "Boston",
+      "gradeCode": 6,
+      "roleTitle": "Managing Consultant",
+      "target": 518,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P034",
+      "division": "Design",
+      "team": "Studio South",
+      "location": "Ireland",
+      "gradeCode": 8,
+      "roleTitle": "Partner",
+      "target": 900,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P035",
+      "division": "Engineering",
+      "team": "Delivery",
+      "location": "London",
+      "gradeCode": 6,
+      "roleTitle": "Managing Consultant",
+      "target": 434,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P036",
+      "division": "Science",
+      "team": "Applied",
+      "location": "GITC",
+      "gradeCode": 4,
+      "roleTitle": "Senior Consultant",
+      "target": 187,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P037",
+      "division": "Design",
+      "team": "Studio North",
+      "location": "Boston",
+      "gradeCode": 3,
+      "roleTitle": "Consultant",
+      "target": 140,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P038",
+      "division": "Engineering",
+      "team": "Platform",
+      "location": "Ireland",
+      "gradeCode": 3,
+      "roleTitle": "Consultant",
+      "target": 150,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P039",
+      "division": "Science",
+      "team": "Research",
+      "location": "London",
+      "gradeCode": 2,
+      "roleTitle": "Consultant Analyst",
+      "target": 131,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P040",
+      "division": "Design",
+      "team": "Studio South",
+      "location": "GITC",
+      "gradeCode": 3,
+      "roleTitle": "Consultant",
+      "target": 150,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P041",
+      "division": "Engineering",
+      "team": "Delivery",
+      "location": "Boston",
+      "gradeCode": 7,
+      "roleTitle": "Associate Partner",
+      "target": 724,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P042",
+      "division": "Science",
+      "team": "Applied",
+      "location": "Ireland",
+      "gradeCode": 7,
+      "roleTitle": "Associate Partner",
+      "target": 657,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P043",
+      "division": "Design",
+      "team": "Studio North",
+      "location": "London",
+      "gradeCode": 8,
+      "roleTitle": "Partner",
+      "target": 913,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P044",
+      "division": "Engineering",
+      "team": "Platform",
+      "location": "GITC",
+      "gradeCode": 3,
+      "roleTitle": "Consultant",
+      "target": 150,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P045",
+      "division": "Science",
+      "team": "Research",
+      "location": "Boston",
+      "gradeCode": 1,
+      "roleTitle": "Analyst",
+      "target": 82,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P046",
+      "division": "Design",
+      "team": "Studio South",
+      "location": "Ireland",
+      "gradeCode": 3,
+      "roleTitle": "Consultant",
+      "target": 159,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P047",
+      "division": "Engineering",
+      "team": "Delivery",
+      "location": "London",
+      "gradeCode": 4,
+      "roleTitle": "Senior Consultant",
+      "target": 178,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P048",
+      "division": "Science",
+      "team": "Applied",
+      "location": "GITC",
+      "gradeCode": 2,
+      "roleTitle": "Consultant Analyst",
+      "target": 126,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P049",
+      "division": "Design",
+      "team": "Studio North",
+      "location": "Boston",
+      "gradeCode": 6,
+      "roleTitle": "Managing Consultant",
+      "target": 502,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P050",
+      "division": "Engineering",
+      "team": "Platform",
+      "location": "Ireland",
+      "gradeCode": 2,
+      "roleTitle": "Consultant Analyst",
+      "target": 122,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P051",
+      "division": "Science",
+      "team": "Research",
+      "location": "London",
+      "gradeCode": 5,
+      "roleTitle": "Principal Consultant",
+      "target": 224,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P052",
+      "division": "Design",
+      "team": "Studio South",
+      "location": "GITC",
+      "gradeCode": 4,
+      "roleTitle": "Senior Consultant",
+      "target": 201,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P053",
+      "division": "Engineering",
+      "team": "Delivery",
+      "location": "Boston",
+      "gradeCode": 3,
+      "roleTitle": "Consultant",
+      "target": 150,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P054",
+      "division": "Science",
+      "team": "Applied",
+      "location": "Ireland",
+      "gradeCode": 4,
+      "roleTitle": "Senior Consultant",
+      "target": 173,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P055",
+      "division": "Design",
+      "team": "Studio North",
+      "location": "London",
+      "gradeCode": 5,
+      "roleTitle": "Principal Consultant",
+      "target": 238,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P056",
+      "division": "Engineering",
+      "team": "Platform",
+      "location": "GITC",
+      "gradeCode": 5,
+      "roleTitle": "Principal Consultant",
+      "target": 220,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P057",
+      "division": "Science",
+      "team": "Research",
+      "location": "Boston",
+      "gradeCode": 4,
+      "roleTitle": "Senior Consultant",
+      "target": 192,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P058",
+      "division": "Design",
+      "team": "Studio South",
+      "location": "Ireland",
+      "gradeCode": 6,
+      "roleTitle": "Managing Consultant",
+      "target": 446,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P059",
+      "division": "Engineering",
+      "team": "Delivery",
+      "location": "London",
+      "gradeCode": 4,
+      "roleTitle": "Senior Consultant",
+      "target": 192,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    },
+    {
+      "id": "P060",
+      "division": "Science",
+      "team": "Applied",
+      "location": "GITC",
+      "gradeCode": 5,
+      "roleTitle": "Principal Consultant",
+      "target": 248,
+      "approvedAt": "2026-09-27T00:00:00.000Z"
+    }
+  ]
+}
