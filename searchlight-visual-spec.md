@@ -577,6 +577,61 @@ comment saying why, so the same wrong assumption is not made again.
 
 ---
 
+## Design-direction reset — M5: imagery (28 Sept 2026)
+
+Real photographs wired into every place System 1 represents a person. One
+component, `src/system1/components/PersonAvatar.tsx`, owns the treatment.
+
+### One treatment, not three
+
+Each screen previously drew its own circle of initials at its own size, so "a
+person" looked different depending where you were. Now:
+
+- always a circle, always a 1:1 crop, `object-cover` with **`object-top`**
+- a Grey 01 ring, so a light photo still reads as an object on a white card
+- initials on Grey 01 as the fallback — identical size and shape
+- two sizes only: **44px** (Manager Override) and **56px** (roster card,
+  Individual Detail identity row)
+
+`object-top` is load-bearing, not cosmetic. These are half- and full-body
+shots; a plain centre crop put several faces above the circle and several
+chins at its bottom edge.
+
+Individual Detail's hero also takes the photograph, at 268px square with the
+card radius. Its placeholder glyph carried the comment "Real headshots replace
+this" — that is what this milestone closed.
+
+### 32 photographs, 60 people
+
+**28 people keep initials.** Cycling the photographs would put two
+"different" colleagues with the same face side by side on one roster, which a
+manager notices immediately and stops trusting the screen for. An honest gap
+is better, and it is what a real system looks like when not everyone has
+uploaded a picture.
+
+Who gets one is deterministic: a stable FNV hash per person id, ranked, lowest
+32 take the photographs. Seeded off the id rather than list position, so a
+person keeps the same face on every screen and across reloads, and the
+photographed people scatter across teams instead of clustering at the top of a
+list.
+
+### Sizing was wrong once, and the visual check is what caught it
+
+The images were first resized to 256px on the long edge — correct for 44–56px
+avatars, which is all that existed when that number was chosen. Wiring the
+268px hero made them upscaled and visibly soft. Regenerated at **640px long
+edge (426px shortest)**, which covers the hero with headroom.
+
+1.8MB for 32 files, largest 96KB. Still ~55× smaller than the 99MB originals.
+
+### Loading
+
+`import.meta.glob('/photos/*.jpg')` resolves from the project root, so the
+folder stays where it is rather than moving to `public/`. Vite fingerprints all
+32 into the build — verified in `dist/assets`.
+
+---
+
 ## System 1 — Individual Targeting
 
 ### 1. Overview & Population

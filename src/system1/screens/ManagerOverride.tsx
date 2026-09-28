@@ -13,6 +13,7 @@ import { CrossCheckPanel } from '../components/CrossCheckPanel'
 import { formatMoney } from '../../shared/format'
 import { formatSignedPercent } from '../../shared/format'
 import { IndividualTargetInline } from '../components/IndividualTarget'
+import { PersonAvatar } from '../components/PersonAvatar'
 
 const CAPACITY_MIN = 0.3
 const CAPACITY_MAX = 1.3
@@ -348,9 +349,12 @@ export function ManagerOverrideModal({
 
         <div className="space-y-6 px-8 py-7">
           <div className="rounded-pa-card bg-pa-white shadow-pa-card p-4">
-            <div className="flex items-baseline justify-between">
-              <h2 className="text-sm font-semibold text-pa-grey-04">{person.name}</h2>
-              <span data-testid="override-status" className="text-xs font-medium text-pa-grey-03">
+            <div className="flex items-center justify-between gap-3">
+              <span className="flex min-w-0 items-center gap-3">
+                <PersonAvatar person={person} size={44} />
+                <h2 className="truncate text-sm font-semibold text-pa-grey-04">{person.name}</h2>
+              </span>
+              <span data-testid="override-status" className="shrink-0 text-xs font-medium text-pa-grey-03">
                 {target.status}
               </span>
             </div>

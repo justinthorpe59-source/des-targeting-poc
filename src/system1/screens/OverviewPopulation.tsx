@@ -16,6 +16,7 @@ import { useInitialLoad } from '../../components/searchlight/useInitialLoad'
 import { formatMoney, formatFlatPercent } from '../../shared/format'
 import { calculateRevenue } from '../engine/revenueEngine'
 import { Block, SectionHeading } from '../../components/searchlight/Section'
+import { PersonAvatar } from '../components/PersonAvatar'
 
 const STATUS_ORDER: TargetStatus[] = ['Modelled', 'Adjusted', 'Pending Sign-off', 'Proposed', 'Approved']
 
@@ -44,14 +45,6 @@ interface TeamNode {
   team: string
   people: Person[]
   combinedRevenue: number
-}
-
-function initials(name: string): string {
-  return name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? '')
-    .join('')
 }
 
 /**
@@ -430,13 +423,7 @@ function PersonCard({
       </div>
 
       <div className="mt-2 flex flex-col items-center text-center">
-        <span
-          aria-hidden="true"
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-pa-grey-01 font-pa-mono text-sm font-bold text-pa-grey-04"
-          style={{ background: 'var(--color-pa-grey-01)', color: 'var(--color-pa-grey-04)' }}
-        >
-          {initials(person.name)}
-        </span>
+        <PersonAvatar person={person} size={56} />
         <span className="mt-2 font-pa-body text-sm font-semibold text-pa-grey-04">{person.name}</span>
         <span className="font-pa-body text-xs text-pa-grey-03">{person.grade}</span>
         <span className="mt-2">{status && <StatusPill state={status} testId="person-card-status" />}</span>

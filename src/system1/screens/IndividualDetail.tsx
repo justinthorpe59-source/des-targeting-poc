@@ -13,14 +13,7 @@ import { SearchlightLoader } from '../../components/searchlight/SearchlightLoade
 import { SketchDistribution } from '../../components/searchlight/SketchIllustrations'
 import { useInitialLoad } from '../../components/searchlight/useInitialLoad'
 import { formatPercent } from '../../shared/format'
-
-function initials(name: string): string {
-  return name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? '')
-    .join('')
-}
+import { PersonAvatar, PersonHeroImage } from '../components/PersonAvatar'
 
 /**
  * One attribute chip, matching the reference's anatomy: muted label top-left,
@@ -208,12 +201,7 @@ export function IndividualDetail() {
               <div className="flex flex-col">
                 {/* identity row */}
                 <div className="flex items-center gap-3">
-                  <span
-                    aria-hidden="true"
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-pa-grey-01 font-pa-mono text-sm font-bold text-pa-grey-04"
-                  >
-                    {initials(person.name)}
-                  </span>
+                  <PersonAvatar person={person} size={56} />
                   <div className="min-w-0">
                     <h1 className="font-pa-display text-4xl font-semibold leading-[1.1] text-pa-grey-04">
                       {person.name}
@@ -331,18 +319,8 @@ export function IndividualDetail() {
                   and Personal context moved into the tabs — with the left
                   column that much shorter, the previous 340px square left an
                   obvious void beneath the content. */}
-              <div
-                data-testid="detail-hero-visual"
-                aria-hidden="true"
-                className="ml-auto flex aspect-square w-full max-w-[268px] items-center justify-center rounded-pa-card"
-                style={{ background: 'var(--color-pa-grey-01)' }}
-              >
-                {/* Placeholder, not a chart. Real headshots replace this. */}
-                <svg viewBox="0 0 24 24" className="h-2/5 w-2/5" fill="none" stroke="var(--color-pa-grey-02)" strokeWidth="1.4">
-                  <circle cx="12" cy="9" r="3.6" />
-                  <path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6" strokeLinecap="round" />
-                </svg>
-              </div>
+              {/* The real photograph now, where the placeholder glyph was. */}
+              <PersonHeroImage person={person} className="ml-auto max-w-[268px]" />
             </div>
 
             {target.status === 'Pending Sign-off' && (
