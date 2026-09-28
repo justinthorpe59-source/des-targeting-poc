@@ -601,19 +601,26 @@ Individual Detail's hero also takes the photograph, at 268px square with the
 card radius. Its placeholder glyph carried the comment "Real headshots replace
 this" — that is what this milestone closed.
 
-### 32 photographs, 60 people
+### 32 photographs, 60 people — reused
 
-**28 people keep initials.** Cycling the photographs would put two
-"different" colleagues with the same face side by side on one roster, which a
-manager notices immediately and stops trusting the screen for. An honest gap
-is better, and it is what a real system looks like when not everyone has
-uploaded a picture.
+**Superseded 28 Sept 2026.** This originally gave 32 people a photograph and
+left 28 on initials, on the grounds that a repeated face is worse than an
+honest gap. Reuse was subsequently confirmed as acceptable, so **everyone now
+has a photograph** and initials became an unreachable fallback rather than the
+state of 28 records.
 
-Who gets one is deterministic: a stable FNV hash per person id, ranked, lowest
-32 take the photographs. Seeded off the id rather than list position, so a
-person keeps the same face on every screen and across reloads, and the
-photographed people scatter across teams instead of clustering at the top of a
-list.
+Duplicates are unavoidable at 32 photographs for 60 people, but *where* they
+land is not. People are ordered by division, then team, then id, and assigned
+`photo[i % 32]`. Any run of fewer than 32 consecutive indices is distinct and
+no team exceeds 32 members, so **no two people in the same team ever share a
+face** — the only place two of them would appear side by side. Repeats fall
+across different teams, where they are effectively invisible.
+
+Verified per team in the running app: 10 people, 10 distinct faces, 0
+duplicates, in all six. Each photograph is used once or twice across the 60.
+
+The ordering is a stable sort over fixed data, so a person keeps the same face
+on every screen and across reloads.
 
 ### Sizing was wrong once, and the visual check is what caught it
 

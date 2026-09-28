@@ -17,19 +17,25 @@ import { SEED_PEOPLE } from '../data/people'
  *     against a white card
  *   - initials on Grey 01 as the fallback, identical in size and shape
  *
- * WHY NOT EVERYONE HAS A PHOTO
- * There are 32 photographs and 60 people. Cycling them would give the roster
- * two "different" colleagues with the same face, side by side, which is worse
- * than an honest gap — it is the kind of thing a manager notices immediately
- * and stops trusting the screen for. So 32 people get a photograph and 28
- * keep initials, which is also what a real system looks like when not
- * everyone has uploaded one.
+ * REUSING 32 PHOTOGRAPHS ACROSS 60 PEOPLE
+ * Confirmed 28 Sept 2026: imagery may be reused, so everyone gets a face and
+ * the initials fallback becomes an edge case rather than the state of 28
+ * records.
  *
- * Who gets one is deterministic and spread: a stable hash per id, ranked,
- * lowest 32 take the photos. Seeded off the id rather than list position, so
- * the same person keeps the same face on every screen and across reloads,
- * and the photographed people are scattered across teams rather than
- * clustered at the top of the list.
+ * Duplicates are therefore unavoidable, but *where* they land is not. People
+ * are ordered by division then team then id, and assigned photo[i % 32]. Any
+ * run of consecutive indices shorter than 32 is distinct, and no team has
+ * more than 32 members — so **no two people in the same team ever share a
+ * face**, which is the only place a manager would see two of them side by
+ * side. Repeats fall across different teams, where they are effectively
+ * invisible.
+ *
+ * Deterministic: the ordering is a stable sort over fixed data, so a person
+ * keeps the same face on every screen and across reloads.
+ *
+ * The initials fallback stays for anyone the map somehow misses — it is now
+ * unreachable with the seed population, and is kept as a guard rather than
+ * as a design state.
  */
 
 /* Root-absolute glob: the folder lives at the repo root, not under src/ or
@@ -39,26 +45,15 @@ const PHOTO_URLS: string[] = Object.values(
   import.meta.glob('/photos/*.jpg', { eager: true, query: '?url', import: 'default' }) as Record<string, string>,
 ).sort()
 
-/** Stable string hash — same id, same number, every run. */
-function hashId(id: string): number {
-  let h = 2166136261
-  for (let i = 0; i < id.length; i++) {
-    h ^= id.charCodeAt(i)
-    h = Math.imul(h, 16777619)
-  }
-  return h >>> 0
-}
-
-/**
- * Built once: person id → photo url, for the 32 lowest-hashing ids.
- * Everyone else is absent from the map and falls back to initials.
- */
+/** Built once: every person id → a photo url. */
 const photoByPersonId = new Map<string, string>()
 
 function assignPhotos(people: Person[]): void {
   photoByPersonId.clear()
-  const ranked = people.map((p) => ({ id: p.id, h: hashId(p.id) })).sort((a, b) => a.h - b.h)
-  ranked.slice(0, PHOTO_URLS.length).forEach((entry, i) => photoByPersonId.set(entry.id, PHOTO_URLS[i]))
+  const ordered = [...people].sort((a, b) =>
+    a.division.localeCompare(b.division) || a.team.localeCompare(b.team) || a.id.localeCompare(b.id),
+  )
+  ordered.forEach((person, i) => photoByPersonId.set(person.id, PHOTO_URLS[i % PHOTO_URLS.length]))
 }
 
 /* Assigned at module load against the seed population, so no screen has to
