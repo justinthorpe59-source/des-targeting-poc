@@ -403,6 +403,54 @@ underline and a darkened label.
 
 ---
 
+## Design-direction reset — M2 follow-ups: shell and System 2 headings (28 Sept 2026)
+
+Two exceptions left open at M2, both now closed for consistency.
+
+### The app shell is white
+
+The navigation bar was Dark Blue with white type — the last surface in the old
+palette, and the single element most responsible for the app reading as blue
+chrome. It is now white, sitting on the page's own near-white ground and
+separated by a Grey 01 hairline rather than by a colour block.
+
+- Brand wordmark, icons and controls → Grey 04 / Grey 03
+- **Active screen link → the accent**, with `--color-pa-accent-ink` at 7.23:1.
+  This is exactly the "active/selected state" case the direction reserves pink
+  for, and it is the only accent in the bar.
+- **System switcher → neutral Grey 01 fill.** It is structural — two peers, one
+  of which is current — so it takes a neutral fill rather than competing with
+  the active screen for the eye. Two pink pills in one bar would have broken
+  the "sparing" rule at the first glance a user gets.
+- Avatar and the Reset control → neutral grey.
+
+### Executive Summary and Division Comparison use the benchmark heading
+
+Both carried a small bold org name over a grey subtitle — the treatment
+Executive Summary's own reference screenshot set (§6). **That reference
+predates this redesign and no longer overrides it**: consistency across all
+eight screens is the goal, and leaving two screens on a bespoke header made
+them the exception.
+
+The org name is kept as content, restyled rather than dropped — it is now the
+heading's first line, with the screen name as the second:
+
+- Executive Summary — *Design, Engineering & Science / Organisational operating summary*
+- Division Comparison — *Design, Engineering & Science / Division comparison*
+
+Division Comparison's explanatory sentence about the no-apportioning goal rule
+was too long for a heading line, so it stays as a body paragraph beneath.
+
+Both screens also lose the small bar-chart glyph that sat opposite the old
+header; the benchmark heading has no icon slot, and the glyph was decoration
+rather than information.
+
+Measured after both changes: zero Dark-Blue-filled elements anywhere, nav
+white with the active link the only accent in the bar, accent still ~0.5% of
+page area.
+
+---
+
 ## System 1 — Individual Targeting
 
 ### 1. Overview & Population

@@ -10,6 +10,7 @@ import { SearchlightLoader } from '../../components/searchlight/SearchlightLoade
 import { SketchScatter } from '../../components/searchlight/SketchIllustrations'
 import { useInitialLoad } from '../../components/searchlight/useInitialLoad'
 import { formatMoney, formatPercent } from '../../shared/format'
+import { SectionHeading } from '../../components/searchlight/Section'
 
 /**
  * S2-M5/M6: coverage, forecast, confidence and status side by side across
@@ -139,8 +140,7 @@ export function DivisionComparison() {
     return (
       <section className="space-y-4">
         <header>
-          <h1 className="font-pa-body text-sm font-bold text-pa-grey-04">Design, Engineering &amp; Science</h1>
-          <p className="mt-1 font-pa-body text-sm text-pa-grey-03">Division comparison.</p>
+          <SectionHeading first="Design, Engineering &amp; Science" second="Division comparison" />
         </header>
         <div className="rounded-pa-card bg-pa-grey-01 p-6 font-pa-body text-sm text-pa-grey-03">
           No snapshot imported yet.{' '}
@@ -161,20 +161,14 @@ export function DivisionComparison() {
     <section className="relative">
       <SketchScatter className="pointer-events-none absolute right-0 top-8 -z-10 h-[360px] w-[560px] max-w-none opacity-[0.06]" />
 
-      {/* Same header treatment as Executive Summary, for continuity between
-          the two sponsor-facing screens. */}
-      <header className="flex items-start justify-between gap-6">
-        <div>
-          <h1 className="font-pa-body text-sm font-bold text-pa-grey-04">Design, Engineering &amp; Science</h1>
-          <p className="mt-1 font-pa-body text-sm text-pa-grey-03">
-            Division comparison. Each division&apos;s goal is its own prior year revenue + 10%, never a slice
-            of the DES-wide figure.
-          </p>
-        </div>
-        <svg viewBox="0 0 16 16" className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" fill="var(--color-pa-grey-04)">
-          <rect x="1" y="2" width="14" height="4" rx="0.5" />
-          <rect x="1" y="8" width="9" height="4" rx="0.5" />
-        </svg>
+      {/* Benchmark heading, matching Executive Summary — the two
+          sponsor-facing screens stay in step with each other and with the
+          rest of the app. */}
+      <header>
+        <SectionHeading first="Design, Engineering &amp; Science" second="Division comparison" />
+        <p className="mt-4 max-w-xl font-pa-body text-sm text-pa-grey-03">
+          Each division&apos;s goal is its own prior year revenue + 10%, never a slice of the DES-wide figure.
+        </p>
       </header>
 
       {loading ? (

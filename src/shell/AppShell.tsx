@@ -38,14 +38,30 @@ const SYSTEM_2_LINKS = [
   { to: '/system2/scenario-workspace', label: 'Scenarios' },
 ]
 
+/*
+ * Repainted 28 Sept 2026 (design reset). The bar was Dark Blue with white
+ * type — the last surface still in the old palette, and the one most
+ * responsible for the app reading as "blue chrome". It is now white, sitting
+ * on the page's own near-white ground and separated by a hairline rather
+ * than by a colour block.
+ *
+ * The active screen is the accent, which is exactly the "active/selected
+ * state" case the direction reserves pink for. Dark ink on the accent, never
+ * white: white on the accent measures 2.50:1 and fails AA.
+ */
 const screenLinkClass = ({ isActive }: { isActive: boolean }) =>
   `rounded-pa-chip px-3 py-1.5 font-pa-body text-sm font-medium transition-colors ${
-    isActive ? 'bg-pa-white/15 text-pa-white' : 'text-pa-grey-02 hover:bg-pa-white/10 hover:text-pa-white'
+    isActive
+      ? 'bg-[var(--color-pa-accent)] text-[var(--color-pa-accent-ink)]'
+      : 'text-pa-grey-03 hover:bg-pa-grey-01 hover:text-pa-grey-04'
   }`
 
+/* The system switcher is structural, not an emphasis moment — two peers, one
+   of which happens to be current. It takes a neutral fill so it does not
+   compete with the active screen for the eye. */
 const systemLinkClass = ({ isActive }: { isActive: boolean }) =>
   `rounded-pa-chip px-3 py-1.5 font-pa-body text-xs font-semibold uppercase tracking-wide transition-colors ${
-    isActive ? 'bg-pa-aqua-04 text-pa-white' : 'text-pa-grey-02 hover:text-pa-white'
+    isActive ? 'bg-pa-grey-01 text-pa-grey-04' : 'text-pa-grey-03 hover:text-pa-grey-04'
   }`
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -57,9 +73,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-pa-grey-wash text-pa-grey-04">
-      <header className="bg-pa-dark-blue">
+      <header className="border-b border-pa-grey-01 bg-pa-white">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 px-8 py-3">
-          <span className="font-pa-display text-lg font-semibold tracking-tight text-pa-white">Searchlight</span>
+          <span className="font-pa-display text-lg font-semibold tracking-tight text-pa-grey-04">Searchlight</span>
 
           <nav aria-label="System" className="flex gap-1">
             <NavLink to="/system1" className={systemLinkClass}>
@@ -82,7 +98,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <NavLink
               to="/system1/exceptions"
               title={`${openExceptions} open exception${openExceptions === 1 ? '' : 's'}`}
-              className="relative flex h-8 w-8 items-center justify-center rounded-full text-pa-grey-02 transition-colors hover:bg-pa-white/10 hover:text-pa-white"
+              className="relative flex h-8 w-8 items-center justify-center rounded-full text-pa-grey-03 transition-colors hover:bg-pa-grey-01 hover:text-pa-grey-04"
             >
               <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
                 <path d="M10 2.5a4.5 4.5 0 0 0-4.5 4.5v3L4 13h12l-1.5-3V7A4.5 4.5 0 0 0 10 2.5Z" strokeLinejoin="round" />
@@ -106,14 +122,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             <button
               type="button"
               onClick={resetAllDemoData}
-              className="rounded-pa-chip border border-pa-white/25 px-3 py-1.5 font-pa-body text-xs font-medium text-pa-grey-02 transition-colors hover:bg-pa-white/10 hover:text-pa-white"
+              className="rounded-pa-chip border border-pa-grey-02 px-3 py-1.5 font-pa-body text-xs font-medium text-pa-grey-04 transition-colors hover:bg-pa-grey-01"
             >
               Reset demo data
             </button>
 
             <span
               title="Demo user — this POC has no real sign-in"
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-pa-aqua-04 font-pa-mono text-xs font-bold text-pa-white"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-pa-grey-01 font-pa-mono text-xs font-bold text-pa-grey-04"
             >
               JT
             </span>

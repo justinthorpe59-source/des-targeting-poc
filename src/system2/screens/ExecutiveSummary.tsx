@@ -12,6 +12,7 @@ import { SearchlightLoader } from '../../components/searchlight/SearchlightLoade
 import { SketchDistribution } from '../../components/searchlight/SketchIllustrations'
 import { formatMoney } from '../../shared/format'
 import { formatPercent } from '../../shared/format'
+import { SectionHeading } from '../../components/searchlight/Section'
 
 /**
  * S2-M4: the sponsor-facing front door — goal, coverage, forecast, gap,
@@ -205,17 +206,15 @@ export function ExecutiveSummary() {
           column — texture, not a corner decoration. */}
       <SketchDistribution className="pointer-events-none absolute left-1/2 top-24 -z-10 h-[560px] w-[1100px] max-w-none -translate-x-1/2 opacity-[0.16]" />
 
-      {/* Header: org name + one-line grey subtitle left, single icon right. */}
-      <header className="flex items-start justify-between gap-6">
-        <div>
-          <h1 className="font-pa-body text-sm font-bold text-pa-grey-04">Design, Engineering &amp; Science</h1>
-          <p className="mt-1 font-pa-body text-sm text-pa-grey-03">Organisational operating summary.</p>
-        </div>
-        <svg viewBox="0 0 16 16" className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" fill="var(--color-pa-grey-04)">
-          <rect x="1" y="9" width="3" height="6" rx="0.5" />
-          <rect x="6.5" y="1" width="3" height="14" rx="0.5" />
-          <rect x="12" y="6" width="3" height="9" rx="0.5" />
-        </svg>
+      {/*
+        Moved to the shared SectionHeading (28 Sept 2026). This was a small
+        bold org name over a grey subtitle — the treatment its own reference
+        screenshot set. That reference predates the design reset, and leaving
+        it would make this the one screen not on the benchmark heading. The
+        org name is kept; it is now the heading's first line.
+      */}
+      <header>
+        <SectionHeading first="Design, Engineering &amp; Science" second="Organisational operating summary" />
       </header>
 
       {loading ? (
