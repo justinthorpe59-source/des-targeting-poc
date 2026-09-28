@@ -255,6 +255,84 @@ Verified by measuring computed styles on all 8 screens: page
 
 ---
 
+## Design-direction reset — M1: tokens and neutral elevation (28 Sept 2026)
+
+**Supersedes** the Aqua-led chrome described throughout this document and the
+blue-tinted elevation locked on 27 Sept. Delivered as five milestones; this
+entry covers M1 only.
+
+### The direction
+
+White is overwhelmingly dominant. Depth comes from shadows, subtle borders and
+card boxes — not colour blocking. Structural chrome (navigation, dividers,
+icons, elevation tints) becomes white or neutral grey. Pink is a single,
+sparing accent for things that must draw the eye: primary actions, the
+active/selected state, at most a chart's primary series. **If the interface
+reads pink, the reset has been applied wrongly.**
+
+### Milestones
+
+| | Scope |
+| --- | --- |
+| **M1** | Accent token + neutral elevation *(this entry)* |
+| **M2** | App shell chrome — nav bar, loader, background illustrations |
+| **M3** | System 1 screens, blue use decided case by case |
+| **M4** | System 2 screens, same |
+| **M5** | Real profile photographs |
+
+### Accent token
+
+`--color-pa-accent: #f3809e` — this is **Rose 03, already in the PA palette**.
+No hex was invented. It was effectively unused, so it carries no prior meaning
+in this app.
+
+Measured, not estimated:
+
+| | Contrast | |
+| --- | --- | --- |
+| white on accent | **2.50:1** | fails AA — never use |
+| Dark Blue on accent | **7.23:1** | passes AA |
+| Grey 04 on accent | 3.85:1 | large text only |
+| accent on white | **2.50:1** | below the 3:1 UI-component threshold |
+
+Two consequences that constrain M2–M4:
+
+1. **A pink button takes dark ink, not white.** Every primary button in the app
+   is currently white-on-Aqua. Swapping the fill alone would fail AA on all of
+   them. `--color-pa-accent-ink` is provided for this.
+2. **Pink on white cannot carry a state by itself.** At 2.50:1 a 1px pink
+   border or hairline underline is not distinguishable enough. A selected
+   state needs a fill, a thicker mark, or a second non-colour cue.
+
+There is also a **semantic collision to watch**: the Rose family already means
+failure here — Rose 01 wash with Rose 04 text is "missing data", "check
+failed", "Off track". A pink primary button will sit on screens that also show
+pink failure chips. Raised now rather than discovered in M3.
+
+### Neutral elevation
+
+The five shadow tokens were tinted with Dark Blue to keep elevation in the
+brand's colour family. They are now plain black alpha — same geometry, same
+opacities, hue only:
+
+| Token | Value |
+| --- | --- |
+| `--shadow-pa-chip` | `0 1px 3px rgba(0,0,0,0.06)` |
+| `--shadow-pa-card` | `0 2px 10px rgba(0,0,0,0.06)` |
+| `--shadow-pa-card-hover` | `0 4px 16px rgba(0,0,0,0.1)` |
+| `--shadow-pa-card-raised` | `0 6px 24px rgba(0,0,0,0.14)` |
+| `--shadow-pa-modal` | `0 24px 64px rgba(0,0,0,0.24)` |
+
+Every remaining inline blue-tinted shadow was folded into these, plus the
+override modal's backdrop. Verified by computed style across all 8 screens:
+**zero** blue-tinted shadows or gradients remain.
+
+One blue element is deliberately left for M2: `SearchlightLoader`'s Aqua panel
+and radial beam. That is a colour-blocked surface rather than an elevation
+tint, so it belongs with the app-shell chrome pass.
+
+---
+
 ## System 1 — Individual Targeting
 
 ### 1. Overview & Population

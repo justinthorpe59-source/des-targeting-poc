@@ -314,7 +314,7 @@ export function ManagerOverrideModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-6 font-pa-body"
-      style={{ background: 'rgba(0, 23, 45, 0.45)' }}
+      style={{ background: 'rgba(0, 0, 0, 0.45)' }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}
@@ -324,7 +324,7 @@ export function ManagerOverrideModal({
         aria-modal="true"
         aria-labelledby="override-modal-title"
         data-testid="override-modal"
-        className="my-8 w-full max-w-3xl overflow-hidden rounded-pa-card bg-pa-white shadow-[0_24px_64px_rgba(2,77,120,0.24)]"
+        className="my-8 w-full max-w-3xl overflow-hidden rounded-pa-card bg-pa-white shadow-pa-modal"
       >
         <div className="flex items-start justify-between gap-6 border-b border-pa-grey-01 px-8 py-6">
           <div>

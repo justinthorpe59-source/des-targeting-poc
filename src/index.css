@@ -84,20 +84,50 @@
   --radius-pa-card: 1rem;
 
   /*
-   * Card elevation (27 Sept 2026). The page sits on Grey wash (#f9fafc),
-   * the nearest near-white in the PA palette — the next step is pure white,
-   * which a page must not be if white cards are to read against it. Cards
-   * are therefore separated by ELEVATION rather than by a grey fill: a white
-   * surface plus one of these shadows, instead of the Grey 01 wash several
-   * screens were using to manufacture an edge.
+   * ---------------------------------------------------------------------
+   * Accent — design-direction reset, M1, 28 Sept 2026
+   * ---------------------------------------------------------------------
+   * One accent, used sparingly: primary actions, the active/selected state,
+   * and at most the primary series in a chart. It is NOT a replacement for
+   * everything that used to be Aqua — structural chrome goes white or
+   * neutral grey instead. If a screen reads pink, it is wrong.
    *
-   * Tinted with the palette's own Dark Blue (#00172d) rather than neutral
-   * black, so the shadow sits in the same colour family as everything else.
-   * Values match the Scenario Workspace treatment the reference set.
+   * The value is Rose 03, already in the PA palette — no hex invented. It
+   * was effectively unused, so it carries no prior meaning here.
+   *
+   * MEASURED, not assumed:
+   *   white on accent      2.50:1  FAILS AA — never use white text on pink
+   *   Dark Blue on accent  7.23:1  passes AA comfortably
+   *   Grey 04 on accent    3.85:1  large text only
+   *   accent on white      2.50:1  below the 3:1 UI-component threshold
+   *
+   * Two consequences that shape every use:
+   *   1. A pink button takes DARK ink, not white. Every primary button in
+   *      the app is currently white-on-Aqua; swapping the fill alone would
+   *      break AA on all of them.
+   *   2. Pink on white cannot carry a state by itself — a 1px pink border
+   *      or hairline underline is not distinguishable enough. A selected
+   *      state needs a fill, a thicker mark, or a second non-colour cue.
    */
-  --shadow-pa-card: 0 2px 10px rgba(0, 23, 45, 0.06);
-  --shadow-pa-card-hover: 0 4px 16px rgba(0, 23, 45, 0.1);
-  --shadow-pa-card-raised: 0 6px 24px rgba(0, 23, 45, 0.14);
+  --color-pa-accent: #f3809e;
+  --color-pa-accent-ink: #00172d;
+
+  /*
+   * Card elevation. The page sits on Grey wash (#f9fafc), the nearest
+   * near-white in the PA palette, so cards are separated by ELEVATION
+   * rather than by a grey fill.
+   *
+   * Neutralised at M1 (28 Sept 2026). These were tinted with Dark Blue
+   * (rgba(0,23,45,…)) to keep the shadow in the brand's colour family. The
+   * reset calls for neutral-toned elevation — not blue-tinted, not
+   * pink-tinted — so they are now plain black alpha. Same geometry, same
+   * opacities; only the hue changed.
+   */
+  --shadow-pa-chip: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-pa-card: 0 2px 10px rgba(0, 0, 0, 0.06);
+  --shadow-pa-card-hover: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --shadow-pa-card-raised: 0 6px 24px rgba(0, 0, 0, 0.14);
+  --shadow-pa-modal: 0 24px 64px rgba(0, 0, 0, 0.24);
 
   --font-pa-body: 'Manrope', ui-sans-serif, system-ui, sans-serif;
   --font-pa-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;

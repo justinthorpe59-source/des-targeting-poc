@@ -73,7 +73,7 @@ function AttributeChip({
          edge competing with the card's own. */
       style={{
         background: 'var(--color-pa-grey-wash)',
-        boxShadow: '0 1px 3px rgba(2, 77, 120, 0.06)',
+        boxShadow: 'var(--shadow-pa-chip)',
       }}
     >
       <div className="flex items-start justify-between gap-3">
@@ -490,7 +490,7 @@ export function IndividualDetail() {
                   className="rounded-pa-card p-7 md:max-w-lg"
                   style={{
                     background: 'var(--color-pa-grey-wash)',
-                    boxShadow: '0 1px 3px rgba(2, 77, 120, 0.06)',
+                    boxShadow: 'var(--shadow-pa-chip)',
                   }}
                 >
                   <div className="flex items-center justify-between gap-3">
@@ -519,7 +519,7 @@ export function IndividualDetail() {
                            card without adding a second boxed edge. */
                         style={{
                           background: 'var(--color-pa-grey-wash)',
-                          boxShadow: '0 1px 3px rgba(2, 77, 120, 0.06)',
+                          boxShadow: 'var(--shadow-pa-chip)',
                         }}
                       >
                         <div className="flex items-center justify-between gap-3">
