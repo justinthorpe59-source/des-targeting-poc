@@ -511,6 +511,72 @@ Real-time cross-check). No change needed.
 
 ---
 
+## Design-direction reset — M4: numbers and data audit (28 Sept 2026)
+
+An audit of every figure the app shows, against CLAUDE.md's locked values and
+against independent recomputation. **No defect found.** Kept as a runnable
+script — `npm run verify:locked`, 33 checks — rather than a one-off report,
+because nothing previously guarded the locked constants against drift.
+
+### What is now asserted
+
+**Locked dataset defaults (12 checks)** — population 60; divisions and
+locations; division baselines 92/100/96; two teams per division; ±15% range
+band; 25% extreme-value threshold; ±20% large-adjustment threshold; 65%/85%
+utilisation; sales targets on Managing Consultant and above; 220 working days.
+
+**The seed population obeys them (7 checks)** — capacity within 0.6–1.0,
+economic factor within 0.9–1.15, and role factor, utilisation, sales-target
+presence, baseline and team membership all consistent with the locked rules,
+for all 60 records.
+
+**The locked formula (3 checks)** — modelled = round(baseline × capacity ×
+role × economic) for all 60, recalculation is deterministic, and billable +
+sales = combined revenue.
+
+**The System 1 → System 2 hand-off (4 checks)** — the snapshot holds the whole
+population with no duplicates, and every record's target and group match the
+person it came from.
+
+**Roll-ups never apportion (7 checks)** — teams and divisions sum to DES-wide
+for target, headcount, expected achievement and goal, and each division's
+forecast ratio is its own expected achievement over its own goal.
+
+### Rendered figures match the engines
+
+Spot-checked against independently computed values:
+
+| | Shown | Expected |
+| --- | --- | --- |
+| Executive Summary | £15.7m goal, 87.0% forecast, 102.5% coverage, −£2.0m gap | identical |
+| Division Comparison | £6.4m/95.3%/77.8%, £4.8m/96.4%/80.3%, £4.5m/119.3%/107.4% | identical |
+| Individual Detail (P009) | 85%, £285k billable, £184k sales, £119k–£161k | identical |
+
+P009's explanation prose also reconciles: 96 × 0.84 × 1.55 × 1.12 = 139.98 →
+£140k, ±15% → £119k–£161k.
+
+### One correction to record
+
+The audit first reported 22 of 60 records failing the range check. **The test
+was wrong, not the engine.** `calculateModelledTarget` derives the range from
+the *unrounded* product, rounding once at the end; the test derived it from
+the already-rounded modelled figure. The engine's order is the more correct
+one. The assertion is now written the way the engine actually works, with a
+comment saying why, so the same wrong assumption is not made again.
+
+### Two things a reader will ask about, both correct
+
+- **DES-wide coverage is 102.5% while two of three divisions sit below 100%**
+  (95.3% and 96.4%). Science's 119.3% carries the total. Arithmetically sound
+  and worth being ready to explain, since "covered overall, under in most of
+  the business" is exactly the ambition-versus-reality split System 2 exists
+  to expose.
+- **The modelled point figure appears only in the explanation prose** on
+  Individual Detail; the hero shows the range. That follows CLAUDE.md's
+  "range, not false precision" rule rather than being an omission.
+
+---
+
 ## System 1 — Individual Targeting
 
 ### 1. Overview & Population
