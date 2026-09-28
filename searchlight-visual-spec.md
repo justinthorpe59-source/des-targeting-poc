@@ -870,13 +870,36 @@ was introduced for this screen.
 
 ---
 
-## Summary of what's still genuinely open
+## Summary of what was still genuinely open — all closed (28 Sept 2026)
 
-These need an answer (from Justin, or a proposal from Claude Code flagged as a judgement call, not a silent decision) before their screen can be built to the same standard as the rest:
+Every item on this list has since been answered. Kept as the record of how,
+rather than deleted, so nobody re-opens a question that already has a decision
+behind it.
 
-1. ~~Individual Detail's right-hero visual (cohort chart vs. avatar)~~ — **resolved 26 Sept 2026: avatar/photo placeholder.** A chart would duplicate the Cohort comparison tab already on the screen.
-2. Individual Detail's plain-language explanation block — **still undesigned.** It has a home (the Explanation tab) but the copy is the engine's generated sentence, not designed content.
-3. Manager Override — overall layout beyond the now-specified cross-check accordion (panel vs. standalone route, sign-off gate visual treatment)
-4. Mass Adjustment — full visual layout
-5. Bubble-network sizing/positioning logic on Overview & Population
-6. Executive Summary's page-index footer element — keep or drop
+1. ~~Individual Detail's right-hero visual (cohort chart vs. avatar)~~ —
+   **resolved 26 Sept:** avatar/photo placeholder. A chart would duplicate the
+   Cohort comparison tab already on the screen. The placeholder became the real
+   photograph at M5.
+2. ~~Individual Detail's plain-language explanation block~~ — **resolved 27
+   Sept:** stays as the engine's generated sentence. Confirmed as a decision,
+   not an omission; the copy cites the record's own factor values, which is
+   what it is for.
+3. ~~Manager Override's overall layout~~ — **resolved 26 Sept:** a modal over
+   Individual Detail rather than a standalone route, with the sign-off gate
+   using the amber "at risk" colour and explanatory copy rather than a plain
+   disabled button. `/system1/override/:id` still resolves, so inbound links
+   keep working.
+4. ~~Mass Adjustment's full visual layout~~ — **resolved 26 Sept:** built in
+   the established card language, population fed by the roster multi-select,
+   amber gate matching Manager Override. Refined to the benchmark at M2.
+5. ~~Bubble-network sizing/positioning on Overview & Population~~ —
+   **resolved 25 Sept:** uniform-size bubble per team, positioned by a
+   two-phase relaxation (spring-to-seed, then alternating separation and
+   keep-out until both constraints hold), with connectors trimmed to bubble
+   edges.
+6. ~~Executive Summary's page-index footer element~~ — **resolved 26 Sept:**
+   dropped. A print-report artefact with nothing to paginate against in a live
+   app.
+
+Nothing on the visual spec is open. What remains is process rather than
+design — see the branch's own state.
