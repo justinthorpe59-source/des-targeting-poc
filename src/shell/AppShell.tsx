@@ -29,7 +29,7 @@ import { resetAllDemoData } from '../store/resetAll'
 const SYSTEM_1_LINKS = [
   { to: '/system1/overview', label: 'Overview' },
   { to: '/system1/exceptions', label: 'Exceptions' },
-  { to: '/system1/mass-adjustment', label: 'Mass adjust' },
+  { to: '/system1/mass-adjustment', label: 'Mass adjustment' },
 ]
 
 const SYSTEM_2_LINKS = [

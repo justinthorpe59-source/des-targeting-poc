@@ -413,7 +413,7 @@ export function ScenarioWorkspace() {
   if (records.length === 0) {
     return (
       <section className="space-y-4">
-        <SectionHeading first="Scenario Workspace" second="(Nothing imported yet)" />
+        <SectionHeading first="Scenario workspace" second="Nothing imported yet" />
         <p className="max-w-xl font-pa-body text-sm text-pa-grey-03">
           Import an Approved-only snapshot from System 1 before testing a scenario against it.
         </p>
@@ -435,8 +435,8 @@ export function ScenarioWorkspace() {
       {/* ---------- Scenario options ---------- */}
       <div className="space-y-10">
         <SectionHeading
-          first="Scenario Workspace"
-          second="(Test before you commit)"
+          first="Scenario workspace"
+          second="Test before you commit"
           action={<NavArrows onPrev={() => stepPreset(-1)} onNext={() => stepPreset(1)} testIdPrefix="preset-nav" label="scenario" />}
         />
 
@@ -505,8 +505,8 @@ export function ScenarioWorkspace() {
       {/* ---------- Saved scenarios ---------- */}
       <div className="space-y-8">
         <SectionHeading
-          first="Saved Scenarios"
-          second="Baseline & yours"
+          first="Saved scenarios"
+          second="Baseline and the ones you save"
           action={<NavArrows onPrev={() => scrollCarousel(-1)} onNext={() => scrollCarousel(1)} testIdPrefix="saved-nav" label="saved scenario" />}
         />
 

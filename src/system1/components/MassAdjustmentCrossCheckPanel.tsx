@@ -38,7 +38,7 @@ export function MassAdjustmentCrossCheckPanel({ result }: { result: MassAdjustme
 
       <div className="mt-3 border-t border-pa-grey-01 pt-2">
         <div className="text-xs font-medium uppercase tracking-wide text-pa-grey-03">
-          Aggregate effect — everyone&apos;s change applied together
+          Aggregate effect — the whole batch applied together
         </div>
         <div data-testid="mass-crosscheck-aggregate-groups" className="mt-1">
           {result.aggregateGroups.map((group) => (

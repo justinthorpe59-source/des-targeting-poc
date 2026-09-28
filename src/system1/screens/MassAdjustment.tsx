@@ -123,7 +123,7 @@ export function MassAdjustment() {
 
   return (
     <PageSections>
-      <SectionHeading first="Mass adjustment" second="(Nothing applies until you confirm)" />
+      <SectionHeading first="Mass adjustment" second="Nothing applies until you confirm" />
 
       <Block>
         {lastApplied && (
@@ -324,7 +324,7 @@ export function MassAdjustment() {
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   rows={2}
-                  placeholder="Why is this change being made?"
+                  placeholder="Why are you making this change?"
                   className="mt-1.5 w-full rounded-pa-chip border border-pa-grey-02 bg-pa-white px-3 py-2 font-pa-body text-sm text-pa-grey-04 focus:border-pa-aqua-04 focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-aqua-03"
                 />
               </label>

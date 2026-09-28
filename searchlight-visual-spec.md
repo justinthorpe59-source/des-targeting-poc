@@ -451,6 +451,66 @@ page area.
 
 ---
 
+## Design-direction reset — M3: copy audit (28 Sept 2026)
+
+A pass over every user-facing string in both systems. Five inconsistencies
+fixed, three left with reasons.
+
+### Fixed
+
+**A screen name that no longer exists.** Four links read "View the Sign-off
+Queue →" / "Sign-off Queue →". The Sign-off Queue was folded into the
+Exceptions Queue by the 5-screen consolidation and has not existed as a screen
+since. They now read "View the exceptions queue →" / "Exceptions queue →".
+
+**Heading case and punctuation.** The seven two-line headings used three
+different patterns — a parenthetical aside, a standalone label, and a sentence
+continuation — and mixed Title Case with sentence case on the first line. One
+rule now: **sentence case on both lines, no parentheses.**
+
+| Was | Now |
+| --- | --- |
+| Scenario Workspace / (Test before you commit) | Scenario workspace / Test before you commit |
+| Saved Scenarios / Baseline & yours | Saved scenarios / Baseline and the ones you save |
+| Mass adjustment / (Nothing applies until you confirm) | Mass adjustment / Nothing applies until you confirm |
+| Every team in DES, / and where their targets stand | Every team in DES / And where their targets stand |
+| Exceptions & / sign-off queue | Exceptions / And the sign-off queue |
+
+This drops the parentheses the benchmark screenshot used for "(Step-by-step)".
+Noted as a deliberate move away from the reference: three of seven headings
+used parentheses and four did not, so either choice changed something, and
+sentence-case-no-parens matches every other label in the app.
+
+**Nav label vs screen name.** The sidebar said "Mass adjust" for a screen
+headed "Mass adjustment". Now matched.
+
+**Reason prompts spoke in two voices.** Manager Override asked "Why are you
+making this change?" while Mass Adjustment asked "Why is this change being
+made?" — same act, active vs passive. Both are second-person active now.
+
+**One phrasing for the aggregate-effect heading.** "Aggregate effect —
+everyone's change applied together" and "Aggregate effect — the whole batch
+applied together" described the same block. The second wins.
+
+### Left alone, deliberately
+
+**Two phrasings for "System 2 has no data".** The live panels say
+"Organisational data not yet available — cross-check skipped"; the Exceptions
+Queue says "Organisational data wasn't available when this was flagged". The
+tense difference is real — one is a live condition, the other a frozen
+historical fact — so collapsing them would lose meaning.
+
+**Short nav labels.** "Exceptions", "Divisions" and "Scenarios" are shorter
+than their screen headings. That is normal for navigation and aids scanning;
+only the "Mass adjust"/"Mass adjustment" pair was an inconsistency rather than
+a deliberate abbreviation.
+
+**Card and section titles.** Already uniformly sentence case
+(Attributes, Explanation, Personal context, Selected population, The change,
+Real-time cross-check). No change needed.
+
+---
+
 ## System 1 — Individual Targeting
 
 ### 1. Overview & Population

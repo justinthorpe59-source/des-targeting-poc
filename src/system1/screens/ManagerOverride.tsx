@@ -371,7 +371,7 @@ export function ManagerOverrideModal({
                 This change is pending sign-off from {person.division} / {person.team}&apos;s leadership group —
                 it hasn&apos;t applied as final yet.{' '}
                 <Link to="/system1/exceptions" className="font-medium underline">
-                  View the Sign-off Queue →
+                  View the exceptions queue →
                 </Link>
               </p>
             )}

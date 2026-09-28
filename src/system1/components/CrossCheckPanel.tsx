@@ -78,7 +78,7 @@ export function CrossCheckPanel({ result }: { result: OverrideCrossCheckResult }
             This change still requires sign-off from this person's team leadership group: {result.signOffReasons.join(' ')}{' '}
             Once applied, it&apos;ll appear in the{' '}
             <Link to="/system1/exceptions" className="font-medium underline">
-              Sign-off Queue →
+              Exceptions queue →
             </Link>
           </p>
         )}
@@ -106,7 +106,7 @@ export function CrossCheckPanel({ result }: { result: OverrideCrossCheckResult }
           <p className="mt-2">
             Once applied, it&apos;ll appear in the{' '}
             <Link to="/system1/exceptions" className="font-medium underline">
-              Sign-off Queue →
+              Exceptions queue →
             </Link>
           </p>
         </div>

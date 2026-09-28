@@ -791,7 +791,7 @@ export function OverviewPopulation() {
           {/* ---- Landing state: team bubble network ---- */}
           {!openTeam ? (
             <Block>
-              <SectionHeading first="Every team in DES," second="and where their targets stand" />
+              <SectionHeading first="Every team in DES" second="And where their targets stand" />
               <p className="-mt-6 max-w-md font-pa-body text-sm text-pa-grey-03">
                 Pick a team to open its roster. Filter by location to narrow which teams show.
               </p>

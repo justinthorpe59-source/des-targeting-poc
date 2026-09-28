@@ -469,7 +469,7 @@ export function ExceptionsQueue() {
   return (
     <PageSections>
       <Block>
-        <SectionHeading first="Exceptions &amp;" second="sign-off queue" />
+        <SectionHeading first="Exceptions" second="And the sign-off queue" />
 
       <div className="flex flex-wrap items-center gap-2">
         {FILTER_OPTIONS.map((opt) => {
