@@ -679,6 +679,88 @@ comparison, which CLAUDE.md avoids by design.
 
 ---
 
+## Demo journey run — M14 / S2-M10 acceptance signal (28 Sept 2026)
+
+First full end-to-end run since the redesign: Overview → Individual → Override
+→ Mass adjust → Approve → Export → System 2 import → Scenario. Run from a
+clean reset, driving the real controls.
+
+**Every step completed. Zero console errors. Zero functional breaks.** But the
+run surfaced three things that pass their own checks and are still wrong, two
+of them caused by the System 2 seed added a few commits earlier.
+
+### What passed
+
+Reset gives 60 people, £16.1m, 25 exceptions, 6 teams. Roster → Individual
+Detail navigates and the photograph renders. An override stores its reason and
+updates status. The roster multi-select carries into Mass Adjustment — 4
+selected, 3 eligible, the fourth correctly excluded as already Pending
+Sign-off. **M10 holds: the preview matched what was applied, 0 mismatches.**
+Batch and individual sign-off both approve. Export produces exactly the
+Approved records. Import takes exactly that many. All four Scenario presets
+still drive the diff panel. Reset restores cleanly.
+
+### A. The journey makes System 2 worse — the most serious finding
+
+Export → import collapses System 2 from **60 records, £15.7m, three divisions**
+to **4 records, £1.3m, one division**. Division Comparison drops to a single
+card. Executive Summary reads "100.0% Design".
+
+This is functionally correct — only 4 records were Approved, and the snapshot
+is Approved-only by design. But it means **the demo's own happy path guts the
+sponsor-facing screen**. Before System 2 was seeded, it started empty and
+importing 4 records was an improvement; now it starts at 60 and the journey is
+a large step backwards.
+
+Worth deciding before any demo: approve far more records during the run, or
+have import merge rather than replace, or present System 2 before the export
+step rather than after.
+
+### B. Every override now routes to sign-off, without exception
+
+A **+10%** change — half the ±20% threshold — routed to Pending Sign-off. So
+did **+2% on a person in an On track team**. The reasons given are
+change-independent:
+
+> Team total moves from £3.1m to £3.1m — team remains Infeasible (already
+> non-compliant before this change).
+> Org forecast stays Off track against the £15.7m goal.
+
+The DES-wide forecast is Off track in the seeded data, so the org-goal check
+fails for *everyone*, and the direct-apply path is unreachable.
+
+This was previously ruled correct behaviour — but that ruling was made when
+System 2 started **empty**, so the cross-checks were skipped and most overrides
+applied directly. Seeding System 2 turned a rare route into the only route. The
+behaviour did not change; its reachability did.
+
+### C. Scenario Workspace renders a blank panel for an absent group — a real bug
+
+After a Design-only import, the "Engineering capacity dip" preset shows its
+config row (`Capacity · Engineering ×1.00→×0.90`) and then **an empty "What it
+does" column with no status pill**. `readScope` returns no rollup for a
+division that is not in the imported data, `outcomeRows` returns `[]`, and the
+pill is conditional on a risk result.
+
+It needs to say the group is not in the imported data rather than rendering
+nothing.
+
+### D. Cross-check sentences read as no-ops at £m scale
+
+"Team total moves from **£3.1m to £3.1m**" — the formatter's one decimal at
+millions hides a real delta inside the very sentence explaining the change.
+This is the trade-off recorded with the formatter, but here it actively
+undermines the copy. These sentences want £k precision regardless of
+magnitude.
+
+### E. "Never exported" while System 2 shows 60 records
+
+After a reset, System 1's sync strip says "Never exported" while System 2 is
+fully populated. Both are true — the seed is not an export — but together they
+read oddly.
+
+---
+
 ## System 1 — Individual Targeting
 
 ### 1. Overview & Population
