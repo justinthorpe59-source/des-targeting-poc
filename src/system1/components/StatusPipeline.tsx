@@ -74,7 +74,7 @@ export function StatusPipeline({
               <div
                 className={`flex h-6 w-6 items-center justify-center rounded-full font-pa-mono text-xs font-semibold transition-colors ${
                   isCurrent
-                    ? 'bg-pa-aqua-05 text-pa-white'
+                    ? 'bg-[var(--color-pa-accent)] text-[var(--color-pa-accent-ink)]'
                     : isPast
                       ? 'bg-pa-aqua-02 text-pa-aqua-05'
                       : 'bg-pa-grey-01 text-pa-grey-03'

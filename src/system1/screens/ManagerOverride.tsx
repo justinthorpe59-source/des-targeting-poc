@@ -328,7 +328,7 @@ export function ManagerOverrideModal({
       >
         <div className="flex items-start justify-between gap-6 border-b border-pa-grey-01 px-8 py-6">
           <div>
-            <h2 id="override-modal-title" className="font-pa-display text-2xl font-semibold text-pa-grey-04">
+            <h2 id="override-modal-title" className="font-pa-display text-3xl font-semibold leading-[1.1] text-pa-grey-04">
               Manager override
             </h2>
             <p className="mt-1 font-pa-body text-sm text-pa-grey-03">
@@ -558,7 +558,7 @@ export function ManagerOverrideModal({
               className={`mt-4 rounded-full px-5 py-2.5 font-pa-body text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                 crossCheck?.requiresSignOff
                   ? 'text-pa-dark-blue'
-                  : 'bg-pa-aqua-05 text-pa-white hover:bg-pa-aqua-04'
+                  : 'bg-[var(--color-pa-accent)] text-[var(--color-pa-accent-ink)] hover:opacity-85'
               }`}
               style={
                 crossCheck?.requiresSignOff ? { background: 'var(--color-pa-state-pending-signoff)' } : undefined

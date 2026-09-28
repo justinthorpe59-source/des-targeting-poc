@@ -333,6 +333,76 @@ tint, so it belongs with the app-shell chrome pass.
 
 ---
 
+## Design-direction reset — M2: refinement against the Scenario Workspace benchmark (28 Sept 2026)
+
+**Supersedes** the per-screen heading sizes and section rhythms recorded in
+every screen section below. Those sections still describe each screen's
+structure correctly; where they specify a heading size or spacing that
+contradicts the table here, this entry wins.
+
+### The benchmark, extracted from Scenario Workspace
+
+| Role | Value |
+| --- | --- |
+| Page rhythm | `space-y-20` between major blocks, `space-y-10` within one |
+| Page/section heading | display 4xl semibold, `leading-[1.1]`, two lines — first Grey 04, second Grey 03 |
+| Card title | display xl semibold, Grey 04 |
+| Eyebrow | body xs bold uppercase, `tracking-[0.14em]`, Grey 03 |
+| Body | body sm, Grey 03 |
+| Card | `rounded-pa-card`, white, `shadow-pa-card`; p-8 panel / p-6 grid / p-5 small; `gap-5` |
+
+These now live in `src/components/searchlight/Section.tsx` as `PageSections`,
+`Block`, `SectionHeading`, `Eyebrow` and `Card`, rather than being re-derived
+per screen. Before this pass the other seven screens used **five** different
+section rhythms and **four** different sizes for the same page heading.
+
+### Scenario Workspace was not actually on the new colour system
+
+It was the layout benchmark but still painted in Dark Blue — its next arrow,
+active pagination pill and Save button. Those are now the accent, with
+`--color-pa-accent-ink` (never white, which fails AA at 2.50:1). Without this
+the benchmark could not have been followed for colour.
+
+### Accent placement, decided case by case
+
+**Accent** — primary actions (Propose, Apply, Save, Resolve, Import), the
+active/selected state (filter pill, pagination pill, active tab underline,
+selected roster card).
+
+**Neutral grey** — avatars, focus rings, back-links, "show teams" affordances,
+the roster's unselected border. These were Aqua purely as chrome.
+
+**Left semantic, deliberately not repainted** — the StatusPipeline's progress
+fill and the `large-unexplained-gap` flag chip still use Aqua. They encode
+meaning (workflow progress, flag category), not structure, and pink is
+reserved for emphasis. Risk and workflow status colours are untouched
+throughout.
+
+Measured across all 8 screens: accent covers **0.07%–0.71%** of page area.
+The interface reads white, which is the test the direction sets.
+
+### Selected states carry extra weight
+
+M1 measured accent-on-white at 2.50:1, below the 3:1 UI-component threshold,
+so a selected state is never a 1px pink line. The roster's selected card uses
+a 2px accent border plus a 2px 30%-alpha ring; the active tab keeps its 2px
+underline and a darkened label.
+
+### Two things deliberately left
+
+1. **The app shell's Dark Blue navigation bar.** The M2 brief listed screens,
+   not the shell, so it is untouched — but it is now the only surface still
+   painted in the old system, and the direction says navigation should go
+   white or neutral grey. Needs a decision.
+2. **Executive Summary and Division Comparison keep their small bold org-name
+   header** rather than the benchmark's 4xl two-line heading. Executive
+   Summary's is screenshot-locked (§6), and Division Comparison was built to
+   match it for continuity. Moving both to the benchmark heading is a real
+   option; it is flagged rather than chosen, because changing Executive
+   Summary would contradict a locked screenshot treatment.
+
+---
+
 ## System 1 — Individual Targeting
 
 ### 1. Overview & Population

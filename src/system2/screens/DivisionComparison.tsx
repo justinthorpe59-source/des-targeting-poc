@@ -144,7 +144,7 @@ export function DivisionComparison() {
         </header>
         <div className="rounded-pa-card bg-pa-grey-01 p-6 font-pa-body text-sm text-pa-grey-03">
           No snapshot imported yet.{' '}
-          <Link to="/system2/executive-summary" className="font-semibold text-pa-aqua-05 underline">
+          <Link to="/system2/executive-summary" className="font-semibold text-pa-grey-04 underline">
             Import from System 1
           </Link>{' '}
           on Executive summary first.
@@ -200,7 +200,7 @@ export function DivisionComparison() {
                      carrying an extra "Concentration flagged" line rode 12px
                      higher than its neighbours inside an identically-sized
                      card. Top-aligning the content keeps the row level. */
-                  className="flex flex-col items-stretch rounded-pa-card px-6 py-5 text-left transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-aqua-04"
+                  className="flex flex-col items-stretch rounded-pa-card px-6 py-5 text-left transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-grey-03"
                   style={{
                     background: 'var(--color-pa-white)',
                     boxShadow: isOpen ? 'var(--shadow-pa-card-raised)' : 'var(--shadow-pa-card)',
@@ -236,7 +236,7 @@ export function DivisionComparison() {
                     <span className="font-pa-body text-[11px] uppercase tracking-[0.1em] text-pa-grey-03">
                       {teamCount} teams
                     </span>
-                    <span className="flex items-center gap-1.5 font-pa-body text-xs font-semibold text-pa-aqua-05">
+                    <span className="flex items-center gap-1.5 font-pa-body text-xs font-semibold text-pa-grey-04">
                       {isOpen ? 'Hide teams' : 'Show teams'}
                       <span
                         data-testid="s2-division-expand-caret"

@@ -9,6 +9,7 @@ import { formatMoney } from '../../shared/format'
 import { formatFlatPercent } from '../../shared/format'
 import { calculateRevenue } from '../engine/revenueEngine'
 import { IndividualTargetInline } from '../components/IndividualTarget'
+import { PageSections, Block, SectionHeading } from '../../components/searchlight/Section'
 
 /**
  * M9's exceptions queue, plus the Sign-off Queue folded in by the 5-screen
@@ -186,7 +187,7 @@ function SignOffActions({
               data-testid={`${testIdPrefix}-approve`}
               disabled={note.trim().length === 0}
               onClick={() => onApprove(note.trim())}
-              className="rounded-full bg-pa-aqua-05 px-4 py-2 font-pa-body text-xs font-semibold text-pa-white transition-colors hover:bg-pa-aqua-04 disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-full bg-[var(--color-pa-accent)] text-[var(--color-pa-accent-ink)] px-4 py-2 font-pa-body text-xs font-semibold transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Approve
             </button>
@@ -441,7 +442,7 @@ export function ExceptionsQueue() {
                 type="button"
                 data-testid="exceptions-resolve"
                 onClick={() => navigate(`/system1/override/${personId}`)}
-                className="rounded-full bg-pa-aqua-05 px-4 py-2 font-pa-body text-xs font-semibold text-pa-white transition-colors hover:bg-pa-aqua-04"
+                className="rounded-full bg-[var(--color-pa-accent)] text-[var(--color-pa-accent-ink)] px-4 py-2 font-pa-body text-xs font-semibold transition-opacity hover:opacity-85"
               >
                 Resolve in Manager Override →
               </button>
@@ -466,20 +467,11 @@ export function ExceptionsQueue() {
   ])
 
   return (
-    <section className="space-y-8">
-      {/* Eyebrow + large two-line centred heading, per the reference. */}
-      <div className="mx-auto max-w-2xl text-center">
-        <p className="font-pa-body text-xs font-bold uppercase tracking-[0.14em] text-pa-grey-03">
-          Design, Engineering &amp; Science
-        </p>
-        <h1 className="mt-4 font-pa-display text-5xl font-semibold leading-[1.1] text-pa-grey-04">
-          Exceptions &amp;
-          <br />
-          sign-off queue
-        </h1>
-      </div>
+    <PageSections>
+      <Block>
+        <SectionHeading first="Exceptions &amp;" second="sign-off queue" />
 
-      <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {FILTER_OPTIONS.map((opt) => {
           const active = typeFilter === opt
           return (
@@ -492,7 +484,7 @@ export function ExceptionsQueue() {
               onClick={() => setTypeFilter(opt)}
               className={`rounded-full px-3.5 py-1.5 font-pa-body text-xs font-semibold transition-colors ${
                 active
-                  ? 'bg-pa-aqua-05 text-pa-white'
+                  ? 'bg-[var(--color-pa-accent)] text-[var(--color-pa-accent-ink)]'
                   : 'bg-pa-grey-01 text-pa-grey-04 hover:bg-pa-grey-02/60'
               }`}
             >
@@ -502,8 +494,8 @@ export function ExceptionsQueue() {
         })}
       </div>
 
-      <div className="mx-auto max-w-4xl">
-        <p data-testid="exceptions-count" className="mb-4 text-center font-pa-body text-sm text-pa-grey-03">
+      <div>
+        <p data-testid="exceptions-count" className="mb-4 font-pa-body text-sm text-pa-grey-03">
           {items.length} item{items.length === 1 ? '' : 's'} flagged
         </p>
 
@@ -518,6 +510,7 @@ export function ExceptionsQueue() {
           <Accordion testId="exceptions-rows" items={items} />
         )}
       </div>
-    </section>
+      </Block>
+    </PageSections>
   )
 }

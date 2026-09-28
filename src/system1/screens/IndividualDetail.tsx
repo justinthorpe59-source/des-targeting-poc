@@ -138,7 +138,7 @@ export function IndividualDetail() {
     return (
       <section className="space-y-4">
         <p className="font-pa-body text-sm text-pa-grey-03">No record found for id &quot;{id}&quot;.</p>
-        <Link to="/system1/overview" className="font-pa-body text-sm font-medium text-pa-aqua-05 underline">
+        <Link to="/system1/overview" className="font-pa-body text-sm font-medium text-pa-grey-03 underline hover:text-pa-grey-04">
           Back to Population
         </Link>
       </section>
@@ -164,7 +164,7 @@ export function IndividualDetail() {
   const visibleHistory = showAllHistory ? history : history.slice(0, HISTORY_PREVIEW)
 
   return (
-    <section className="relative space-y-6">
+    <section className="relative space-y-20 pb-8">
       <SketchDistribution className="pointer-events-none absolute right-0 top-10 -z-10 h-[300px] w-[480px] max-w-none opacity-[0.05]" />
 
       <div>
@@ -176,7 +176,7 @@ export function IndividualDetail() {
       {loading ? (
         <SearchlightLoader />
       ) : (
-        <div className="animate-[pa-fade-in_500ms_ease-out] space-y-8">
+        <div className="animate-[pa-fade-in_500ms_ease-out] space-y-10">
           {/*
             Hero card — two zones per searchlight-visual-spec.md and the
             reference: left ~58% identity + data, right ~42% a large square
@@ -210,13 +210,12 @@ export function IndividualDetail() {
                 <div className="flex items-center gap-3">
                   <span
                     aria-hidden="true"
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full font-pa-mono text-sm font-bold text-pa-white"
-                    style={{ background: 'var(--color-pa-aqua-05)' }}
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-pa-grey-01 font-pa-mono text-sm font-bold text-pa-grey-04"
                   >
                     {initials(person.name)}
                   </span>
                   <div className="min-w-0">
-                    <h1 className="font-pa-display text-2xl font-semibold leading-tight text-pa-grey-04">
+                    <h1 className="font-pa-display text-4xl font-semibold leading-[1.1] text-pa-grey-04">
                       {person.name}
                     </h1>
                     <p className="mt-0.5 font-pa-body text-sm text-pa-grey-03">
@@ -282,7 +281,8 @@ export function IndividualDetail() {
                       type="button"
                       data-testid="propose-button"
                       onClick={() => proposeRecord(person.id)}
-                      className="rounded-full bg-pa-aqua-05 px-4 py-2 font-pa-body text-xs font-semibold text-pa-white transition-colors hover:bg-pa-aqua-04"
+                      style={{ background: 'var(--color-pa-accent)', color: 'var(--color-pa-accent-ink)' }}
+                      className="rounded-full px-4 py-2 font-pa-body text-xs font-semibold transition-opacity hover:opacity-85"
                     >
                       Propose
                     </button>
@@ -292,7 +292,8 @@ export function IndividualDetail() {
                       type="button"
                       data-testid="approve-button"
                       onClick={() => approveRecord(person.id)}
-                      className="rounded-full bg-pa-aqua-05 px-4 py-2 font-pa-body text-xs font-semibold text-pa-white transition-colors hover:bg-pa-aqua-04"
+                      style={{ background: 'var(--color-pa-accent)', color: 'var(--color-pa-accent-ink)' }}
+                      className="rounded-full px-4 py-2 font-pa-body text-xs font-semibold transition-opacity hover:opacity-85"
                     >
                       Approve
                     </button>
@@ -422,9 +423,9 @@ export function IndividualDetail() {
                       aria-controls={`detail-panel-${id}`}
                       data-testid={`detail-tab-${id}`}
                       onClick={() => setDetailTab(id)}
-                      className={`-mb-px border-b-2 px-4 py-2.5 font-pa-body text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-aqua-04 ${
+                      className={`-mb-px border-b-2 px-4 py-2.5 font-pa-body text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-grey-03 ${
                         active
-                          ? 'border-pa-aqua-05 text-pa-grey-04'
+                          ? 'border-[var(--color-pa-accent)] text-pa-grey-04'
                           : 'border-transparent text-pa-grey-03 hover:text-pa-grey-04'
                       }`}
                     >
@@ -529,7 +530,7 @@ export function IndividualDetail() {
                             className="shrink-0 rounded-full px-2.5 py-1 font-pa-body text-[11px] font-semibold"
                             style={{
                               background: 'var(--color-pa-aqua-01)',
-                              color: 'var(--color-pa-aqua-05)',
+                              color: 'var(--color-pa-grey-04)',
                             }}
                           >
                             {entry.actor}

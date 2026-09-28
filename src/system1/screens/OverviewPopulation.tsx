@@ -15,6 +15,7 @@ import { SketchNetwork } from '../../components/searchlight/SketchIllustrations'
 import { useInitialLoad } from '../../components/searchlight/useInitialLoad'
 import { formatMoney, formatFlatPercent } from '../../shared/format'
 import { calculateRevenue } from '../engine/revenueEngine'
+import { Block, SectionHeading } from '../../components/searchlight/Section'
 
 const STATUS_ORDER: TargetStatus[] = ['Modelled', 'Adjusted', 'Pending Sign-off', 'Proposed', 'Approved']
 
@@ -317,7 +318,7 @@ function TeamPill({
       data-team-key={teamKey}
       onClick={onOpen}
       style={{ left: `${(x / VIEW_W) * 100}%`, top: `${(y / VIEW_H) * 100}%` }}
-      className="absolute z-10 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border border-pa-grey-01 bg-pa-white px-6 py-3 font-pa-body text-base font-semibold text-pa-grey-04 shadow-pa-card-hover transition-transform duration-200 ease-out hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-aqua-04 focus-visible:ring-offset-2"
+      className="absolute z-10 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border border-pa-grey-01 bg-pa-white px-6 py-3 font-pa-body text-base font-semibold text-pa-grey-04 shadow-pa-card-hover transition-transform duration-200 ease-out hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-grey-03 focus-visible:ring-offset-2"
     >
       {team}
     </button>
@@ -409,7 +410,9 @@ function PersonCard({
       data-person-id={person.id}
       data-selected={selected ? 'true' : 'false'}
       className={`flex flex-col rounded-pa-card border bg-pa-white p-4 shadow-pa-card transition-colors ${
-        selected ? 'border-pa-aqua-04 ring-1 ring-pa-aqua-04' : 'border-pa-grey-01'
+        selected
+          ? 'border-2 border-[var(--color-pa-accent)] ring-2 ring-[var(--color-pa-accent)]/30'
+          : 'border border-pa-grey-01'
       }`}
     >
       <div className="flex items-start justify-between">
@@ -419,7 +422,7 @@ function PersonCard({
             data-testid="person-select"
             checked={selected}
             onChange={onToggle}
-            className="h-4 w-4 accent-pa-aqua-04"
+            className="h-4 w-4 accent-[var(--color-pa-accent)]"
           />
           <span className="sr-only">Select {person.name} for mass adjustment</span>
         </label>
@@ -429,8 +432,8 @@ function PersonCard({
       <div className="mt-2 flex flex-col items-center text-center">
         <span
           aria-hidden="true"
-          className="flex h-14 w-14 items-center justify-center rounded-full font-pa-mono text-sm font-bold text-pa-white"
-          style={{ background: 'var(--color-pa-aqua-05)' }}
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-pa-grey-01 font-pa-mono text-sm font-bold text-pa-grey-04"
+          style={{ background: 'var(--color-pa-grey-01)', color: 'var(--color-pa-grey-04)' }}
         >
           {initials(person.name)}
         </span>
@@ -484,7 +487,7 @@ function PersonCard({
           type="button"
           data-testid="person-card-view"
           onClick={onView}
-          className="flex-1 rounded-full bg-pa-aqua-05 px-3 py-1.5 font-pa-body text-xs font-semibold text-pa-white transition-colors hover:bg-pa-aqua-04"
+          className="flex-1 rounded-full bg-[var(--color-pa-accent)] text-[var(--color-pa-accent-ink)] px-3 py-1.5 font-pa-body text-xs font-semibold transition-opacity hover:opacity-85"
         >
           View
         </button>
@@ -599,7 +602,7 @@ function System2SyncStrip() {
           data-testid="export-button"
           onClick={handleExport}
           disabled={preview.recordCount === 0}
-          className="rounded-pa-chip bg-pa-aqua-05 px-3 py-1.5 font-pa-body text-sm font-medium text-pa-white hover:bg-pa-aqua-04 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-pa-chip bg-[var(--color-pa-accent)] text-[var(--color-pa-accent-ink)] px-3 py-1.5 font-pa-body text-sm font-semibold hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-40"
         >
           Re-export ({preview.recordCount})
         </button>
@@ -710,7 +713,7 @@ export function OverviewPopulation() {
       {loading ? (
         <SearchlightLoader />
       ) : (
-        <div className="animate-[pa-fade-in_500ms_ease-out] space-y-10">
+        <div className="animate-[pa-fade-in_500ms_ease-out] space-y-20">
           <System2SyncStrip />
 
           {/* Headline metrics */}
@@ -787,17 +790,11 @@ export function OverviewPopulation() {
 
           {/* ---- Landing state: team bubble network ---- */}
           {!openTeam ? (
-            <div className="space-y-6">
-              <div className="mx-auto max-w-2xl text-center">
-                <h1 className="font-pa-display text-4xl font-semibold leading-tight text-pa-grey-04">
-                  Every team in DES,
-                  <br />
-                  and where their targets stand
-                </h1>
-                <p className="mx-auto mt-3 max-w-md font-pa-body text-sm text-pa-grey-03">
-                  Pick a team to open its roster. Filter by location to narrow which teams show.
-                </p>
-              </div>
+            <Block>
+              <SectionHeading first="Every team in DES," second="and where their targets stand" />
+              <p className="-mt-6 max-w-md font-pa-body text-sm text-pa-grey-03">
+                Pick a team to open its roster. Filter by location to narrow which teams show.
+              </p>
 
               <div className="flex flex-wrap items-center justify-center gap-2">
                 {[ALL_LOCATIONS, ...LOCATIONS].map((loc) => {
@@ -812,7 +809,7 @@ export function OverviewPopulation() {
                       onClick={() => setLocationFilter(loc as LocationFilter)}
                       className={`rounded-full px-3 py-1.5 font-pa-body text-xs font-semibold transition-colors ${
                         active
-                          ? 'bg-pa-aqua-05 text-pa-white'
+                          ? 'bg-[var(--color-pa-accent)] text-[var(--color-pa-accent-ink)]'
                           : 'border border-pa-grey-02 text-pa-grey-04 hover:bg-pa-white'
                       }`}
                     >
@@ -833,14 +830,14 @@ export function OverviewPopulation() {
                 <TeamBubbleNetwork nodes={teamNodes} onOpen={(key) => setOpenTeamKey(key)} />
               )}
 
-              <p data-testid="network-team-count" className="text-center font-pa-body text-xs text-pa-grey-03">
+              <p data-testid="network-team-count" className="font-pa-body text-xs text-pa-grey-03">
                 {teamNodes.length} team{teamNodes.length === 1 ? '' : 's'}
                 {locationFilter !== ALL_LOCATIONS ? ` with people in ${locationFilter}` : ' across DES'}
               </p>
-            </div>
+            </Block>
           ) : (
             /* ---- Drill-in state: team roster ---- */
-            <div className="space-y-5">
+            <Block>
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
                   <button
@@ -850,7 +847,7 @@ export function OverviewPopulation() {
                       setOpenTeamKey(null)
                       setSearch('')
                     }}
-                    className="font-pa-body text-xs font-semibold text-pa-aqua-05 hover:text-pa-aqua-04"
+                    className="font-pa-body text-xs font-semibold text-pa-grey-03 hover:text-pa-grey-04"
                   >
                     ← All teams
                   </button>
@@ -900,7 +897,7 @@ export function OverviewPopulation() {
                   <Link
                     to="/system1/mass-adjustment"
                     data-testid="roster-to-mass-adjust"
-                    className="ml-auto rounded-pa-chip bg-pa-aqua-05 px-3 py-1.5 font-pa-body text-xs font-semibold text-pa-white hover:bg-pa-aqua-04"
+                    className="ml-auto rounded-pa-chip bg-[var(--color-pa-accent)] text-[var(--color-pa-accent-ink)] px-3 py-1.5 font-pa-body text-xs font-semibold hover:opacity-85"
                   >
                     Mass adjust selected →
                   </Link>
@@ -936,7 +933,7 @@ export function OverviewPopulation() {
                   })}
                 </div>
               )}
-            </div>
+            </Block>
           )}
         </div>
       )}

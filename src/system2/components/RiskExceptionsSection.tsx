@@ -176,7 +176,7 @@ export function RiskExceptionsSection({ scopeKey }: { scopeKey?: string } = {}) 
                   <StatusPill risk={row.status} />
                   <Link
                     to="/system2/division-comparison"
-                    className="font-pa-body text-xs font-semibold text-pa-aqua-05 hover:text-pa-aqua-04"
+                    className="font-pa-body text-xs font-semibold text-pa-grey-04 hover:text-pa-grey-03"
                   >
                     {row.level === 'division' ? 'Compare →' : 'Find →'}
                   </Link>

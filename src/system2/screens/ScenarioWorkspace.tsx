@@ -9,6 +9,7 @@ import { runScenario, type ScenarioLevers } from '../engine/scenario'
 import { statusBadgeClass } from '../riskDisplay'
 import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
 import { useInitialLoad } from '../../components/searchlight/useInitialLoad'
+import { SectionHeading } from '../../components/searchlight/Section'
 import { formatMoney, formatPercent } from '../../shared/format'
 
 /**
@@ -252,7 +253,7 @@ function NavArrows({
         data-testid={`${testIdPrefix}-prev`}
         onClick={onPrev}
         aria-label={`Previous ${label}`}
-        className="flex h-12 w-12 items-center justify-center rounded-full border border-pa-grey-02 bg-pa-white text-pa-grey-04 transition-colors hover:bg-pa-grey-01 focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-aqua-04"
+        className="flex h-12 w-12 items-center justify-center rounded-full border border-pa-grey-02 bg-pa-white text-pa-grey-04 transition-colors hover:bg-pa-grey-01 focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-grey-03"
       >
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M16 10H4" />
@@ -264,8 +265,10 @@ function NavArrows({
         data-testid={`${testIdPrefix}-next`}
         onClick={onNext}
         aria-label={`Next ${label}`}
-        className="flex h-12 w-12 items-center justify-center rounded-full text-pa-white transition-opacity hover:opacity-85 focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-aqua-04"
-        style={{ background: 'var(--color-pa-dark-blue)' }}
+        className="flex h-12 w-12 items-center justify-center rounded-full transition-opacity hover:opacity-85 focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-grey-03"
+        /* Accent + dark ink, never white ink: white on the accent measures
+           2.50:1 and fails AA. */
+        style={{ background: 'var(--color-pa-accent)', color: 'var(--color-pa-accent-ink)' }}
       >
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M4 10h12" />
@@ -273,19 +276,6 @@ function NavArrows({
         </svg>
       </button>
     </div>
-  )
-}
-
-/** Two-line section heading: bold first line, lighter second, as the
-    reference sets both "How it works / (Step-by-step)" and "Trusted by /
-    Our Partners". */
-function SectionHeading({ first, second }: { first: string; second: string }) {
-  return (
-    <h2 className="font-pa-display text-4xl font-semibold leading-[1.1] text-pa-grey-04">
-      {first}
-      <br />
-      <span className="text-pa-grey-03">{second}</span>
-    </h2>
   )
 }
 
@@ -444,10 +434,11 @@ export function ScenarioWorkspace() {
     <section className="space-y-20 pb-8">
       {/* ---------- Scenario options ---------- */}
       <div className="space-y-10">
-        <div className="flex items-start justify-between gap-6">
-          <SectionHeading first="Scenario Workspace" second="(Test before you commit)" />
-          <NavArrows onPrev={() => stepPreset(-1)} onNext={() => stepPreset(1)} testIdPrefix="preset-nav" label="scenario" />
-        </div>
+        <SectionHeading
+          first="Scenario Workspace"
+          second="(Test before you commit)"
+          action={<NavArrows onPrev={() => stepPreset(-1)} onNext={() => stepPreset(1)} testIdPrefix="preset-nav" label="scenario" />}
+        />
 
         <div data-testid="preset-cards" className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {presets.map((preset) => {
@@ -460,7 +451,7 @@ export function ScenarioWorkspace() {
                 data-preset-id={preset.id}
                 data-active={active ? 'true' : 'false'}
                 onClick={() => setSelectedId(preset.id)}
-                className={`flex h-52 flex-col rounded-pa-card bg-pa-white p-6 text-left transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-aqua-04 ${
+                className={`flex h-52 flex-col rounded-pa-card bg-pa-white p-6 text-left transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-grey-03 ${
                   active
                     ? 'shadow-pa-card-raised'
                     : 'shadow-pa-card hover:shadow-pa-card-hover'
@@ -495,10 +486,14 @@ export function ScenarioWorkspace() {
                 data-active={active ? 'true' : 'false'}
                 onClick={() => setSelectedId(preset.id)}
                 aria-label={`Scenario ${preset.index}: ${preset.title}`}
-                className={`relative rounded-pa-chip px-5 py-2.5 font-pa-mono text-sm font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-aqua-04 ${
-                  active ? 'text-pa-white' : 'border border-pa-grey-02 bg-pa-white text-pa-grey-04 hover:bg-pa-grey-01'
+                className={`relative rounded-pa-chip px-5 py-2.5 font-pa-mono text-sm font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-grey-03 ${
+                  active ? '' : 'border border-pa-grey-02 bg-pa-white text-pa-grey-04 hover:bg-pa-grey-01'
                 }`}
-                style={active ? { background: 'var(--color-pa-dark-blue)' } : undefined}
+                style={
+                  active
+                    ? { background: 'var(--color-pa-accent)', color: 'var(--color-pa-accent-ink)' }
+                    : undefined
+                }
               >
                 {preset.index}
               </button>
@@ -509,10 +504,11 @@ export function ScenarioWorkspace() {
 
       {/* ---------- Saved scenarios ---------- */}
       <div className="space-y-8">
-        <div className="flex items-start justify-between gap-6">
-          <SectionHeading first="Saved Scenarios" second="Baseline & yours" />
-          <NavArrows onPrev={() => scrollCarousel(-1)} onNext={() => scrollCarousel(1)} testIdPrefix="saved-nav" label="saved scenario" />
-        </div>
+        <SectionHeading
+          first="Saved Scenarios"
+          second="Baseline & yours"
+          action={<NavArrows onPrev={() => scrollCarousel(-1)} onNext={() => scrollCarousel(1)} testIdPrefix="saved-nav" label="saved scenario" />}
+        />
 
         <div
           ref={carouselRef}
@@ -529,7 +525,7 @@ export function ScenarioWorkspace() {
                 data-scenario-id={card.id}
                 data-active={active ? 'true' : 'false'}
                 onClick={() => setSelectedId(card.id)}
-                className={`flex h-36 w-64 shrink-0 snap-start flex-col justify-end rounded-pa-card bg-pa-white p-5 text-left transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-aqua-04 ${
+                className={`flex h-36 w-64 shrink-0 snap-start flex-col justify-end rounded-pa-card bg-pa-white p-5 text-left transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-grey-03 ${
                   active
                     ? 'shadow-pa-card-raised'
                     : 'shadow-pa-card hover:shadow-pa-card-hover'
@@ -563,8 +559,8 @@ export function ScenarioWorkspace() {
               saveScenario(scenarioName.trim(), selectedLevers)
               setScenarioName('')
             }}
-            className="rounded-pa-chip px-5 py-2.5 font-pa-body text-sm font-semibold text-pa-white transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-40"
-            style={{ background: 'var(--color-pa-dark-blue)' }}
+            className="rounded-pa-chip px-5 py-2.5 font-pa-body text-sm font-semibold transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-40"
+            style={{ background: 'var(--color-pa-accent)', color: 'var(--color-pa-accent-ink)' }}
           >
             Save scenario
           </button>

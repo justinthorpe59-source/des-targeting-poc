@@ -93,7 +93,7 @@ export function ExecutiveSummary() {
     return (
       <section className="space-y-6">
         <div>
-          <h1 className="font-pa-display text-4xl font-semibold text-pa-grey-04">Executive summary</h1>
+          <h1 className="font-pa-display text-4xl font-semibold leading-[1.1] text-pa-grey-04">Executive summary</h1>
           <p className="mt-2 max-w-md font-pa-body text-sm text-pa-grey-03">
             Tells leadership whether DES is on track to hit its goal. Import an Approved snapshot from
             System 1 to get started — System 2 never reads System 1&apos;s live data directly.
@@ -119,7 +119,8 @@ export function ExecutiveSummary() {
           data-testid="s2-import-button"
           disabled={!lastSnapshot}
           onClick={() => lastSnapshot && importSnapshot(lastSnapshot)}
-          className="rounded-md bg-pa-aqua-05 px-3 py-1.5 font-pa-body text-sm font-medium text-pa-white hover:bg-pa-aqua-04 disabled:cursor-not-allowed disabled:opacity-40"
+          style={{ background: 'var(--color-pa-accent)', color: 'var(--color-pa-accent-ink)' }}
+          className="rounded-pa-chip px-4 py-2 font-pa-body text-sm font-semibold transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-40"
         >
           Import from System 1
         </button>
@@ -225,7 +226,7 @@ export function ExecutiveSummary() {
         <div className="animate-[pa-fade-in_500ms_ease-out]">
           {/* Generous vertical whitespace above the body — this screen should
               feel calm and editorial, not dense. */}
-          <div className="grid gap-12 pb-24 pt-32 lg:grid-cols-[35fr_65fr] lg:gap-16">
+          <div className="grid gap-12 pb-20 pt-20 lg:grid-cols-[35fr_65fr] lg:gap-16">
             {/* ---- Left: the organisational goal, as the dominant element ---- */}
             <div>
               <p className="font-pa-body text-sm font-semibold text-pa-grey-04">Organisational goal.</p>

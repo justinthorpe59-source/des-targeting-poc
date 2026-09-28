@@ -11,6 +11,7 @@ import { StatusPill } from '../../components/searchlight/StatusPill'
 import { formatMoney } from '../../shared/format'
 import { formatSignedPercent } from '../../shared/format'
 import { IndividualTargetInline } from '../components/IndividualTarget'
+import { PageSections, Block, SectionHeading } from '../../components/searchlight/Section'
 
 /** People listed before the rest go behind a reveal. */
 const PREVIEW_ROWS = 6
@@ -121,21 +122,10 @@ export function MassAdjustment() {
   const visibleRows = showAllRows ? preview : preview.slice(0, PREVIEW_ROWS)
 
   return (
-    <section className="space-y-8">
-      <div className="mx-auto max-w-2xl text-center">
-        <p className="font-pa-body text-xs font-bold uppercase tracking-[0.14em] text-pa-grey-03">
-          Design, Engineering &amp; Science
-        </p>
-        <h1 className="mt-4 font-pa-display text-5xl font-semibold leading-[1.1] text-pa-grey-04">
-          Mass adjustment
-        </h1>
-        <p className="mx-auto mt-4 max-w-md font-pa-body text-sm text-pa-grey-03">
-          A percentage change across the people you selected. Nothing applies until you confirm, and a reason is
-          always required.
-        </p>
-      </div>
+    <PageSections>
+      <SectionHeading first="Mass adjustment" second="(Nothing applies until you confirm)" />
 
-      <div className="mx-auto max-w-4xl space-y-6">
+      <Block>
         {lastApplied && (
           <div
             data-testid="mass-adjustment-success"
@@ -169,7 +159,7 @@ export function MassAdjustment() {
             </p>
             <Link
               to="/system1/overview"
-              className="mt-5 inline-block rounded-full bg-pa-aqua-05 px-5 py-2.5 font-pa-body text-sm font-semibold text-pa-white transition-colors hover:bg-pa-aqua-04"
+              className="mt-5 inline-block rounded-full bg-[var(--color-pa-accent)] text-[var(--color-pa-accent-ink)] px-5 py-2.5 font-pa-body text-sm font-semibold transition-opacity hover:opacity-85"
             >
               Choose people →
             </Link>
@@ -374,7 +364,7 @@ export function MassAdjustment() {
                 className={`mt-4 rounded-full px-5 py-2.5 font-pa-body text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                   signOffPersonIds.length > 0
                     ? 'text-pa-dark-blue'
-                    : 'bg-pa-aqua-05 text-pa-white hover:bg-pa-aqua-04'
+                    : 'bg-[var(--color-pa-accent)] text-[var(--color-pa-accent-ink)] hover:opacity-85'
                 }`}
                 style={
                   signOffPersonIds.length > 0
@@ -389,7 +379,7 @@ export function MassAdjustment() {
             </div>
           </>
         )}
-      </div>
-    </section>
+      </Block>
+    </PageSections>
   )
 }

@@ -74,7 +74,7 @@ export function Accordion({
               aria-expanded={isOpen}
               aria-controls={panelId}
               onClick={() => setOpenId(isOpen ? null : item.id)}
-              className={`flex w-full items-center gap-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-aqua-04 ${
+              className={`flex w-full items-center gap-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-grey-03 ${
                 isOpen ? 'px-7 pb-3 pt-6' : 'py-4 pl-7 pr-4'
               }`}
             >
