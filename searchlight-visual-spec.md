@@ -632,6 +632,46 @@ folder stays where it is rather than moving to `public/`. Vite fingerprints all
 
 ---
 
+## Design-direction reset — M5 follow-ups: queue avatars and roster accent (28 Sept 2026)
+
+Two closing items. The five-milestone pass is complete after these.
+
+### Exceptions Queue rows carry a 32px avatar
+
+A third size joins the avatar system: **32px**, for list rows. A queue row is
+denser than a roster card, and a face is what makes a long column of names
+scannable. Same component, same circle, same crop, same initials fallback.
+
+All 25 rows show one. **Batch rows deliberately do not** — a mass adjustment
+has no single person to picture, and inventing one would misrepresent what is
+being signed off, the same reasoning that keeps a person's name out of a batch
+row's label.
+
+### The roster no longer spends the accent on every card
+
+"View" appeared once per roster card, so ten cards meant ten accent buttons on
+screen at once — **2.04%** of page area, against 0.07–0.71% everywhere else.
+It was the one screen where the interface started to read pink.
+
+"View" is now a **filled Grey 01** button. It still reads as the stronger of
+the two actions against the outlined "Notes", so the hierarchy inside the card
+survives; it just no longer uses colour to say so. The accent is spent once on
+this screen, on "Mass adjust selected", which is the action that actually
+moves work forward.
+
+Measured after: **0.24%** with nothing selected, **0.40%** once a selection
+brings the mass-adjust call to action into view. Both inside the band.
+
+### Not done, and deliberately
+
+Faces on Mass Adjustment preview rows, on Cohort Comparison, and anywhere in
+System 2 (Top Risks, Division Comparison) were all considered and rejected.
+System 2 is org-level and never shows an individual; putting a face there
+would breach that boundary. Cohort Comparison risks implying named peer
+comparison, which CLAUDE.md avoids by design.
+
+---
+
 ## System 1 — Individual Targeting
 
 ### 1. Overview & Population

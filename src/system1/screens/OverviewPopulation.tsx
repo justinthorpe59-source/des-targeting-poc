@@ -474,7 +474,13 @@ function PersonCard({
           type="button"
           data-testid="person-card-view"
           onClick={onView}
-          className="flex-1 rounded-full bg-[var(--color-pa-accent)] text-[var(--color-pa-accent-ink)] px-3 py-1.5 font-pa-body text-xs font-semibold transition-opacity hover:opacity-85"
+          /* Filled neutral, not the accent. Ten roster cards meant ten accent
+             buttons on screen at once, which made this the densest use of pink
+             in the app by a wide margin. A filled Grey 01 still reads as the
+             stronger of the two actions against the outlined Notes, so the
+             hierarchy inside the card survives; the accent is spent once on
+             this screen, on "Mass adjust selected". */
+          className="flex-1 rounded-full bg-pa-grey-01 px-3 py-1.5 font-pa-body text-xs font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-02/50"
         >
           View
         </button>

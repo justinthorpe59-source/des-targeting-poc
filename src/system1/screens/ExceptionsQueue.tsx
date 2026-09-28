@@ -10,6 +10,7 @@ import { formatFlatPercent } from '../../shared/format'
 import { calculateRevenue } from '../engine/revenueEngine'
 import { IndividualTargetInline } from '../components/IndividualTarget'
 import { PageSections, Block, SectionHeading } from '../../components/searchlight/Section'
+import { PersonAvatar } from '../components/PersonAvatar'
 
 /**
  * M9's exceptions queue, plus the Sign-off Queue folded in by the 5-screen
@@ -381,6 +382,7 @@ export function ExceptionsQueue() {
           dataAttrs: { 'data-row-type': 'pending-signoff', 'data-person-id': row.person.id },
           label: (
             <>
+              <PersonAvatar person={row.person} size={32} />
               <span>{row.person.name}</span>
               <FlagChip type="pending-signoff" />
               <Severity type="pending-signoff" />
@@ -417,6 +419,11 @@ export function ExceptionsQueue() {
         dataAttrs: { 'data-row-type': worst, 'data-person-id': personId },
         label: (
           <>
+            {/* 32px, the third size in the avatar system — a row is denser
+                than a roster card, and a face is what makes a long queue of
+                names scannable. Batch rows deliberately get none: a mass
+                adjustment has no single person to picture. */}
+            <PersonAvatar person={person} size={32} />
             <span>{person.name}</span>
             {flags.map((flag, i) => (
               <FlagChip key={i} type={flag.type} />
