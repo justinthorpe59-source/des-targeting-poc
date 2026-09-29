@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useSnapshotStore } from '../../store/snapshotStore'
 import { useSystem2Store } from '../../store/system2Store'
@@ -37,8 +37,13 @@ import { AnimatedFigure } from '../../components/searchlight/AnimatedFigure'
 // The big hero status word, coloured by severity (text only, no chip).
 
 /**
- * Stat tile, reference anatomy: label with a trailing period, a small line
- * icon, a large numeral, and a small grey caption beneath.
+ * Stat tile, reference anatomy: a label, a small line icon, a large numeral,
+ * and a small grey caption beneath.
+ *
+ * The label carried a trailing full stop from the reference screenshot until
+ * 29 Sept 2026. These are labels, not sentences, so the punctuation went —
+ * across the whole screen, not just the tiles. Running prose on this screen
+ * keeps its full stops.
  */
 function StatTile({
   label,
@@ -46,12 +51,15 @@ function StatTile({
   caption,
   icon,
   testId,
+  valueColor,
 }: {
   label: string
   value: ReactNode
   caption: string
   icon: ReactNode
   testId: string
+  /** Overrides the numeral's ink where the value itself carries meaning. */
+  valueColor?: string
 }) {
   return (
     /* Grey 01 for the same reason as the hero card: Grey wash is the page
@@ -64,6 +72,7 @@ function StatTile({
       <p
         data-testid={testId}
         className="mt-3 font-pa-display text-4xl font-medium leading-none tracking-tight text-pa-grey-04"
+        style={valueColor ? { color: valueColor } : undefined}
       >
         {value}
       </p>
@@ -81,6 +90,25 @@ export function ExecutiveSummary() {
   const rollups = useMemo(() => aggregate(records), [records])
   const goals = useMemo(() => computeGoals(rollups), [rollups])
   const riskStatuses = useMemo(() => computeRiskStatuses(records, rollups, goals), [records, rollups, goals])
+
+  /**
+   * Item 3: whether the top row shows proportions or the money behind them.
+   *
+   * It governs the NUMERALS only. The hero's proportional fill still scales by
+   * the forecast ratio and the goal-split pills keep their order, because the
+   * shapes encode the same relationships either way — swapping the units must
+   * not redraw the chart.
+   *
+   * The organisational goal itself and the gap line are absolute figures with
+   * no percentage counterpart, so they read the same in both modes rather than
+   * being converted into something they are not.
+   */
+  const [display, setDisplay] = useState<'percent' | 'actuals'>('percent')
+  const showActuals = display === 'actuals'
+
+  /* Declared with the other hooks, above the empty-state early return below —
+     a hook after a conditional return runs in a different order on the two
+     paths. */
 
   if (records.length === 0) {
     return (
@@ -189,7 +217,7 @@ export function ExecutiveSummary() {
    *  own breakdown. Three, because DES has three divisions: the pill pattern
    *  is the reference's, the count follows our data. */
   const goalSplit = [...goals.byDivision.entries()]
-    .map(([division, value]) => ({ division, pct: goals.desWide > 0 ? (value / goals.desWide) * 100 : 0 }))
+    .map(([division, value]) => ({ division, value, pct: goals.desWide > 0 ? (value / goals.desWide) * 100 : 0 }))
     .sort((a, b) => b.pct - a.pct)
 
   return (
@@ -216,7 +244,7 @@ export function ExecutiveSummary() {
           <div className="grid gap-12 pb-20 pt-20 lg:grid-cols-[35fr_65fr] lg:gap-16">
             {/* ---- Left: the organisational goal, as the dominant element ---- */}
             <div>
-              <p className="font-pa-body text-sm font-semibold text-pa-grey-04">Organisational goal.</p>
+              <p className="font-pa-body text-sm font-semibold text-pa-grey-04">Organisational goal</p>
               <p
                 className="mt-4 font-pa-display text-[5.5rem] font-medium leading-[0.95] tracking-tight text-pa-grey-04"
               >
@@ -224,14 +252,14 @@ export function ExecutiveSummary() {
               </p>
 
               <div className="mt-6 flex flex-wrap gap-2">
-                {goalSplit.map(({ division, pct }) => (
+                {goalSplit.map(({ division, pct, value }) => (
                   <span
                     key={division}
                     data-testid="s2-exec-goal-split"
                     className="rounded-pa-chip px-2.5 py-1 font-pa-body text-xs text-pa-grey-03"
                     style={{ background: 'var(--color-pa-white)', boxShadow: 'var(--shadow-pa-card)' }}
                   >
-                    {formatPercent(pct)} {division}
+                    {showActuals ? formatMoney(value) : formatPercent(pct)} {division}
                   </span>
                 ))}
               </div>
@@ -276,14 +304,37 @@ export function ExecutiveSummary() {
                   */}
                   <div>
                     <p className="font-pa-body text-lg font-semibold" style={{ color: hero.onFill }}>
-                      Forecast.
+                      Forecast
                     </p>
+                    {/*
+                      Item 2: the ratio and the money behind it are shown
+                      together, never one without the other — a forecast of 87%
+                      means nothing to a sponsor without the figure it is 87%
+                      of. The toggle decides which of the two leads; both stay
+                      on screen either way.
+
+                      Keyed on the mode so AnimatedFigure remounts instead of
+                      tweening across a change of unit — without it, switching
+                      would count from 87 to 13,700 as though the number had
+                      grown.
+                    */}
                     <p
                       data-testid="s2-exec-forecast"
                       className="mt-3 font-pa-display text-5xl font-medium leading-none tracking-tight"
                       style={{ color: hero.onFill }}
                     >
-                      <AnimatedFigure value={forecastPct} format={formatPercent} />
+                      <AnimatedFigure
+                        key={display}
+                        value={showActuals ? expected : forecastPct}
+                        format={showActuals ? formatMoney : formatPercent}
+                      />
+                    </p>
+                    <p
+                      data-testid="s2-exec-forecast-secondary"
+                      className="mt-2 font-pa-body text-base font-medium"
+                      style={{ color: hero.onFill }}
+                    >
+                      {showActuals ? `${formatPercent(forecastPct)} of goal` : `${formatMoney(expected)} forecast`}
                     </p>
                     <p
                       data-testid="s2-exec-gap"
@@ -293,16 +344,16 @@ export function ExecutiveSummary() {
                       {gap >= 0 ? '−' : '+'}{formatMoney(Math.abs(gap))} {gap >= 0 ? 'short of' : 'above'} goal
                     </p>
                   </div>
-                  <p className="shrink-0 font-pa-body text-sm text-pa-grey-03">Target FY26.</p>
+                  <p className="shrink-0 font-pa-body text-sm text-pa-grey-03">Target FY26</p>
                 </div>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <StatTile
-                  label="Coverage."
+                  label="Coverage"
                   testId="s2-exec-coverage"
-                  value={formatPercent(coverage)}
-                  caption="Allocated targets vs goal"
+                  value={showActuals ? formatMoney(rollups.desWide.target) : formatPercent(coverage)}
+                  caption={showActuals ? 'Allocated targets, total' : 'Allocated targets vs goal'}
                   icon={
                     <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.4">
                       <circle cx="10" cy="10" r="7" />
@@ -310,10 +361,26 @@ export function ExecutiveSummary() {
                     </svg>
                   }
                 />
+                {/*
+                  Item 4: High takes --color-pa-risk-on-track, the same token
+                  StatusPill already uses for an On track risk status, so
+                  "good" is one colour across the app rather than a green
+                  invented here. It resolves to #2c8027 (Lime 04), which
+                  measures 4.96:1 on white and clears AA for normal text, let
+                  alone at this size.
+
+                  Medium and Low keep the default ink deliberately. Only High
+                  was asked for, and coding all three would turn an
+                  explicitly illustrative figure into what looks like a
+                  measured traffic light.
+                */}
                 <StatTile
-                  label="Confidence."
+                  label="Confidence"
                   testId="s2-exec-confidence"
                   value={desWideRisk.confidence}
+                  valueColor={
+                    desWideRisk.confidence === 'High' ? 'var(--color-pa-risk-on-track)' : undefined
+                  }
                   caption="Simulated — illustrative only"
                   icon={
                     <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.4">
@@ -347,6 +414,50 @@ export function ExecutiveSummary() {
                   Concentration risk flagged.
                 </p>
               )}
+
+              {/*
+                Item 3: the unit switch for this row, bottom-right of it. Sits
+                at the end of the right-hand column so it reads as a control
+                over what is above it rather than a page-level setting.
+
+                Styled as the location filter's chips on System 1's population
+                screen — accent fill for the live option — so a segmented
+                choice looks the same in both systems. Two real buttons with
+                aria-pressed rather than a checkbox: it picks between two
+                named options, not on/off.
+              */}
+              <div className="flex justify-end pt-2">
+                <div
+                  role="group"
+                  aria-label="Number format"
+                  className="inline-flex gap-1 rounded-pa-chip bg-pa-white p-1 shadow-pa-card"
+                >
+                  {([
+                    ['percent', 'Percentage'],
+                    ['actuals', 'Actuals'],
+                  ] as const).map(([mode, label]) => {
+                    const active = display === mode
+                    return (
+                      <button
+                        key={mode}
+                        type="button"
+                        data-testid="s2-exec-display-toggle"
+                        data-mode={mode}
+                        data-active={active ? 'true' : 'false'}
+                        aria-pressed={active}
+                        onClick={() => setDisplay(mode)}
+                        className={`rounded-full px-3 py-1.5 font-pa-body text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-grey-03 ${
+                          active
+                            ? 'bg-[var(--color-pa-accent)] text-[var(--color-pa-accent-ink)]'
+                            : 'text-pa-grey-04 hover:bg-pa-grey-01'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
             </div>
           </div>
 
