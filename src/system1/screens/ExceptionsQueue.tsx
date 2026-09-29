@@ -11,6 +11,7 @@ import { calculateRevenue } from '../engine/revenueEngine'
 import { IndividualTargetInline } from '../components/IndividualTarget'
 import { PageSections, Block, SectionHeading } from '../../components/searchlight/Section'
 import { PersonAvatar } from '../components/PersonAvatar'
+import type { CheckStatus } from '../engine/overrideCrossCheck'
 
 /**
  * M9's exceptions queue, plus the Sign-off Queue folded in by the 5-screen
@@ -86,8 +87,8 @@ function Severity({ type }: { type: RowType }) {
   )
 }
 
-/** A failed/passed check line inside an expanded row. */
-function CheckLine({ label, status, detail }: { label: string; status: 'pass' | 'fail'; detail: string }) {
+/** A check line inside an expanded row — pass, fail, or the neutral note. */
+function CheckLine({ label, status, detail }: { label: string; status: CheckStatus; detail: string }) {
   return (
     <div className="flex items-start gap-3 py-2">
       <span
@@ -96,10 +97,12 @@ function CheckLine({ label, status, detail }: { label: string; status: 'pass' | 
         style={
           status === 'pass'
             ? { background: 'var(--color-pa-lime-02)', color: 'var(--color-pa-lime-04)' }
-            : { background: 'var(--color-pa-rose-01)', color: 'var(--color-pa-rose-04)' }
+            : status === 'note'
+              ? { background: 'var(--color-pa-white)', border: '1px solid var(--color-pa-grey-02)', color: 'var(--color-pa-grey-03)' }
+              : { background: 'var(--color-pa-rose-01)', color: 'var(--color-pa-rose-04)' }
         }
       >
-        {status === 'pass' ? '✓' : '✕'}
+        {status === 'pass' ? '✓' : status === 'note' ? 'i' : '✕'}
       </span>
       <div>
         <div className="font-pa-body text-sm font-medium text-pa-grey-04">{label}</div>

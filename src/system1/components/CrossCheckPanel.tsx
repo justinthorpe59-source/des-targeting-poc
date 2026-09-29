@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import type { OverrideCrossCheckResult } from '../engine/overrideCrossCheck'
 import { Accordion, type AccordionItem } from '../../components/searchlight/Accordion'
+import type { CheckStatus } from '../engine/overrideCrossCheck'
 
 /**
  * Batch 3b: the live pass/fail + numeric-effect display for the real-time
@@ -21,7 +22,7 @@ import { Accordion, type AccordionItem } from '../../components/searchlight/Acco
  * hidden behind an expand that wasn't hidden before.
  */
 
-function CheckMark({ status }: { status: 'pass' | 'fail' }) {
+function CheckMark({ status }: { status: CheckStatus }) {
   return (
     <span
       data-status={status}
@@ -39,7 +40,7 @@ function CheckMark({ status }: { status: 'pass' | 'fail' }) {
 }
 
 function checkItems(result: OverrideCrossCheckResult): AccordionItem[] {
-  const defs: Array<{ key: string; label: string; check: { status: 'pass' | 'fail'; detail: string } | null | undefined }> = [
+  const defs: Array<{ key: string; label: string; check: { status: CheckStatus; detail: string } | null | undefined }> = [
     { key: 'team', label: 'Team total', check: result.team },
     { key: 'division', label: 'Division total (informational)', check: result.division },
     { key: 'cohort', label: 'Level-cohort norms', check: result.cohort },

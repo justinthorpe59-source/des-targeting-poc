@@ -761,10 +761,37 @@ read oddly.
 
 ---
 
-## OPEN DECISION — what the sign-off cross-checks should test (29 Sept 2026)
+## RESOLVED — what the sign-off cross-checks test (29 Sept 2026)
 
-Finding B from the journey run. **Nothing implemented; this is the options
-write-up.**
+Finding B from the journey run. **Decided: Option 1 + Option 3, implemented
+29 Sept 2026.** The checks now test regression rather than ambient status, and
+an already-non-compliant group is reported as a neutral `note` that carries
+the context without forcing sign-off. The options and their trade-offs are
+kept below as the record of what was weighed.
+
+### Result
+
+| Override | Team fail | Team note | Org fail | Org note | Cohort fail | Sign-off |
+| --- | --- | --- | --- | --- | --- | --- |
+| +1% | 0 | 30 | 0 | 60 | 0 | **0 / 60** |
+| +10% | 0 | 30 | 0 | 60 | 0 | **0 / 60** |
+| +15% | 0 | 30 | 0 | 60 | 5 | 5 / 60 |
+| +25% | 0 | 30 | 0 | 60 | 31 | 60 / 60 |
+| −40% | **12** | 20 | **3** | 57 | 60 | 60 / 60 |
+
+Small changes apply directly. The ±20% drastic trigger still catches large
+ones. Cuts that genuinely drag a group into a worse band fail, as they should.
+The gate discriminates again.
+
+Verified in the app: a +10% override on P022 now reads "Apply override" and
+lands on **Adjusted**, where it previously read "Send for sign-off" and landed
+on Pending Sign-off.
+
+`CheckStatus` is now `'pass' | 'fail' | 'note'`, rendered as a neutral
+outlined `i` badge by the three components that show check results.
+verify-override-cross-check.ts's Scenario C was rewritten — it had asserted
+the old "already Infeasible therefore fail" behaviour — and a Scenario C2
+added, pinning that a change which *causes* a regression still fails.
 
 ### What is actually happening
 

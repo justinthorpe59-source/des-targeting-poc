@@ -90,7 +90,25 @@ export function buildHypotheticalOrgRecord(person: Person, hypotheticalTarget: n
   }
 }
 
-export type CheckStatus = 'pass' | 'fail'
+/**
+ * 'note' added 29 Sept 2026.
+ *
+ * The team and org checks used to test the group's AMBIENT status — is this
+ * team/org currently compliant — rather than the override's own effect. With
+ * DES-wide deliberately Off track in the seeded data, that condition was
+ * permanently true, so sign-off fired for all 60 people at +1% exactly as it
+ * did at +30% and the direct-apply path was unreachable. A gate that always
+ * fires discriminates nothing.
+ *
+ * The checks now test REGRESSION: does this change move the group into a
+ * worse status band. An override inside an already-Infeasible team passes,
+ * because it is not the thing that made the team Infeasible.
+ *
+ * 'note' keeps that context visible without gating on it: the group was
+ * already non-compliant, this change did not worsen it, here is the state you
+ * are working inside. It never forces sign-off.
+ */
+export type CheckStatus = 'pass' | 'fail' | 'note'
 
 export interface TeamCheckResult {
   status: CheckStatus
@@ -223,9 +241,13 @@ export function runOverrideCrossCheck(input: OverrideCrossCheckInput): OverrideC
   // check 3's explicit "push from on-track into worse" wording below). A
   // team moving On track -> At risk is still a pass here; only landing in
   // Off track/Infeasible fails it.
-  const teamPasses = isCompliant(teamAfterRisk.status)
+  /* Regression, not ambient status. A team already Off track or Infeasible
+     before this change is reported as a note, not a failure — the override
+     did not put it there. */
+  const teamRegressed = teamBeforeStatus !== null && STATUS_SEVERITY[teamAfterRisk.status] > STATUS_SEVERITY[teamBeforeStatus]
+  const teamAlreadyNonCompliant = teamBeforeStatus !== null && !isCompliant(teamBeforeStatus)
   const team: TeamCheckResult = {
-    status: teamPasses ? 'pass' : 'fail',
+    status: teamRegressed ? 'fail' : teamAlreadyNonCompliant ? 'note' : 'pass',
     division: person.division,
     team: person.team,
     beforeHeadcount: teamBefore?.rollup.headcount ?? 0,
@@ -236,8 +258,8 @@ export function runOverrideCrossCheck(input: OverrideCrossCheckInput): OverrideC
     afterStatus: teamAfterRisk.status,
     afterCoveragePct: round1(teamAfterRisk.forecastRatio * 100),
     detail:
-      teamBeforeStatus && !isCompliant(teamBeforeStatus)
-        ? `Team total moves from ${formatMoneyPrecise(teamBefore?.rollup.target ?? 0)} to ${formatMoneyPrecise(teamAfterRollup.target)} — team remains ${teamAfterRisk.status} (already non-compliant before this change).`
+      teamAlreadyNonCompliant
+        ? `Team total moves from ${formatMoneyPrecise(teamBefore?.rollup.target ?? 0)} to ${formatMoneyPrecise(teamAfterRollup.target)} — team was already ${teamBeforeStatus} before this change, and this does not worsen it.`
         : `Team total moves from ${formatMoneyPrecise(teamBefore?.rollup.target ?? 0)} to ${formatMoneyPrecise(teamAfterRollup.target)}, ${formatPercent(teamAfterRisk.forecastRatio * 100)} coverage — ${teamBeforeStatus ?? 'no prior data'} → ${teamAfterRisk.status}.`,
   }
 
@@ -296,9 +318,13 @@ export function runOverrideCrossCheck(input: OverrideCrossCheckInput): OverrideC
   const goal = snapshot.org.goal
   const orgAfterRisk = assessRisk(orgAfterRollup, orgAfterRecords, 'DES-wide', goal)
   const orgBeforeStatus = snapshot.org.risk.status
-  const orgPasses = stillSensible(orgBeforeStatus, orgAfterRisk.status)
+  /* Same change as the team check. stillSensible()'s first clause was
+     isCompliant(after), which DES-wide never satisfies in the seeded data, so
+     the no-regression clause beneath it was never reached. */
+  const orgRegressed = STATUS_SEVERITY[orgAfterRisk.status] > STATUS_SEVERITY[orgBeforeStatus]
+  const orgAlreadyNonCompliant = !isCompliant(orgBeforeStatus)
   const org: OrgCheckResult = {
-    status: orgPasses ? 'pass' : 'fail',
+    status: orgRegressed ? 'fail' : orgAlreadyNonCompliant ? 'note' : 'pass',
     goal,
     beforeTotal: snapshot.org.rollup.target,
     afterTotal: orgAfterRollup.target,
@@ -308,11 +334,12 @@ export function runOverrideCrossCheck(input: OverrideCrossCheckInput): OverrideC
     afterStatus: orgAfterRisk.status,
     detail:
       orgBeforeStatus === orgAfterRisk.status
-        ? `Org forecast stays ${orgAfterRisk.status} against the ${formatMoney(goal)} goal (${formatMoney(orgAfterRollup.expectedAchievement)} expected achievement).`
+        ? `Org forecast was already ${orgAfterRisk.status} against the ${formatMoney(goal)} goal (${formatMoney(orgAfterRollup.expectedAchievement)} expected achievement), and this does not worsen it.`
         : `Org forecast moves from ${orgBeforeStatus} to ${orgAfterRisk.status} against the ${formatMoney(goal)} goal (${formatMoneyPrecise(snapshot.org.rollup.expectedAchievement)} → ${formatMoneyPrecise(orgAfterRollup.expectedAchievement)} expected achievement).`,
   }
 
   const signOffReasons: string[] = []
+  /* Only 'fail' routes to sign-off. 'note' is context, not a gate. */
   if (team.status === 'fail') signOffReasons.push(`Team total check failed: ${team.detail}`)
   if (cohort.status === 'fail') signOffReasons.push(`Level-cohort norm check failed: ${cohort.detail}`)
   if (org.status === 'fail') signOffReasons.push(`Org goal integrity check failed: ${org.detail}`)

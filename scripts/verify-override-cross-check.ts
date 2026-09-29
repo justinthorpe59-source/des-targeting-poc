@@ -16,6 +16,10 @@ import { aggregate } from '../src/system2/engine/aggregation'
 import { computeGoals, GROWTH_RATE_RANGE, GOAL_GROWTH_MULTIPLIER } from '../src/system2/engine/goals'
 import type { OrgRecord } from '../src/system2/data/types'
 import type { Person } from '../src/system1/data/types'
+import SEED_SNAPSHOT from '../src/system2/data/snapshot.seed.json'
+import { ingestSnapshot } from '../src/system2/engine/ingestSnapshot'
+import { SEED_PEOPLE } from '../src/system1/data/people'
+import { calculateModelledTarget } from '../src/system1/engine/targetingEngine'
 
 function orgRecord(overrides: Partial<OrgRecord> & { id: string }): OrgRecord {
   return {
@@ -156,7 +160,7 @@ console.log('=== Scenario B: fails cohort-norm check specifically (team/org pass
 }
 
 console.log()
-console.log('=== Scenario C: fails team-coverage check specifically (cohort/org pass, non-drastic) ===')
+console.log('=== Scenario C: an already-non-compliant team is a NOTE, not a failure ===')
 {
   const testId = 'XCHK_TEAM_FAIL'
   const { capacityUtilisation, teamHistoricalTrend } = expectedCapacityAndTrend(testId)
@@ -214,15 +218,24 @@ console.log('=== Scenario C: fails team-coverage check specifically (cohort/org 
     people: [...cohortPeers, testPerson],
   })
 
-  check('team check fails', result.team?.status, 'fail')
+  /*
+   * Rewritten 29 Sept 2026. This scenario used to assert that an
+   * already-Infeasible team FAILS the team check, which was the behaviour
+   * that made sign-off fire for everyone: the team was already Infeasible
+   * before this person was even considered, so the check was reporting the
+   * team's ambient state rather than anything the override did.
+   *
+   * The same fixture now pins the corrected behaviour: the check reports a
+   * NOTE, carries the context, and does not force sign-off on its own.
+   */
+  check('team check reports a note, not a failure', result.team?.status, 'note')
   check('team after total', result.team?.afterTotal, 2000 + 196)
-  check('team after status is non-compliant', result.team?.afterStatus === 'Off track' || result.team?.afterStatus === 'Infeasible', true)
+  check('team after status is still non-compliant', result.team?.afterStatus === 'Off track' || result.team?.afterStatus === 'Infeasible', true)
+  check('the note says the team was already in that state', result.team?.detail.includes('was already'), true)
   check('cohort check passes', result.cohort?.status, 'pass')
-  check('org check passes (other team covers it)', result.org?.status, 'pass')
   check('not a drastic change', result.isDrasticChange, false)
-  check('sign-off required (team failure alone)', result.requiresSignOff, true)
-  check('exactly one sign-off reason, naming the team check', result.signOffReasons.length, 1)
-  check('sign-off reason mentions the team check', result.signOffReasons[0]?.includes('Team total'), true)
+  check('a note alone does not force sign-off', result.requiresSignOff, false)
+  check('no sign-off reasons', result.signOffReasons.length, 0)
 }
 
 console.log()
@@ -300,6 +313,39 @@ console.log('=== Edge case: no org data yet, but a drastic change still routes t
   check('is a drastic change', result.isDrasticChange, true)
   check('sign-off is still required, via the drastic-change trigger alone', result.requiresSignOff, true)
   check('exactly one sign-off reason, naming the drastic change', result.signOffReasons.length, 1)
+}
+
+
+console.log()
+console.log('=== Scenario C2: a change that MAKES a group worse still fails (29 Sept 2026) ===')
+{
+  /*
+   * The companion to Scenario C. C proves an already-non-compliant group is
+   * only a note; this proves the check still fails when the override is
+   * genuinely the cause — otherwise the gate would have been disabled rather
+   * than corrected.
+   *
+   * Run against the real seeded snapshot rather than a synthetic team,
+   * because the regression has to be a real band change in the same data the
+   * app uses. P005 sits in Engineering / Delivery, which is Off track; a 50%
+   * cut to their target drags the team to Infeasible.
+   */
+  const liveSnapshot = computeSystem2LiveSnapshot(ingestSnapshot(SEED_SNAPSHOT as Snapshot), '2026-09-27T00:00:00.000Z')
+  const p005 = SEED_PEOPLE.find((p) => p.id === 'P005')!
+  const modelled = calculateModelledTarget(p005).modelled
+  const res = runOverrideCrossCheck({
+    person: p005,
+    proposedFinalTarget: Math.round(modelled * 0.5),
+    currentModelledTarget: modelled,
+    snapshot: liveSnapshot,
+    people: SEED_PEOPLE,
+  })
+
+  check('team was Off track before', res.team?.beforeStatus, 'Off track')
+  check('the cut drags it to Infeasible', res.team?.afterStatus, 'Infeasible')
+  check('team check FAILS — this change caused the regression', res.team?.status, 'fail')
+  check('sign-off is required', res.requiresSignOff, true)
+  check('a team-failure reason is given', res.signOffReasons.some((r) => r.includes('Team total')), true)
 }
 
 console.log()

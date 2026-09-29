@@ -44,14 +44,14 @@ export interface OverrideInfo {
  * flag, not a fresh recalculation against whatever System 2 says right now.
  */
 export interface SignOffCheckSummary {
-  status: 'pass' | 'fail'
+  status: 'pass' | 'fail' | 'note'
   detail: string
 }
 
 export interface SignOffAggregateGroup {
   key: string
   label: string
-  status: 'pass' | 'fail'
+  status: 'pass' | 'fail' | 'note'
   detail: string
 }
 
