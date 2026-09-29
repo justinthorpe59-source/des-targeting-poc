@@ -36,7 +36,23 @@ function seedRecords(): OrgRecord[] {
 interface System2State {
   records: OrgRecord[]
   importedAt: string | null
-  /** Full replace, not a merge — re-importing overwrites the prior set entirely. Trivially satisfies "no drops, no duplicates": a straight map in ingestSnapshot(), then a full swap here. */
+  /**
+   * Merge by person id: records in the snapshot are updated or added, records
+   * already held and absent from the snapshot are kept.
+   *
+   * This was a full replace until 29 Sept 2026, which was right while System 2
+   * started empty — the snapshot was the only data there had ever been. Once
+   * the store gained a seeded 60-record baseline, replace became actively
+   * wrong: the demo journey approves a handful of records, and importing them
+   * erased the other 56. Executive Summary fell from £15.7m across three
+   * divisions to £1.3m across one, so the happy path gutted the screen it
+   * exists to show.
+   *
+   * An approval should move the organisation's position, not redefine the
+   * organisation. S2-M1's signal still holds — a snapshot of N records still
+   * produces exactly N updated-or-added records, no drops and no duplicates,
+   * because the merge is keyed on id.
+   */
   importSnapshot: (snapshot: Snapshot) => void
   resetToSeed: () => void
 }
@@ -47,7 +63,12 @@ export const useSystem2Store = create<System2State>()(
       records: seedRecords(),
       importedAt: SNAPSHOT_SEED.exportedAt,
       importSnapshot: (snapshot) =>
-        set({ records: ingestSnapshot(snapshot), importedAt: new Date().toISOString() }),
+        set((state) => {
+          const incoming = ingestSnapshot(snapshot)
+          const byId = new Map(state.records.map((record) => [record.id, record]))
+          for (const record of incoming) byId.set(record.id, record)
+          return { records: [...byId.values()], importedAt: new Date().toISOString() }
+        }),
       resetToSeed: () => set({ records: seedRecords(), importedAt: SNAPSHOT_SEED.exportedAt }),
     }),
     {
