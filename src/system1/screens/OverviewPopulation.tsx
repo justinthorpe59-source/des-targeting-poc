@@ -13,7 +13,7 @@ import { StatusPill } from '../../components/searchlight/StatusPill'
 import { SketchNetwork } from '../../components/searchlight/SketchIllustrations'
 import { formatMoney, formatFlatPercent } from '../../shared/format'
 import { calculateRevenue } from '../engine/revenueEngine'
-import { Block, SectionHeading } from '../../components/searchlight/Section'
+import { Block, SectionHeading, Eyebrow } from '../../components/searchlight/Section'
 import { PersonAvatar } from '../components/PersonAvatar'
 
 /** id -> person, for the bubble network, which carries ids only. */
@@ -513,14 +513,36 @@ function MetricCell({
   testId: string
   to?: string
 }) {
+  /*
+   * Brought onto the app's stat treatment, 29 Sept 2026. These cells were
+   * both smaller and typographically different from every other headline
+   * figure in the POC:
+   *
+   *   value  font-pa-mono text-lg  ->  font-pa-display text-4xl
+   *          Mono is this app's voice for figures sitting INSIDE running
+   *          text — a target in a sentence, a before/after pair. A headline
+   *          stat is display everywhere else (Executive Summary's tiles,
+   *          Division Comparison's forecast), and these were the exception.
+   *   label  text-[11px] font-medium tracking-wide
+   *          ->  text-xs font-bold tracking-[0.14em], the shared Eyebrow.
+   *   pad    px-4 py-3  ->  px-6 py-5, matching the stat tiles.
+   */
   const body = (
-    <div className="relative h-full px-4 py-3">
+    <div className="relative flex h-full flex-col px-6 py-5">
       <div className="absolute inset-x-0 top-0 h-0.5" style={{ background: rule }} />
-      <div className="font-pa-body text-[11px] font-medium uppercase tracking-wide text-pa-grey-03">{label}</div>
-      <div data-testid={testId} className="mt-1 font-pa-mono text-lg font-bold text-pa-grey-04">
+      {/* The labels are different lengths and wrap to different depths, which
+          left the four figures on four different baselines. Reserving two
+          lines for the label keeps them aligned across the row. */}
+      <div className="min-h-[2.6em]">
+        <Eyebrow>{label}</Eyebrow>
+      </div>
+      <div
+        data-testid={testId}
+        className="mt-2 font-pa-display text-4xl font-medium leading-none tracking-tight text-pa-grey-04"
+      >
         {value}
       </div>
-      {sub && <div className="mt-0.5 font-pa-body text-[11px] text-pa-grey-03">{sub}</div>}
+      {sub && <div className="mt-2 font-pa-body text-sm text-pa-grey-03">{sub}</div>}
     </div>
   )
   return to ? (
