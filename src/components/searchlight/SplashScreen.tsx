@@ -99,17 +99,23 @@ export function SplashScreen({ onEnter }: { onEnter: () => void }) {
           its own alpha, so the red circle and grey dots sit straight on the
           black with no plate behind them.
 
-          Sized in rem like everything else: at this project's 18px root, h-32
-          is 144px tall and the 444x400 source gives ~160px wide. The inset is
-          deliberately larger than the page's own px-8 gutter — at this size
-          the mark needs room to sit in rather than being tucked against the
-          corner. Absolute so it cannot disturb the centring of the wordmark
-          beneath it, and inside the splash element so it fades with it. */}
+          Sized in rem like everything else: at this project's 18px root, h-40
+          is 180px tall and the 444x400 source gives ~200px wide. The inset is
+          deliberately far larger than the page's own px-8 gutter — at this
+          size the mark needs room to sit in rather than being tucked against
+          the corner. Absolute so it cannot disturb the centring of the
+          wordmark beneath it, and inside the splash element so it fades with
+          it.
+
+          Its box now overlaps the wordmark canvas's own box slightly, which
+          is fine and was checked rather than assumed: the canvas is 280px
+          tall and the word's ink is ~148px centred inside it, so there is
+          ~66px of empty canvas above the letters for the mark to sit over. */}
       <img
         src="/pa-logo.png"
         alt="PA"
         data-testid="splash-logo"
-        className="absolute left-16 top-16 h-32 w-auto"
+        className="absolute left-24 top-24 h-40 w-auto"
       />
 
       {/* One column so the button can be positioned against the wordmark's
