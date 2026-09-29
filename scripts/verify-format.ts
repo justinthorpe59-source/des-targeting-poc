@@ -6,6 +6,7 @@
  */
 import {
   formatMoney,
+  formatMoneyPrecise,
   formatPercent,
   formatFlatPercent,
   formatSignedPercent,
@@ -49,6 +50,17 @@ const cases: Array<[string, string, string]> = [
   ['flat 65%', formatFlatPercent(0.65), '65%'],
   ['signed up', formatSignedPercent(12), '+12.0%'],
   ['signed down', formatSignedPercent(-8.5), '−8.5%'],
+
+  // formatMoneyPrecise: explanatory before/after sentences only. Never rolls
+  // up to millions, so a real delta at £m scale stays visible.
+  // A £40k team movement, the kind the journey produces. One decimal at £m
+  // scale renders both sides "£3.1m", so the sentence explaining the change
+  // reads as a no-op. The precise form keeps the delta visible.
+  ['banded form collapses a £40k move', `${formatMoney(3100)} to ${formatMoney(3140)}`, '£3.1m to £3.1m'],
+  ['precise form keeps it', `${formatMoneyPrecise(3100)} to ${formatMoneyPrecise(3140)}`, '£3100k to £3140k'],
+  ['precise at exactly 1000k', formatMoneyPrecise(1000), '£1000k'],
+  ['precise below £1k falls to pounds', formatMoneyPrecise(0.82), '£820'],
+  ['precise negative', formatMoneyPrecise(-3148), '−£3148k'],
 ]
 
 let failed = 0

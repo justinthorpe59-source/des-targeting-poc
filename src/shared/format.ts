@@ -71,3 +71,24 @@ export function formatFlatPercent(ratio: number): string {
 export function formatSignedPercent(percent: number): string {
   return `${percent >= 0 ? '+' : '−'}${Math.abs(percent).toFixed(1)}%`
 }
+
+/**
+ * £k, always — never rolled up to millions.
+ *
+ * For the before → after pairs inside explanatory cross-check sentences, and
+ * nothing else. The banded formatter above is right for headline figures, but
+ * at £m scale its single decimal hides exactly the delta these sentences exist
+ * to explain: a real £23k movement rendered as "Team total moves from £3.1m to
+ * £3.1m", which reads as a no-op and undermines the sentence.
+ *
+ * Deliberately NOT thousands-separated. "£5,820k" is the exact string shape of
+ * the defect the banded formatter was introduced to fix, and reproducing it
+ * here — even correctly — would invite someone to "fix" it back to millions.
+ */
+export function formatMoneyPrecise(valueInThousands: number): string {
+  const sign = valueInThousands < 0 ? '−' : ''
+  const k = Math.abs(valueInThousands)
+  const pounds = k * 1000
+  if (Math.round(pounds) < 1000) return `${sign}£${Math.round(pounds)}`
+  return `${sign}£${Math.round(k)}k`
+}
