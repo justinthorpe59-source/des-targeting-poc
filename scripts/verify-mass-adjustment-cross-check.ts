@@ -53,6 +53,29 @@ function targetRecord(personId: string, modelled: number): TargetRecord {
   return { personId, status: 'Modelled', modelled, rangeLow: 0, rangeHigh: 0, notes: '' }
 }
 
+/**
+ * Picks a teamHistoricalTrend that puts a fixture's team at a chosen
+ * forecast ratio against its OWN computed goal.
+ *
+ * These scenarios depend on starting from a specific risk status ("passes
+ * cleanly", "compliant but not already failing"). The goal derives from a
+ * fabricated prior-year growth rate, which is a demo-data parameter rather
+ * than a locked figure — it was widened on 27 Sept 2026 and every
+ * hard-coded trend tuned to the old value broke at once, even though
+ * nothing about the behaviour under test had changed. Deriving the trend
+ * keeps each scenario's intent true whatever that range is set to.
+ *
+ * capacityUtilisation is 1 across these fixtures, so expected achievement
+ * is target x trend and the trend needed for a given ratio is exact.
+ */
+function trendForRatio(records: OrgRecord[], ratio: number): number {
+  const probe = computeSystem2LiveSnapshot(
+    records.map((r) => ({ ...r, teamHistoricalTrend: 1 })),
+    '2026-01-01T00:00:00.000Z',
+  )
+  return (ratio * probe.org!.goal) / probe.org!.rollup.target
+}
+
 let failures = 0
 function check(label: string, actual: unknown, expected: unknown) {
   const pass = JSON.stringify(actual) === JSON.stringify(expected)
@@ -79,9 +102,9 @@ console.log('=== Scenario 1: clean pass for everyone ===')
   // otherwise nearly double the top-N share captured).
   const people = [person({ id: 'MASS_OUT1' }), person({ id: 'MASS_OUT2' }), person({ id: 'MASS_OUT3' })]
   const targets: Record<string, TargetRecord> = Object.fromEntries(people.map((p) => [p.id, targetRecord(p.id, 100)]))
-  const baseline: OrgRecord[] = Array.from({ length: 6 }, (_, i) =>
-    orgRecord({ id: `BASE${i + 1}`, target: 2500, teamHistoricalTrend: 1.15 }),
-  )
+  const shape1 = Array.from({ length: 6 }, (_, i) => orgRecord({ id: `BASE${i + 1}`, target: 2500 }))
+  const trend1 = trendForRatio(shape1, 1.05)
+  const baseline: OrgRecord[] = shape1.map((r) => ({ ...r, teamHistoricalTrend: trend1 }))
   const snapshot = computeSystem2LiveSnapshot(baseline, '2026-01-01T00:00:00.000Z')
 
   const result = computeMassAdjustmentCrossCheck({ people, percent: 5, targets, snapshot, allPeople: people })
@@ -126,10 +149,15 @@ console.log('=== Scenario 2: aggregate fails even though no individual is drasti
   const currentRevenue = combinedRevenueFor(people[0])
   check('sanity: combinedRevenueFor(dayRate=1000 person) is 187k, matching this file\'s other fixtures', currentRevenue, 187)
   const targets: Record<string, TargetRecord> = Object.fromEntries(people.map((p) => [p.id, targetRecord(p.id, 100)]))
-  const baseline: OrgRecord[] = [
-    orgRecord({ id: 'ANCHOR', target: 8000, teamHistoricalTrend: 1.1 }),
-    ...ids.map((id) => orgRecord({ id, target: currentRevenue, teamHistoricalTrend: 1.1 })),
+  const shape2 = [
+    orgRecord({ id: 'ANCHOR', target: 8000 }),
+    ...ids.map((id) => orgRecord({ id, target: currentRevenue })),
   ]
+  /* 0.97, not 0.95: below ~0.953 the team's own maxFeasible (capacity 1.05
+     x trend) stops clearing its goal and assessRisk returns Infeasible
+     rather than At risk. */
+  const trend2 = trendForRatio(shape2, 0.97)
+  const baseline: OrgRecord[] = shape2.map((r) => ({ ...r, teamHistoricalTrend: trend2 }))
   const snapshot = computeSystem2LiveSnapshot(baseline, '2026-01-01T00:00:00.000Z')
   check('sanity: team starts compliant (At risk, not already failing)', snapshot.org?.risk.status, 'At risk')
 
@@ -165,9 +193,9 @@ console.log('=== Scenario 3: a few individuals are outliers within an otherwise-
   // Same 6-equal-record baseline shape and trend as Scenario 1, for the
   // same reasons (real — not illusory — goal-model buffer, and stable
   // isConcentrationRisk topCount-rounding as headcount grows).
-  const baseline: OrgRecord[] = Array.from({ length: 6 }, (_, i) =>
-    orgRecord({ id: `BASE${i + 1}`, target: 2500, teamHistoricalTrend: 1.15 }),
-  )
+  const shape1 = Array.from({ length: 6 }, (_, i) => orgRecord({ id: `BASE${i + 1}`, target: 2500 }))
+  const trend1 = trendForRatio(shape1, 1.05)
+  const baseline: OrgRecord[] = shape1.map((r) => ({ ...r, teamHistoricalTrend: trend1 }))
   const snapshot = computeSystem2LiveSnapshot(baseline, '2026-01-01T00:00:00.000Z')
 
   const result = computeMassAdjustmentCrossCheck({ people, percent: 5, targets, snapshot, allPeople: people })

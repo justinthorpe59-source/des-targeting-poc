@@ -1,6 +1,16 @@
 @import "tailwindcss";
 
 /*
+ * Base type size, 29 Sept 2026. Raised from the browser default of 16px.
+ * Set at the root so the whole rem-based scale — every text size and every
+ * Tailwind spacing step — grows together, rather than bumping individual
+ * elements and leaving the layout rhythm behind.
+ */
+html {
+  font-size: 18px;
+}
+
+/*
  * Searchlight design tokens — PA design-system palette, shared directly as
  * hex values (the full token package isn't wired up yet). Kept as Tailwind
  * v4 @theme entries so they compile to real CSS custom properties
@@ -18,12 +28,30 @@
 @theme {
   --color-pa-dark-blue: #00172d;
   --color-pa-logo-grey: #7c8b9a;
-  --color-pa-grey-wash: #f9fafc;
+  /*
+   * Repointed to pure white, 29 Sept 2026. This token WAS the page background
+   * (#f9fafc) and the source of the grey under the top nav — the thing that
+   * kept coming back because it was only ever overridden per screen. Changing
+   * it here turns the page and all eight surfaces that reference it white in
+   * one move. The name is kept so nothing has to be renamed; it now means
+   * "the page ground", which is white.
+   */
+  --color-pa-grey-wash: #ffffff;
   --color-pa-white: #ffffff;
   --color-pa-ingenuity-red: #f62b44;
 
-  --color-pa-grey-04: #36465a;
-  --color-pa-grey-03: #64778a;
+  /*
+   * Text ramp, reset 29 Sept 2026. Headings and body were rendering in
+   * #36465a and #64778a — a mid blue-grey that read as washed out. Primary
+   * text is now near-black and secondary is the old primary, which is a
+   * genuinely dark grey rather than a light one.
+   *
+   * Changed at the token rather than per element: `text-pa-grey-04` is
+   * primary and `text-pa-grey-03` is supplementary across ~500 usages, so
+   * remapping the two values moves every one of them at once.
+   */
+  --color-pa-grey-04: #111111;
+  --color-pa-grey-03: #36465a;
   --color-pa-grey-02: #a2b3c9;
   --color-pa-grey-01: #e8ecf2;
 
@@ -48,52 +76,294 @@
   --color-pa-rose-02: #ffbecf;
   --color-pa-rose-01: #f3d3dc;
 
+  /*
+   * Semantic role tokens (visual rebuild, 25 Sept 2026). These map the
+   * palette above onto the roles searchlight-visual-spec.md names, so a
+   * screen references a role and never a raw colour. Values are the mapping
+   * already shipped across Overview/Population/Exceptions — centralised
+   * here rather than duplicated inline in each screen.
+   *
+   * Workflow states: the spec allocates four, but the model has five —
+   * 'Pending Sign-off' sits between Adjusted and Proposed and is written by
+   * the sign-off gate. It keeps Apricot, reading as "needs attention"
+   * against the neutral -> aqua -> lime progression.
+   */
+  --color-pa-state-modelled: #a2b3c9;
+  --color-pa-state-adjusted: #4ab9d3;
+  --color-pa-state-pending-signoff: #ffc000;
+  --color-pa-state-proposed: #0580a7;
+  --color-pa-state-approved: #6cbd3a;
+
+  /*
+   * Risk statuses: green -> amber -> red per the spec. 'On track' moves from
+   * Aqua to Lime here — the spec calls for a green/amber/red family, and
+   * Aqua reads as a brand colour rather than a health signal.
+   */
+  --color-pa-risk-on-track: #2c8027;
+  --color-pa-risk-at-risk: #ffc000;
+  --color-pa-risk-off-track: #ee2f66;
+  --color-pa-risk-infeasible: #f62b44;
+
+  /*
+   * Radius hierarchy: outer card is exactly 2x the inner chip/button, the
+   * system rule from the spec's card/chip hierarchy note.
+   */
+  --radius-pa-chip: 0.5rem;
+  --radius-pa-card: 1rem;
+
+  /*
+   * ---------------------------------------------------------------------
+   * Accent — design-direction reset, M1, 28 Sept 2026
+   * ---------------------------------------------------------------------
+   * One accent, used sparingly: primary actions, the active/selected state,
+   * and at most the primary series in a chart. It is NOT a replacement for
+   * everything that used to be Aqua — structural chrome goes white or
+   * neutral grey instead. If a screen reads pink, it is wrong.
+   *
+   * The value is Rose 03, already in the PA palette — no hex invented. It
+   * was effectively unused, so it carries no prior meaning here.
+   *
+   * MEASURED, not assumed:
+   *   white on accent      2.50:1  FAILS AA — never use white text on pink
+   *   Dark Blue on accent  7.23:1  passes AA comfortably
+   *   Grey 04 on accent    3.85:1  large text only
+   *   accent on white      2.50:1  below the 3:1 UI-component threshold
+   *
+   * Two consequences that shape every use:
+   *   1. A pink button takes DARK ink, not white. Every primary button in
+   *      the app is currently white-on-Aqua; swapping the fill alone would
+   *      break AA on all of them.
+   *   2. Pink on white cannot carry a state by itself — a 1px pink border
+   *      or hairline underline is not distinguishable enough. A selected
+   *      state needs a fill, a thicker mark, or a second non-colour cue.
+   */
+  --color-pa-accent: #f3809e;
+  --color-pa-accent-ink: #00172d;
+
+  /*
+   * Card elevation. The page sits on Grey wash (#f9fafc), the nearest
+   * near-white in the PA palette, so cards are separated by ELEVATION
+   * rather than by a grey fill.
+   *
+   * Neutralised at M1 (28 Sept 2026). These were tinted with Dark Blue
+   * (rgba(0,23,45,…)) to keep the shadow in the brand's colour family. The
+   * reset calls for neutral-toned elevation — not blue-tinted, not
+   * pink-tinted — so they are now plain black alpha. Same geometry, same
+   * opacities; only the hue changed.
+   */
+  --shadow-pa-chip: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-pa-card: 0 2px 10px rgba(0, 0, 0, 0.06);
+  --shadow-pa-card-hover: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --shadow-pa-card-raised: 0 6px 24px rgba(0, 0, 0, 0.14);
+  --shadow-pa-modal: 0 24px 64px rgba(0, 0, 0, 0.24);
+
+  /*
+   * ---------------------------------------------------------------------
+   * Motion system, 29 Sept 2026
+   * ---------------------------------------------------------------------
+   * Three curves and three durations, used everywhere. A hover on a button
+   * and a hover on a card resolve to the same numbers, because both read
+   * these tokens rather than picking their own.
+   *
+   *   out     entrances and anything arriving — decelerates into place
+   *   inout   state changes on something already on screen
+   *   settle  a single soft overshoot, for things that physically land
+   *           (the population bubbles). Used sparingly; overshoot
+   *           everywhere is what makes an interface feel like a toy.
+   *
+   * Durations are deliberately short. This is a tool people open every day,
+   * and the second viewing of an animation is the one that matters.
+   */
+  /*
+   * Tailwind's own transition-* utilities default to 150ms/ease-in-out. Every
+   * `transition-colors` and `transition-shadow` already in the components
+   * would otherwise sit outside this system and run on their own numbers, so
+   * the defaults are repointed at the tokens. One system, whether a component
+   * uses a utility class or a token directly.
+   */
+  --default-transition-duration: 120ms;
+  --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --ease-pa-out: cubic-bezier(0.2, 0, 0, 1);
+  --ease-pa-inout: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-pa-settle: cubic-bezier(0.34, 1.25, 0.64, 1);
+
+  --dur-pa-fast: 120ms;
+  --dur-pa-medium: 220ms;
+  --dur-pa-slow: 360ms;
+
+  --animate-pa-rise: pa-rise var(--dur-pa-medium) var(--ease-pa-out) both;
+  --animate-pa-fade: pa-fade var(--dur-pa-medium) var(--ease-pa-out) both;
+  --animate-pa-scale-in: pa-scale-in var(--dur-pa-medium) var(--ease-pa-out) both;
+  /* `backwards`, not `both`. A filling animation outranks any later rule, so
+     `both` left pa-settle's closing `scale(1)` clamped on every bubble for
+     good and the .pa-bubble:hover scale never applied at all — measured as an
+     identity matrix under the pointer. `backwards` still covers the staggered
+     delay (bubbles wait at the `from` frame rather than flashing in at full
+     size), and once the animation ends the element simply returns to its base
+     style, which is already opacity 1 and no transform — the same place the
+     closing frame put it, but without holding the property hostage. */
+  --animate-pa-settle: pa-settle var(--dur-pa-slow) var(--ease-pa-settle) backwards;
+
   --font-pa-body: 'Manrope', ui-sans-serif, system-ui, sans-serif;
   --font-pa-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
   --font-pa-mono: 'Space Mono', ui-monospace, 'SFMono-Regular', monospace;
 }
 
-/* Searchlight-beam sweep for loading/thinking states (Executive Summary M0). */
-@keyframes pa-searchlight-rotate {
-  0%,
-  100% {
-    transform: rotate(-30deg);
+/*
+ * Only transform and opacity are animated anywhere below — no width, height,
+ * top/left or margin — so nothing here triggers layout or paint thrash.
+ */
+
+/* The standard entrance: content arriving from slightly below. */
+@keyframes pa-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes pa-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Modals and popovers: a small scale so they read as arriving toward you. */
+@keyframes pa-scale-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/*
+ * The population bubbles. Scale ONLY — the centring must not be repeated here.
+ *
+ * This used to read `translate(-50%, -50%) scale(...)`, on the reasoning that
+ * dropping the centring mid-keyframe would fling a positioned element to its
+ * corner. That was true under Tailwind v3, where `-translate-x-1/2` compiled
+ * into `transform`. Tailwind v4 emits the separate `translate` property
+ * instead, so the two no longer share a channel: they compose automatically,
+ * and repeating the centring in `transform` applied it TWICE.
+ *
+ * Because the animation is declared `both`, its final frame kept applying,
+ * which left every bubble parked half its own size up and to the left of where
+ * the layout put it — measured at -26px, -26px on a 51px bubble. The pills sat
+ * correctly, so each cluster looked shifted and its pill looked off-centre.
+ * One keyframe, all six clusters.
+ */
+@keyframes pa-settle {
+  from { opacity: 0; transform: scale(0.72); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/*
+ * Staggered list/grid entrance. Applied to a container; children rise in
+ * sequence. Capped at ten steps — past that a stagger stops reading as
+ * rhythm and starts reading as a wait, which is the opposite of the point.
+ */
+.pa-stagger > * { animation: var(--animate-pa-rise); }
+.pa-stagger > *:nth-child(1)  { animation-delay: 0ms; }
+.pa-stagger > *:nth-child(2)  { animation-delay: 30ms; }
+.pa-stagger > *:nth-child(3)  { animation-delay: 60ms; }
+.pa-stagger > *:nth-child(4)  { animation-delay: 90ms; }
+.pa-stagger > *:nth-child(5)  { animation-delay: 120ms; }
+.pa-stagger > *:nth-child(6)  { animation-delay: 150ms; }
+.pa-stagger > *:nth-child(7)  { animation-delay: 180ms; }
+.pa-stagger > *:nth-child(8)  { animation-delay: 210ms; }
+.pa-stagger > *:nth-child(9)  { animation-delay: 240ms; }
+.pa-stagger > *:nth-child(n+10) { animation-delay: 270ms; }
+
+/*
+ * Interactive feel, set once rather than per component. Press is opacity
+ * rather than scale: several controls in this app are absolutely positioned
+ * with a centring translate, and a scale utility would overwrite it.
+ */
+@layer base {
+  button,
+  a,
+  [role='button'],
+  summary {
+    transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+    transition-duration: var(--dur-pa-fast);
+    transition-timing-function: var(--ease-pa-inout);
   }
-  50% {
-    transform: rotate(30deg);
+
+  button:active,
+  a:active,
+  [role='button']:active {
+    opacity: 0.82;
+  }
+
+  /* Status and risk pills: a state change should register, not blink. */
+  [data-status],
+  [data-state] {
+    transition-property: background-color, color, border-color;
+    transition-duration: var(--dur-pa-medium);
+    transition-timing-function: var(--ease-pa-inout);
   }
 }
 
-@keyframes pa-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+/*
+ * The team pill in the population network.
+ *
+ * It does NOT move on hover — no transform at all. It used to take
+ * `translate(-50%, -50%) scale(1.04)`, which stacked on Tailwind v4's separate
+ * `translate` property and threw the pill 86px left and 29px up: half its own
+ * size, not a 4% nudge. The label slid out from under the pointer, which could
+ * drop the hover and flicker.
+ *
+ * Feedback is colour instead, which the component owns (accent fill, the same
+ * pair the nav's active screen uses). Position is now fixed by construction
+ * rather than by a transform that happens to cancel out.
+ */
+.pa-team-pill {
+  transition:
+    background-color var(--dur-pa-fast) var(--ease-pa-inout),
+    border-color var(--dur-pa-fast) var(--ease-pa-inout),
+    color var(--dur-pa-fast) var(--ease-pa-inout),
+    box-shadow var(--dur-pa-fast) var(--ease-pa-inout);
 }
 
-/* Bubble entrance for the Population clusters — a gentle scale-in, staggered
-   per bubble via an inline animation-delay. */
-@keyframes pa-pop-in {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.6);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
+/*
+ * A bubble in the population network. Scale only, for the same reason the
+ * keyframe above carries scale only — the centring lives on `translate` and
+ * composes on its own.
+ */
+.pa-bubble {
+  transition: transform var(--dur-pa-fast) var(--ease-pa-inout);
+}
+.pa-bubble:hover {
+  transform: scale(1.12);
+  z-index: 5;
 }
 
+/*
+ * Reduced motion. Durations collapse AND the transforms are neutralised —
+ * zeroing the duration alone still leaves an element starting from its
+ * offset position, which can flash. Opacity is kept at 1 so nothing
+ * disappears for someone who has asked for less movement.
+ */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .pa-stagger > *,
+  [class*='animate-pa-'] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Neutralise the hover scale. `none`, not `translate(-50%, -50%)` — the
+     centring is on the `translate` property and must be left alone; writing it
+     back into `transform` here would double it, the same defect this block was
+     meant to guard against. The pill needs no entry: it no longer transforms
+     at all, and its colour feedback is worth keeping for someone who has asked
+     only for less movement. */
+  .pa-bubble:hover {
+    transform: none;
   }
 }

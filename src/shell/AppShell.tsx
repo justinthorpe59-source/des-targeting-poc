@@ -1,38 +1,192 @@
 import type { ReactNode } from 'react'
-import { NavLink } from 'react-router-dom'
-import { resetAllDemoData } from '../store/resetAll'
+import { NavLink, useLocation } from 'react-router-dom'
+import { SEED_PEOPLE } from '../system1/data/people'
+import { useSystem1Store } from '../store/system1Store'
+import { detectExceptions } from '../system1/engine/exceptions'
+import { resetAllDemoData, restartDemo } from '../store/resetAll'
 
-const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-  `rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-    isActive ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'
+/**
+ * Searchlight global navigation. Per searchlight-visual-spec.md: a top
+ * navigation bar, not a sidebar — wordmark left, primary nav links inline,
+ * utilities + profile right, on a bar background visually distinct (Dark
+ * Blue) from the page body beneath it.
+ *
+ * This replaces the per-system sidebars that System1Root/System2Root used
+ * to own, so screen links for whichever system is active now live up here
+ * alongside the system switcher.
+ *
+ * Full bleed: the bar and the page body both run the full viewport width
+ * (25 Sept 2026 decision, applies to every screen). Individual content that
+ * would be unreadable at that measure — long prose especially — keeps its
+ * own max-width rather than the shell imposing one globally.
+ *
+ * Deliberately omitted: the spec's "search" utility icon. A non-functional
+ * search affordance in a sponsor demo invites a click that does nothing.
+ * The notification indicator IS wired to real data — System 1's open
+ * exception count, the same detectExceptions() the queue itself uses.
+ */
+
+const SYSTEM_1_LINKS = [
+  { to: '/system1/overview', label: 'Overview' },
+  { to: '/system1/exceptions', label: 'Exceptions' },
+  { to: '/system1/mass-adjustment', label: 'Mass adjustment' },
+]
+
+const SYSTEM_2_LINKS = [
+  { to: '/system2/executive-summary', label: 'Executive summary' },
+  { to: '/system2/division-comparison', label: 'Divisions' },
+  { to: '/system2/scenario-workspace', label: 'Scenarios' },
+]
+
+/*
+ * Repainted 28 Sept 2026 (design reset). The bar was Dark Blue with white
+ * type — the last surface still in the old palette, and the one most
+ * responsible for the app reading as "blue chrome". It is now white, sitting
+ * on the page's own near-white ground and separated by a hairline rather
+ * than by a colour block.
+ *
+ * The active screen is the accent, which is exactly the "active/selected
+ * state" case the direction reserves pink for. Dark ink on the accent, never
+ * white: white on the accent measures 2.50:1 and fails AA.
+ */
+const screenLinkClass = ({ isActive }: { isActive: boolean }) =>
+  `rounded-pa-chip px-4 py-2.5 font-pa-body text-base font-semibold transition-colors ${
+    isActive
+      ? 'bg-[var(--color-pa-accent)] text-[var(--color-pa-accent-ink)]'
+      : 'text-pa-grey-03 hover:bg-pa-grey-01 hover:text-pa-grey-04'
+  }`
+
+/* The system switcher is structural, not an emphasis moment — two peers, one
+   of which happens to be current. It takes a neutral fill so it does not
+   compete with the active screen for the eye.
+ *
+ * The selected outline is Grey 04 (#111111), the palette's near-black and the
+ * same token every heading uses — no new hex was introduced for it. It was
+ * Grey 01, a very light grey that barely read as an outline at all. The
+ * unselected peer deliberately keeps no border and Grey 03 text, so the two
+ * are told apart by outline-vs-none as well as by weight of ink. */
+const systemLinkClass = ({ isActive }: { isActive: boolean }) =>
+  `rounded-pa-chip px-4 py-2.5 font-pa-body text-sm font-semibold uppercase tracking-wide transition-colors ${
+    isActive ? 'border border-pa-grey-04 bg-pa-white text-pa-grey-04' : 'text-pa-grey-03 hover:text-pa-grey-04'
   }`
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const location = useLocation()
+  const targets = useSystem1Store((state) => state.targets)
+  const inSystem2 = location.pathname.startsWith('/system2')
+  const links = inSystem2 ? SYSTEM_2_LINKS : SYSTEM_1_LINKS
+  const openExceptions = detectExceptions({ people: SEED_PEOPLE, targets }).size
+
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3">
-        <div className="flex items-center gap-6">
-          <span className="text-sm font-semibold tracking-wide text-slate-500">
-            DES TARGETING POC
-          </span>
-          <nav className="flex gap-1">
-            <NavLink to="/system1" className={navLinkClass}>
-              System 1 · Individual Targeting
+    <div className="min-h-screen bg-pa-white text-pa-grey-04">
+      <header className="bg-pa-white">
+        {/* gap-x-5, tightened from gap-x-7 to pay for the PA mark's ~63px.
+            Without it the utilities group wrapped to a second row at 1280,
+            a width it cleared before the mark was added. */}
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-3 px-8 py-5">
+          {/* Brand lockup: the PA mark and the proposition name read as one
+              unit, so they sit in their own tighter gap-3 rather than the
+              bar's gap-x-7 — which also shifts the rest of the nav right to
+              make room. The asset is public/pa-logo.png, the real PA mark
+              already in the repo; nothing was fabricated. */}
+          <div className="flex items-center gap-3">
+            <img src="/pa-logo.png" alt="PA" data-testid="nav-pa-logo" className="h-10 w-auto" />
+
+            {/*
+              Clicking the wordmark restarts the whole POC — data back to seed
+              AND back to the splash. A button rather than a link because it
+              performs an action; it keeps the wordmark's exact typography and
+              adds only a focus ring, so it still reads as a wordmark.
+
+              Only the Searchlight wordmark does this, not the PA mark beside
+              it: PA's logo is corporate identity, and wiring a destructive
+              reset to it would be a surprising place to put one.
+            */}
+            <button
+              type="button"
+              onClick={restartDemo}
+              data-testid="nav-restart"
+              title="Restart the demo — resets all data and returns to the splash"
+              className="rounded-pa-chip font-pa-display text-2xl font-semibold tracking-tight text-pa-grey-04 focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-grey-03 focus-visible:ring-offset-2"
+            >
+              Searchlight
+            </button>
+          </div>
+
+          <nav aria-label="System" className="flex gap-1">
+            <NavLink to="/system1" className={systemLinkClass}>
+              System 1
             </NavLink>
-            <NavLink to="/system2" className={navLinkClass}>
-              System 2 · Organisational Operating
+            <NavLink to="/system2" className={systemLinkClass}>
+              System 2
             </NavLink>
           </nav>
+
+          <nav aria-label="Screens" className="flex flex-wrap gap-1">
+            {links.map((link) => (
+              <NavLink key={link.to} to={link.to} className={screenLinkClass}>
+                {link.label}
+              </NavLink>
+            ))}
+          </nav>
+
+          <div className="ml-auto flex items-center gap-3">
+            <NavLink
+              to="/system1/exceptions"
+              title={`${openExceptions} open exception${openExceptions === 1 ? '' : 's'}`}
+              className="relative flex h-11 w-11 items-center justify-center rounded-full text-pa-grey-03 transition-colors hover:bg-pa-grey-01 hover:text-pa-grey-04"
+            >
+              <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+                <path d="M10 2.5a4.5 4.5 0 0 0-4.5 4.5v3L4 13h12l-1.5-3V7A4.5 4.5 0 0 0 10 2.5Z" strokeLinejoin="round" />
+                <path d="M8 15.5a2 2 0 0 0 4 0" strokeLinecap="round" />
+              </svg>
+              {openExceptions > 0 && (
+                <span
+                  data-testid="nav-exception-count"
+                  aria-hidden="true"
+                  className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 font-pa-mono text-[11px] font-bold text-pa-dark-blue"
+                  style={{ background: 'var(--color-pa-apricot-03)' }}
+                >
+                  {openExceptions}
+                </span>
+              )}
+              <span className="sr-only">
+                {openExceptions} open exception{openExceptions === 1 ? '' : 's'}
+              </span>
+            </NavLink>
+
+            {/* "Reset", not "Reset demo data" — the long label was the single
+                widest thing in the bar and was what pushed the utilities group
+                onto a second row at 1280. The title carries the full meaning
+                now the label is short. */}
+            <button
+              type="button"
+              onClick={resetAllDemoData}
+              title="Reset all demo data back to the seeded dataset"
+              className="rounded-pa-chip border border-pa-grey-02 px-4 py-2.5 font-pa-body text-sm font-medium text-pa-grey-04 transition-colors hover:bg-pa-grey-01"
+            >
+              Reset
+            </button>
+
+            <span
+              title="Demo user — this POC has no real sign-in"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-pa-grey-01 bg-pa-white font-pa-mono text-sm font-bold text-pa-grey-04"
+            >
+              AN
+            </span>
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={resetAllDemoData}
-          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
-        >
-          Reset all demo data
-        </button>
       </header>
-      <main className="mx-auto max-w-5xl px-6 py-8">{children}</main>
+
+      {/*
+        Page transition. Keyed on the pathname so React remounts the subtree
+        on navigation and the entrance animation replays — a considered
+        arrival rather than an instant cut, and short enough not to sit
+        between the user and the screen they asked for.
+      */}
+      <main key={location.pathname} className="animate-pa-rise px-8 py-10">
+        {children}
+      </main>
     </div>
   )
 }

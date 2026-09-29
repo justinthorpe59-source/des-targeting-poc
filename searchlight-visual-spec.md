@@ -2,7 +2,18 @@
 
 Compiled from the screenshot-derived design pass, 24 Sept 2026. This is a companion to the locked functional spec (CLAUDE.md) — read both before building any screen.
 
-**Rule for Claude Code:** every `[role: x]` placeholder below must resolve against the PA colour/typography token file already in this repo. Do not invent a hex value or px size for any placeholder — if a token doesn't exist yet for a role, stop and flag it rather than approximating.
+**Rule for Claude Code:** every `[role: x]` placeholder below must resolve against the PA colour/typography token file already in this repo (`src/index.css`). Do not invent a hex value or px size for any placeholder — if a token doesn't exist yet for a role, stop and flag it rather than approximating.
+
+**What "screenshot reference" means here** *(clarified 26 Sept 2026)*
+- The references are **images from other products** that informed the design pass — not mockups of Searchlight screens. A reference shows a *visual language* to adopt, not content to copy.
+- Consequence: the reference's own data is never a source. Its trait count, its per-node granularity, its field labels belong to that product. **CLAUDE.md governs what the data is and what each element represents; the image governs only how it looks.** Two real errors came from missing this — an 8-cell Attributes grid transcribed from 8 NFT traits when the locked factor list is four, and one bubble per person when the model calls for one per team.
+- This markdown is a *summary* of those images. For any screen not marked "no screenshot reference exists", read the image alongside this text: layout, spacing, proportion and composition come from the image; token mapping, explicit overrides and named rejects come from here.
+
+**Precedence, when the two disagree**
+1. Layout, spacing, proportion, composition, relative hierarchy → **the screenshot**.
+2. Colour and type values, the named rejects, and anywhere this doc says the source material was inconsistent → **this doc**.
+3. Behaviour, data, and what an element represents → **CLAUDE.md**, regardless of the image.
+4. A genuine conflict between 1 and 2 → **stop and flag it**, do not pick silently.
 
 ---
 
@@ -11,12 +22,21 @@ Compiled from the screenshot-derived design pass, 24 Sept 2026. This is a compan
 **Navigation**
 - Top navigation bar, not a sidebar. Logo/wordmark left, primary nav links inline, utility icons (search/notifications) + profile right. Bar background is visually distinct (inverse/dark) from the page body beneath it.
 
+**Page width — full bleed** *(added 26 Sept 2026)*
+- The nav bar and the page body both run the full viewport width on every screen. The shell imposes no max-width.
+- Content that would be unreadable at that measure keeps its **own** max-width — a paragraph set across 1700px is unreadable, so the constraint belongs on the text, not on the container. Same for any element with a natural size (e.g. a square visual): cap the element, not the page.
+
 **Card/chip hierarchy**
 - Two corner-radius sizes establish structure: outer "hero"/card radius ≈ 2× the inner chip/button radius. Treat this ratio as the system rule — one reference screen showed a flatter ratio; that was an inconsistency in the source material, not a second valid pattern.
 
+**Surfaces and nesting** *(added 26 Sept 2026, learned on Individual Detail)*
+- Prefer **few surfaces**. The reference's pattern is one main container per screen region, with internal sections divided by a header and a thin rule — not a separate bordered box per section. Giving every section its own border, radius and ring of page background produces competing surfaces and reads as clutter.
+- Pieces nested **inside** a card — chips, item cards — should read as distinct through a **soft fill plus a hint of elevation**, not a border. A second boxed edge inside a card competes with the card's own.
+
 **Status pill component (single shared component, two uses)**
 - Shape: fully rounded (true pill, not rounded-rectangle), solid colour fill (not outline), centred label text.
-- Use 1 — target workflow state: Modelled / Adjusted / Proposed / Approved (4 distinct `[role: state-*]` colours).
+- Use 1 — target workflow state: Modelled / Adjusted / Pending Sign-off / Proposed / Approved (5 distinct `[role: state-*]` colours).
+  - **Corrected 26 Sept 2026.** This said four, omitting `Pending Sign-off`. That state is written by the sign-off gate and acted on by the Exceptions Queue — see CLAUDE.md's Target states. Five colours, not four.
 - Use 2 — risk status: On track / At risk / Off track / Infeasible → green / amber / red gradient family. This same green→amber→red logic also drives the *fill* of the gap/forecast hero visualisation on Executive Summary and Division Comparison — it is not just a label pill there, it's a proportional gradient fill.
 
 **Accordion component (single shared component, two uses)**
@@ -41,6 +61,819 @@ Compiled from the screenshot-derived design pass, 24 Sept 2026. This is a compan
 
 ---
 
+## Number formatting and individual target order — locked 27 Sept 2026
+
+Two global rules, applying to every screen in both systems.
+
+### Currency and percentages
+
+All formatting goes through `src/shared/format.ts`. No screen formats a
+figure inline. Before this, every screen had its own habit and they disagreed
+at scale boundaries — `£${n.toLocaleString()}k` printed "£5,820k" and
+"£17,820k" for figures that are £5.8m and £17.8m, while Executive Summary's
+hero used a separate two-decimal millions format.
+
+| Range | Format | Example |
+| --- | --- | --- |
+| below £1,000 | full number | `£820` |
+| £1,000 – £999,999 | thousands, no decimal | `£582k` |
+| £1,000,000 and above | millions, one decimal | `£17.8m` |
+
+Banding is decided on the **rounded** figure, so a value that rounds up across
+a boundary moves band with it: 999.6k renders `£1.0m`, never `£1000k`.
+Boundary cases are pinned in `scripts/verify-format.ts` (`npm run
+verify:format`).
+
+Percentages carry **one decimal place** (`87.4%`), except figures that are a
+defined flat rate rather than a measurement, which stay whole: the 65%/85%
+utilisation targets, the ±20% large-adjustment threshold, grade role factors,
+and percentages the user typed into an adjustment field.
+
+**Known trade-off, accepted:** one decimal at £m scale means a change under
+~£50k on a multi-million total renders as no visible change. A 0.5% mass
+adjustment on £5.8m shows `£5.8m → £5.8m`. The net-change line still states
+the real delta (`+£20k (+0.3%)`), so the figure is never lost — but the
+headline pair alone will not show it.
+
+### Individual target display order
+
+For everyone below Managing Consultant, the only target they carry is
+**utilisation**, as a percentage. It is the lead figure — first, and most
+prominent — everywhere an individual's target appears. The monetary
+equivalent (day rate × utilisation × working days) stays visible as a
+supporting figure, never the lead.
+
+Managing Consultant and above additionally carry a sales target. Utilisation
+still leads; the sales target gets its **own clearly labelled figure** and is
+never folded into the utilisation-derived monetary one.
+
+That last point corrected a real defect, not just an ordering: these screens
+printed `combinedRevenueFor(person)`, which is billable **plus** sales added
+together. For a Partner that single number silently merged two targets of
+different kinds. The supporting figure is now billable revenue alone.
+
+Applied via `IndividualTargetLead` / `IndividualTargetInline`
+(`src/system1/components/IndividualTarget.tsx`) on Individual Detail, Manager
+Override, Mass Adjustment, Overview & Population's roster cards, and the
+Exceptions Queue's per-person rows.
+
+**Note the third quantity.** None of the above is the *modelled target*
+(baseline × capacity × role × economic). That is what the override and
+sign-off workflow acts on, and it is unchanged. On Manager Override, Mass
+Adjustment and the Exceptions Queue's sign-off rows, utilisation leads as
+context while the modelled before/after remains the figure actually being
+changed — those screens label it `modelled` explicitly so the two are not
+confused.
+
+---
+
+## System 2 demo seed and goal spread — locked 27 Sept 2026
+
+### System 2 opens pre-loaded
+
+System 2 used to open on "No snapshot imported yet" and stay there until
+someone manually approved records in System 1, exported, then imported.
+Nothing in it was reviewable. `system2Store` now starts from a committed
+snapshot at `src/system2/data/snapshot.seed.json`, generated by
+`npm run generate:snapshot-seed`.
+
+The seed is not separately invented data: the generator runs the real
+`buildSnapshot()` over the seed population with every record Approved, so the
+file is exactly what a genuine export of the seed population produces.
+`exportedAt` is pinned, so regenerating is byte-identical.
+
+Import/export is unchanged and still authoritative — a real import overwrites
+the seed entirely (verified: approving 3 records and re-importing leaves
+System 2 holding exactly 3). "Reset all demo data" restores this pre-imported
+state rather than emptying it, so the demo never lands on a blocked screen.
+
+Two traps worth remembering, both hit during the build:
+- The import control lived only inside the empty state's early return, so
+  seeding the store made the System 1 → System 2 hand-off unreachable. It now
+  lives in the populated footer too.
+- `persist` needed a version bump; without it an existing `records: []` in a
+  visitor's localStorage rehydrates straight over the seed.
+
+### Prior-year growth range widened
+
+`GROWTH_RATE_RANGE` in `src/system2/engine/goals.ts` changed from
+`[-0.05, 0.12]` to **`[-0.20, 0.45]`**.
+
+The narrow range made "On track" unreachable by construction rather than by
+chance. Expected achievement is target × capacity (mean 0.90) × trend (mean
+0.95) ≈ target × 0.855, while the goal was target ÷ 1.035 × 1.1 ≈ target ×
+1.063 — a forecast ratio of ~80% for every group. All three divisions came
+out Infeasible, so Division Comparison, whose entire purpose is comparing
+divisions, showed the same word three times.
+
+This is the only available lever: the capacity range, the trend range and the
+×1.1 goal multiplier are all locked in CLAUDE.md. Prior-year growth is a
+fabrication parameter for synthetic demo data, not a locked figure.
+
+The top end is **0.45, not the 0.40 first proposed** — at exactly 0.40 the
+spread jumps from Infeasible straight to At risk and no group lands in the
+Off track band, giving only three of the four statuses.
+
+Resulting spread, all four statuses present:
+
+| Group | Forecast | Confidence | Status |
+| --- | --- | --- | --- |
+| DES-wide | 87.0% | High | Off track |
+| Design | 77.8% | Medium | Infeasible |
+| Engineering | 80.3% | Low | Infeasible |
+| Science | 107.4% | Low (concentration flagged) | At risk |
+| Design / Studio South | 110.6% | High | On track |
+| Engineering / Delivery | 85.1% | High | Off track |
+| Design / Studio North | 59.1% | High | Infeasible |
+
+**Divisions still show only two distinct statuses.** A sweep of the
+surrounding range found no combination giving three distinct division
+statuses *and* all four overall — each division sums two teams, which averages
+the variation out. The full spread appears once a division is expanded.
+
+The Medium/Low/Low division confidence spread and Science's concentration flag
+are unaffected: both derive from the group key, not from goals.
+
+Two verification fixtures had hard-coded trends and a hard-coded goal tuned to
+the old range and broke immediately. They now derive their calibration from
+the computed goal (`trendForRatio()`) or bound it against the range, so they
+no longer pin an output that a demo-data parameter is free to change.
+
+---
+
+## Page background and card elevation — locked 27 Sept 2026
+
+Applies to every card and panel in both systems.
+
+### The page background was already the near-white token
+
+The brief asked for the page to move to an ice-white/near-white PA token.
+**It was already on it.** The shell has used `--color-pa-grey-wash`
+(`#f9fafc`) throughout; the only token closer to white in the PA palette is
+`--color-pa-white` (`#ffffff`) itself, which a page cannot be if white cards
+are to read against it. No hex was invented and no closer token exists, so
+the page background is unchanged.
+
+What read as "light grey" was the **cards**, not the page. Several screens
+filled their cards with `--color-pa-grey-01` (`#e8ecf2`) to manufacture an
+edge — a workaround for the earlier "invisible container" problem, where a
+white card on a near-white page had no visible boundary. That grey fill is
+what the eye was picking up.
+
+### Cards are now separated by elevation, not fill
+
+Card surfaces are white, distinguished by a shadow rather than by a grey fill
+or a hairline border. Three shared tokens, in `src/index.css`:
+
+| Token | Value | Used for |
+| --- | --- | --- |
+| `--shadow-pa-card` | `0 2px 10px rgba(0,23,45,0.06)` | every resting card |
+| `--shadow-pa-card-hover` | `0 4px 16px rgba(0,23,45,0.1)` | hover on an interactive card |
+| `--shadow-pa-card-raised` | `0 6px 24px rgba(0,23,45,0.14)` | selected / expanded |
+
+Tinted with the palette's own Dark Blue (`#00172d`) rather than neutral black,
+so the shadow sits in the same colour family as everything else. The values
+are the Scenario Workspace treatment the reference screenshot set, promoted
+from inline classes to tokens so every card points at one definition.
+
+Applied to all 8 screens. `--color-pa-grey-01` is still used, but only for
+*nested* surfaces inside a card (attribute chips, icon badges, the accordion's
+circular control) — never to give a top-level card its edge.
+
+The accordion's collapsed row moved from a Grey 01 pill to white + resting
+shadow, with the expanded row on the raised shadow, so the two states now
+differ by elevation rather than by fill. Its circular control is Grey 01 in
+both states; it used to invert to white on the collapsed row, which would now
+be white-on-white.
+
+`CrossCheckPanel` was also migrated off the pre-Searchlight `slate-*` palette
+it had been left on. Zero `slate-` classes remain anywhere.
+
+Verified by measuring computed styles on all 8 screens: page
+`rgb(249,250,252)`, every `rounded-pa-card` surface white with a shadow, and
+**zero** cards indistinguishable from the page.
+
+---
+
+## Design-direction reset — M1: tokens and neutral elevation (28 Sept 2026)
+
+**Supersedes** the Aqua-led chrome described throughout this document and the
+blue-tinted elevation locked on 27 Sept. Delivered as five milestones; this
+entry covers M1 only.
+
+### The direction
+
+White is overwhelmingly dominant. Depth comes from shadows, subtle borders and
+card boxes — not colour blocking. Structural chrome (navigation, dividers,
+icons, elevation tints) becomes white or neutral grey. Pink is a single,
+sparing accent for things that must draw the eye: primary actions, the
+active/selected state, at most a chart's primary series. **If the interface
+reads pink, the reset has been applied wrongly.**
+
+### Milestones
+
+| | Scope |
+| --- | --- |
+| **M1** | Accent token + neutral elevation *(this entry)* |
+| **M2** | App shell chrome — nav bar, loader, background illustrations |
+| **M3** | System 1 screens, blue use decided case by case |
+| **M4** | System 2 screens, same |
+| **M5** | Real profile photographs |
+
+### Accent token
+
+`--color-pa-accent: #f3809e` — this is **Rose 03, already in the PA palette**.
+No hex was invented. It was effectively unused, so it carries no prior meaning
+in this app.
+
+Measured, not estimated:
+
+| | Contrast | |
+| --- | --- | --- |
+| white on accent | **2.50:1** | fails AA — never use |
+| Dark Blue on accent | **7.23:1** | passes AA |
+| Grey 04 on accent | 3.85:1 | large text only |
+| accent on white | **2.50:1** | below the 3:1 UI-component threshold |
+
+Two consequences that constrain M2–M4:
+
+1. **A pink button takes dark ink, not white.** Every primary button in the app
+   is currently white-on-Aqua. Swapping the fill alone would fail AA on all of
+   them. `--color-pa-accent-ink` is provided for this.
+2. **Pink on white cannot carry a state by itself.** At 2.50:1 a 1px pink
+   border or hairline underline is not distinguishable enough. A selected
+   state needs a fill, a thicker mark, or a second non-colour cue.
+
+There is also a **semantic collision to watch**: the Rose family already means
+failure here — Rose 01 wash with Rose 04 text is "missing data", "check
+failed", "Off track". A pink primary button will sit on screens that also show
+pink failure chips. Raised now rather than discovered in M3.
+
+### Neutral elevation
+
+The five shadow tokens were tinted with Dark Blue to keep elevation in the
+brand's colour family. They are now plain black alpha — same geometry, same
+opacities, hue only:
+
+| Token | Value |
+| --- | --- |
+| `--shadow-pa-chip` | `0 1px 3px rgba(0,0,0,0.06)` |
+| `--shadow-pa-card` | `0 2px 10px rgba(0,0,0,0.06)` |
+| `--shadow-pa-card-hover` | `0 4px 16px rgba(0,0,0,0.1)` |
+| `--shadow-pa-card-raised` | `0 6px 24px rgba(0,0,0,0.14)` |
+| `--shadow-pa-modal` | `0 24px 64px rgba(0,0,0,0.24)` |
+
+Every remaining inline blue-tinted shadow was folded into these, plus the
+override modal's backdrop. Verified by computed style across all 8 screens:
+**zero** blue-tinted shadows or gradients remain.
+
+One blue element is deliberately left for M2: `SearchlightLoader`'s Aqua panel
+and radial beam. That is a colour-blocked surface rather than an elevation
+tint, so it belongs with the app-shell chrome pass.
+
+---
+
+## Design-direction reset — M2: refinement against the Scenario Workspace benchmark (28 Sept 2026)
+
+**Supersedes** the per-screen heading sizes and section rhythms recorded in
+every screen section below. Those sections still describe each screen's
+structure correctly; where they specify a heading size or spacing that
+contradicts the table here, this entry wins.
+
+### The benchmark, extracted from Scenario Workspace
+
+| Role | Value |
+| --- | --- |
+| Page rhythm | `space-y-20` between major blocks, `space-y-10` within one |
+| Page/section heading | display 4xl semibold, `leading-[1.1]`, two lines — first Grey 04, second Grey 03 |
+| Card title | display xl semibold, Grey 04 |
+| Eyebrow | body xs bold uppercase, `tracking-[0.14em]`, Grey 03 |
+| Body | body sm, Grey 03 |
+| Card | `rounded-pa-card`, white, `shadow-pa-card`; p-8 panel / p-6 grid / p-5 small; `gap-5` |
+
+These now live in `src/components/searchlight/Section.tsx` as `PageSections`,
+`Block`, `SectionHeading`, `Eyebrow` and `Card`, rather than being re-derived
+per screen. Before this pass the other seven screens used **five** different
+section rhythms and **four** different sizes for the same page heading.
+
+### Scenario Workspace was not actually on the new colour system
+
+It was the layout benchmark but still painted in Dark Blue — its next arrow,
+active pagination pill and Save button. Those are now the accent, with
+`--color-pa-accent-ink` (never white, which fails AA at 2.50:1). Without this
+the benchmark could not have been followed for colour.
+
+### Accent placement, decided case by case
+
+**Accent** — primary actions (Propose, Apply, Save, Resolve, Import), the
+active/selected state (filter pill, pagination pill, active tab underline,
+selected roster card).
+
+**Neutral grey** — avatars, focus rings, back-links, "show teams" affordances,
+the roster's unselected border. These were Aqua purely as chrome.
+
+**Left semantic, deliberately not repainted** — the StatusPipeline's progress
+fill and the `large-unexplained-gap` flag chip still use Aqua. They encode
+meaning (workflow progress, flag category), not structure, and pink is
+reserved for emphasis. Risk and workflow status colours are untouched
+throughout.
+
+Measured across all 8 screens: accent covers **0.07%–0.71%** of page area.
+The interface reads white, which is the test the direction sets.
+
+### Selected states carry extra weight
+
+M1 measured accent-on-white at 2.50:1, below the 3:1 UI-component threshold,
+so a selected state is never a 1px pink line. The roster's selected card uses
+a 2px accent border plus a 2px 30%-alpha ring; the active tab keeps its 2px
+underline and a darkened label.
+
+### Two things deliberately left
+
+1. **The app shell's Dark Blue navigation bar.** The M2 brief listed screens,
+   not the shell, so it is untouched — but it is now the only surface still
+   painted in the old system, and the direction says navigation should go
+   white or neutral grey. Needs a decision.
+2. **Executive Summary and Division Comparison keep their small bold org-name
+   header** rather than the benchmark's 4xl two-line heading. Executive
+   Summary's is screenshot-locked (§6), and Division Comparison was built to
+   match it for continuity. Moving both to the benchmark heading is a real
+   option; it is flagged rather than chosen, because changing Executive
+   Summary would contradict a locked screenshot treatment.
+
+---
+
+## Design-direction reset — M2 follow-ups: shell and System 2 headings (28 Sept 2026)
+
+Two exceptions left open at M2, both now closed for consistency.
+
+### The app shell is white
+
+The navigation bar was Dark Blue with white type — the last surface in the old
+palette, and the single element most responsible for the app reading as blue
+chrome. It is now white, sitting on the page's own near-white ground and
+separated by a Grey 01 hairline rather than by a colour block.
+
+- Brand wordmark, icons and controls → Grey 04 / Grey 03
+- **Active screen link → the accent**, with `--color-pa-accent-ink` at 7.23:1.
+  This is exactly the "active/selected state" case the direction reserves pink
+  for, and it is the only accent in the bar.
+- **System switcher → neutral Grey 01 fill.** It is structural — two peers, one
+  of which is current — so it takes a neutral fill rather than competing with
+  the active screen for the eye. Two pink pills in one bar would have broken
+  the "sparing" rule at the first glance a user gets.
+- Avatar and the Reset control → neutral grey.
+
+### Executive Summary and Division Comparison use the benchmark heading
+
+Both carried a small bold org name over a grey subtitle — the treatment
+Executive Summary's own reference screenshot set (§6). **That reference
+predates this redesign and no longer overrides it**: consistency across all
+eight screens is the goal, and leaving two screens on a bespoke header made
+them the exception.
+
+The org name is kept as content, restyled rather than dropped — it is now the
+heading's first line, with the screen name as the second:
+
+- Executive Summary — *Design, Engineering & Science / Organisational operating summary*
+- Division Comparison — *Design, Engineering & Science / Division comparison*
+
+Division Comparison's explanatory sentence about the no-apportioning goal rule
+was too long for a heading line, so it stays as a body paragraph beneath.
+
+Both screens also lose the small bar-chart glyph that sat opposite the old
+header; the benchmark heading has no icon slot, and the glyph was decoration
+rather than information.
+
+Measured after both changes: zero Dark-Blue-filled elements anywhere, nav
+white with the active link the only accent in the bar, accent still ~0.5% of
+page area.
+
+---
+
+## Design-direction reset — M3: copy audit (28 Sept 2026)
+
+A pass over every user-facing string in both systems. Five inconsistencies
+fixed, three left with reasons.
+
+### Fixed
+
+**A screen name that no longer exists.** Four links read "View the Sign-off
+Queue →" / "Sign-off Queue →". The Sign-off Queue was folded into the
+Exceptions Queue by the 5-screen consolidation and has not existed as a screen
+since. They now read "View the exceptions queue →" / "Exceptions queue →".
+
+**Heading case and punctuation.** The seven two-line headings used three
+different patterns — a parenthetical aside, a standalone label, and a sentence
+continuation — and mixed Title Case with sentence case on the first line. One
+rule now: **sentence case on both lines, no parentheses.**
+
+| Was | Now |
+| --- | --- |
+| Scenario Workspace / (Test before you commit) | Scenario workspace / Test before you commit |
+| Saved Scenarios / Baseline & yours | Saved scenarios / Baseline and the ones you save |
+| Mass adjustment / (Nothing applies until you confirm) | Mass adjustment / Nothing applies until you confirm |
+| Every team in DES, / and where their targets stand | Every team in DES / And where their targets stand |
+| Exceptions & / sign-off queue | Exceptions / And the sign-off queue |
+
+This drops the parentheses the benchmark screenshot used for "(Step-by-step)".
+Noted as a deliberate move away from the reference: three of seven headings
+used parentheses and four did not, so either choice changed something, and
+sentence-case-no-parens matches every other label in the app.
+
+**Nav label vs screen name.** The sidebar said "Mass adjust" for a screen
+headed "Mass adjustment". Now matched.
+
+**Reason prompts spoke in two voices.** Manager Override asked "Why are you
+making this change?" while Mass Adjustment asked "Why is this change being
+made?" — same act, active vs passive. Both are second-person active now.
+
+**One phrasing for the aggregate-effect heading.** "Aggregate effect —
+everyone's change applied together" and "Aggregate effect — the whole batch
+applied together" described the same block. The second wins.
+
+### Left alone, deliberately
+
+**Two phrasings for "System 2 has no data".** The live panels say
+"Organisational data not yet available — cross-check skipped"; the Exceptions
+Queue says "Organisational data wasn't available when this was flagged". The
+tense difference is real — one is a live condition, the other a frozen
+historical fact — so collapsing them would lose meaning.
+
+**Short nav labels.** "Exceptions", "Divisions" and "Scenarios" are shorter
+than their screen headings. That is normal for navigation and aids scanning;
+only the "Mass adjust"/"Mass adjustment" pair was an inconsistency rather than
+a deliberate abbreviation.
+
+**Card and section titles.** Already uniformly sentence case
+(Attributes, Explanation, Personal context, Selected population, The change,
+Real-time cross-check). No change needed.
+
+---
+
+## Design-direction reset — M4: numbers and data audit (28 Sept 2026)
+
+An audit of every figure the app shows, against CLAUDE.md's locked values and
+against independent recomputation. **No defect found.** Kept as a runnable
+script — `npm run verify:locked`, 33 checks — rather than a one-off report,
+because nothing previously guarded the locked constants against drift.
+
+### What is now asserted
+
+**Locked dataset defaults (12 checks)** — population 60; divisions and
+locations; division baselines 92/100/96; two teams per division; ±15% range
+band; 25% extreme-value threshold; ±20% large-adjustment threshold; 65%/85%
+utilisation; sales targets on Managing Consultant and above; 220 working days.
+
+**The seed population obeys them (7 checks)** — capacity within 0.6–1.0,
+economic factor within 0.9–1.15, and role factor, utilisation, sales-target
+presence, baseline and team membership all consistent with the locked rules,
+for all 60 records.
+
+**The locked formula (3 checks)** — modelled = round(baseline × capacity ×
+role × economic) for all 60, recalculation is deterministic, and billable +
+sales = combined revenue.
+
+**The System 1 → System 2 hand-off (4 checks)** — the snapshot holds the whole
+population with no duplicates, and every record's target and group match the
+person it came from.
+
+**Roll-ups never apportion (7 checks)** — teams and divisions sum to DES-wide
+for target, headcount, expected achievement and goal, and each division's
+forecast ratio is its own expected achievement over its own goal.
+
+### Rendered figures match the engines
+
+Spot-checked against independently computed values:
+
+| | Shown | Expected |
+| --- | --- | --- |
+| Executive Summary | £15.7m goal, 87.0% forecast, 102.5% coverage, −£2.0m gap | identical |
+| Division Comparison | £6.4m/95.3%/77.8%, £4.8m/96.4%/80.3%, £4.5m/119.3%/107.4% | identical |
+| Individual Detail (P009) | 85%, £285k billable, £184k sales, £119k–£161k | identical |
+
+P009's explanation prose also reconciles: 96 × 0.84 × 1.55 × 1.12 = 139.98 →
+£140k, ±15% → £119k–£161k.
+
+### One correction to record
+
+The audit first reported 22 of 60 records failing the range check. **The test
+was wrong, not the engine.** `calculateModelledTarget` derives the range from
+the *unrounded* product, rounding once at the end; the test derived it from
+the already-rounded modelled figure. The engine's order is the more correct
+one. The assertion is now written the way the engine actually works, with a
+comment saying why, so the same wrong assumption is not made again.
+
+### Two things a reader will ask about, both correct
+
+- **DES-wide coverage is 102.5% while two of three divisions sit below 100%**
+  (95.3% and 96.4%). Science's 119.3% carries the total. Arithmetically sound
+  and worth being ready to explain, since "covered overall, under in most of
+  the business" is exactly the ambition-versus-reality split System 2 exists
+  to expose.
+- **The modelled point figure appears only in the explanation prose** on
+  Individual Detail; the hero shows the range. That follows CLAUDE.md's
+  "range, not false precision" rule rather than being an omission.
+
+---
+
+## Design-direction reset — M5: imagery (28 Sept 2026)
+
+Real photographs wired into every place System 1 represents a person. One
+component, `src/system1/components/PersonAvatar.tsx`, owns the treatment.
+
+### One treatment, not three
+
+Each screen previously drew its own circle of initials at its own size, so "a
+person" looked different depending where you were. Now:
+
+- always a circle, always a 1:1 crop, `object-cover` with **`object-top`**
+- a Grey 01 ring, so a light photo still reads as an object on a white card
+- initials on Grey 01 as the fallback — identical size and shape
+- two sizes only: **44px** (Manager Override) and **56px** (roster card,
+  Individual Detail identity row)
+
+`object-top` is load-bearing, not cosmetic. These are half- and full-body
+shots; a plain centre crop put several faces above the circle and several
+chins at its bottom edge.
+
+Individual Detail's hero also takes the photograph, at 268px square with the
+card radius. Its placeholder glyph carried the comment "Real headshots replace
+this" — that is what this milestone closed.
+
+### 32 photographs, 60 people — reused
+
+**Superseded 28 Sept 2026.** This originally gave 32 people a photograph and
+left 28 on initials, on the grounds that a repeated face is worse than an
+honest gap. Reuse was subsequently confirmed as acceptable, so **everyone now
+has a photograph** and initials became an unreachable fallback rather than the
+state of 28 records.
+
+Duplicates are unavoidable at 32 photographs for 60 people, but *where* they
+land is not. People are ordered by division, then team, then id, and assigned
+`photo[i % 32]`. Any run of fewer than 32 consecutive indices is distinct and
+no team exceeds 32 members, so **no two people in the same team ever share a
+face** — the only place two of them would appear side by side. Repeats fall
+across different teams, where they are effectively invisible.
+
+Verified per team in the running app: 10 people, 10 distinct faces, 0
+duplicates, in all six. Each photograph is used once or twice across the 60.
+
+The ordering is a stable sort over fixed data, so a person keeps the same face
+on every screen and across reloads.
+
+### Sizing was wrong once, and the visual check is what caught it
+
+The images were first resized to 256px on the long edge — correct for 44–56px
+avatars, which is all that existed when that number was chosen. Wiring the
+268px hero made them upscaled and visibly soft. Regenerated at **640px long
+edge (426px shortest)**, which covers the hero with headroom.
+
+1.8MB for 32 files, largest 96KB. Still ~55× smaller than the 99MB originals.
+
+### Loading
+
+`import.meta.glob('/photos/*.jpg')` resolves from the project root, so the
+folder stays where it is rather than moving to `public/`. Vite fingerprints all
+32 into the build — verified in `dist/assets`.
+
+---
+
+## Design-direction reset — M5 follow-ups: queue avatars and roster accent (28 Sept 2026)
+
+Two closing items. The five-milestone pass is complete after these.
+
+### Exceptions Queue rows carry a 32px avatar
+
+A third size joins the avatar system: **32px**, for list rows. A queue row is
+denser than a roster card, and a face is what makes a long column of names
+scannable. Same component, same circle, same crop, same initials fallback.
+
+All 25 rows show one. **Batch rows deliberately do not** — a mass adjustment
+has no single person to picture, and inventing one would misrepresent what is
+being signed off, the same reasoning that keeps a person's name out of a batch
+row's label.
+
+### The roster no longer spends the accent on every card
+
+"View" appeared once per roster card, so ten cards meant ten accent buttons on
+screen at once — **2.04%** of page area, against 0.07–0.71% everywhere else.
+It was the one screen where the interface started to read pink.
+
+"View" is now a **filled Grey 01** button. It still reads as the stronger of
+the two actions against the outlined "Notes", so the hierarchy inside the card
+survives; it just no longer uses colour to say so. The accent is spent once on
+this screen, on "Mass adjust selected", which is the action that actually
+moves work forward.
+
+Measured after: **0.24%** with nothing selected, **0.40%** once a selection
+brings the mass-adjust call to action into view. Both inside the band.
+
+### Not done, and deliberately
+
+Faces on Mass Adjustment preview rows, on Cohort Comparison, and anywhere in
+System 2 (Top Risks, Division Comparison) were all considered and rejected.
+System 2 is org-level and never shows an individual; putting a face there
+would breach that boundary. Cohort Comparison risks implying named peer
+comparison, which CLAUDE.md avoids by design.
+
+---
+
+## Demo journey run — M14 / S2-M10 acceptance signal (28 Sept 2026)
+
+First full end-to-end run since the redesign: Overview → Individual → Override
+→ Mass adjust → Approve → Export → System 2 import → Scenario. Run from a
+clean reset, driving the real controls.
+
+**Every step completed. Zero console errors. Zero functional breaks.** But the
+run surfaced three things that pass their own checks and are still wrong, two
+of them caused by the System 2 seed added a few commits earlier.
+
+### What passed
+
+Reset gives 60 people, £16.1m, 25 exceptions, 6 teams. Roster → Individual
+Detail navigates and the photograph renders. An override stores its reason and
+updates status. The roster multi-select carries into Mass Adjustment — 4
+selected, 3 eligible, the fourth correctly excluded as already Pending
+Sign-off. **M10 holds: the preview matched what was applied, 0 mismatches.**
+Batch and individual sign-off both approve. Export produces exactly the
+Approved records. Import takes exactly that many. All four Scenario presets
+still drive the diff panel. Reset restores cleanly.
+
+### A. The journey makes System 2 worse — the most serious finding
+
+Export → import collapses System 2 from **60 records, £15.7m, three divisions**
+to **4 records, £1.3m, one division**. Division Comparison drops to a single
+card. Executive Summary reads "100.0% Design".
+
+This is functionally correct — only 4 records were Approved, and the snapshot
+is Approved-only by design. But it means **the demo's own happy path guts the
+sponsor-facing screen**. Before System 2 was seeded, it started empty and
+importing 4 records was an improvement; now it starts at 60 and the journey is
+a large step backwards.
+
+Worth deciding before any demo: approve far more records during the run, or
+have import merge rather than replace, or present System 2 before the export
+step rather than after.
+
+### B. Every override now routes to sign-off, without exception
+
+A **+10%** change — half the ±20% threshold — routed to Pending Sign-off. So
+did **+2% on a person in an On track team**. The reasons given are
+change-independent:
+
+> Team total moves from £3.1m to £3.1m — team remains Infeasible (already
+> non-compliant before this change).
+> Org forecast stays Off track against the £15.7m goal.
+
+The DES-wide forecast is Off track in the seeded data, so the org-goal check
+fails for *everyone*, and the direct-apply path is unreachable.
+
+This was previously ruled correct behaviour — but that ruling was made when
+System 2 started **empty**, so the cross-checks were skipped and most overrides
+applied directly. Seeding System 2 turned a rare route into the only route. The
+behaviour did not change; its reachability did.
+
+### C. Scenario Workspace renders a blank panel for an absent group — a real bug
+
+After a Design-only import, the "Engineering capacity dip" preset shows its
+config row (`Capacity · Engineering ×1.00→×0.90`) and then **an empty "What it
+does" column with no status pill**. `readScope` returns no rollup for a
+division that is not in the imported data, `outcomeRows` returns `[]`, and the
+pill is conditional on a risk result.
+
+It needs to say the group is not in the imported data rather than rendering
+nothing.
+
+### D. Cross-check sentences read as no-ops at £m scale
+
+"Team total moves from **£3.1m to £3.1m**" — the formatter's one decimal at
+millions hides a real delta inside the very sentence explaining the change.
+This is the trade-off recorded with the formatter, but here it actively
+undermines the copy. These sentences want £k precision regardless of
+magnitude.
+
+### E. "Never exported" while System 2 shows 60 records
+
+After a reset, System 1's sync strip says "Never exported" while System 2 is
+fully populated. Both are true — the seed is not an export — but together they
+read oddly.
+
+---
+
+## RESOLVED — what the sign-off cross-checks test (29 Sept 2026)
+
+Finding B from the journey run. **Decided: Option 1 + Option 3, implemented
+29 Sept 2026.** The checks now test regression rather than ambient status, and
+an already-non-compliant group is reported as a neutral `note` that carries
+the context without forcing sign-off. The options and their trade-offs are
+kept below as the record of what was weighed.
+
+### Result
+
+| Override | Team fail | Team note | Org fail | Org note | Cohort fail | Sign-off |
+| --- | --- | --- | --- | --- | --- | --- |
+| +1% | 0 | 30 | 0 | 60 | 0 | **0 / 60** |
+| +10% | 0 | 30 | 0 | 60 | 0 | **0 / 60** |
+| +15% | 0 | 30 | 0 | 60 | 5 | 5 / 60 |
+| +25% | 0 | 30 | 0 | 60 | 31 | 60 / 60 |
+| −40% | **12** | 20 | **3** | 57 | 60 | 60 / 60 |
+
+Small changes apply directly. The ±20% drastic trigger still catches large
+ones. Cuts that genuinely drag a group into a worse band fail, as they should.
+The gate discriminates again.
+
+Verified in the app: a +10% override on P022 now reads "Apply override" and
+lands on **Adjusted**, where it previously read "Send for sign-off" and landed
+on Pending Sign-off.
+
+`CheckStatus` is now `'pass' | 'fail' | 'note'`, rendered as a neutral
+outlined `i` badge by the three components that show check results.
+verify-override-cross-check.ts's Scenario C was rewritten — it had asserted
+the old "already Infeasible therefore fail" behaviour — and a Scenario C2
+added, pinning that a change which *causes* a regression still fails.
+
+### What is actually happening
+
+Two of the three checks test the group's **ambient status**, not the override's
+effect. `isCompliant(status)` passes only On track or At risk:
+
+- **Team check** — `isCompliant(teamAfter)`. Fails whenever the team lands
+  Off track or Infeasible, whether or not the change caused it. The code knows:
+  it has a dedicated message reading *"already non-compliant before this
+  change"*, and still fails.
+- **Org check** — `stillSensible(before, after)`, whose first clause is
+  `isCompliant(after)`. DES-wide is Off track by design, so that clause is
+  false for everyone and the no-regression clause below it is never reached.
+
+Measured across all 60 people, at four override sizes:
+
+| Override | Team fails | Cohort fails | Org fails | Routes to sign-off |
+| --- | --- | --- | --- | --- |
+| +1% | 30 | 0 | **60** | **60 / 60** |
+| +5% | 30 | 0 | **60** | **60 / 60** |
+| +15% | 30 | 5 | **60** | **60 / 60** |
+| +30% | 29 | 45 | **60** | **60 / 60** |
+
+The org check fires for everyone at every size. The team check fires for the
+30 people in Studio North, Platform and Delivery at every size. **Only the
+cohort check responds to the size of the change** — 0 at +5%, 45 at +30% —
+which is what a marginal check looks like, and a useful model.
+
+**Fixing only the org check is not enough.** The team check would still route
+30 of 60 people to sign-off regardless of what they changed.
+
+Worth noting the ±20% drastic-change trigger is independent and already
+catches large moves, so the group checks do not need to police size.
+
+### Option 1 — Regression only: did *this change* make the group worse?
+
+Replace `isCompliant(after)` with a band-regression test in both checks: fail
+only if the change moves the group into a worse status band.
+
+- **For** — smallest change, directly answers what the gate is for, and keeps
+  the existing statuses as the vocabulary. An override inside an Infeasible
+  team passes if it does not make things worse, which is the sponsor-legible
+  reading.
+- **Against** — bands are coarse. A group already Infeasible can be worsened
+  repeatedly without ever tripping a band change: death by a thousand cuts. The
+  gate would go quiet in exactly the situation that most needs attention.
+
+### Option 2 — Materiality: a threshold on the group's forecast ratio
+
+Fail if the change moves the group's forecast ratio down by more than a locked
+number of percentage points, regardless of band.
+
+- **For** — continuous rather than banded, so it has no thousand-cuts blind
+  spot; scales naturally from one person to a mass adjustment; sits beside the
+  existing 25% and ±20% thresholds as a peer.
+- **Against** — introduces a new locked figure that has to be defended, and
+  CLAUDE.md's thresholds are meant to be few. Needs calibration against the
+  real data, the way `GROWTH_RATE_RANGE` did, or it will be arbitrary.
+
+### Option 3 — Keep the ambient test, but as information rather than a gate
+
+Split the result into three states instead of two: **pass**, **fail**
+(a regression this change caused), and **note** (the group was already
+non-compliant — shown, explained, but does not force sign-off).
+
+- **For** — loses no information. A manager still sees "you are operating
+  inside an Infeasible team", which is genuinely worth knowing, but it stops
+  being the reason every override needs a signature. The accordion already
+  renders per-check status, so it is a third badge rather than new structure.
+- **Against** — the most UI work of the three, and it needs a real answer to
+  "what if the team is Infeasible *and* this change makes it worse" — which
+  means it probably wants Option 1 or 2 underneath it anyway.
+
+### Recommendation, if one is wanted
+
+Option 1 for the regression logic with Option 3's third state for the ambient
+condition, and Option 2 held in reserve if the thousand-cuts gap turns out to
+matter. Whatever is chosen must change **both** the team and org checks, or
+the direct-apply path stays closed for half the population.
+
+---
+
 ## System 1 — Individual Targeting
 
 ### 1. Overview & Population
@@ -56,13 +889,65 @@ Compiled from the screenshot-derived design pass, 24 Sept 2026. This is a compan
 - **Open / not yet specified:** bubble layout algorithm (force-directed vs fixed grid) — propose, don't invent silently. Pagination behaviour for large teams in the list state — not decided.
 
 ### 2. Individual Detail
-- Full-width hero card, two zones: left ≈58% (identity + data), right ≈42% (visual).
-- Left zone, top-to-bottom: identity row (avatar + name + subtext), stat row (large value + label, paired with a secondary value + label), metadata row (small value + label).
-- Right zone: large square visual. **Undecided — needs Justin's call before build:** cohort-comparison chart, or a plain avatar/photo placeholder.
-- Below hero: "Attributes" section, strict 4-column × 2-row chip grid — one chip per target factor (role, capacity, location, discipline), each showing its weighting % and value.
-- Below that: two-column row of history cards — timestamp + source-tag pill (top row), bold headline, 2–3 line body. This is the change-history log for this person.
-- Also lives on this screen (per consolidation): Cohort Comparison as a tab/panel, not a separate screen.
-- **Not yet designed at all:** the plain-language factor explanation text block the functional spec requires ("why this target differs from peers"). No screenshot reference covers this — needs original design work.
+
+**Built 26 Sept 2026.** This section has been rewritten to describe what was
+actually built, after several rounds of review against the reference. Where
+it now differs from the original draft, the reason is given inline so the
+change is not mistaken for drift.
+
+**One continuous card.** The whole screen is a single container — not a main
+card plus separate cards beneath. Internal sections are divided by a thin
+rule and a section header, never by their own border, radius or ring of page
+background. *Changed from the original draft, which implied separate
+sections: the reference uses one surface here, and five competing bordered
+boxes was the result of following the draft literally.*
+
+**Always visible** (this is the reference's density — nothing more):
+- Identity row: small round avatar, bold name, grey subtext (`id · grade · division / team`), status pill right.
+- Stat row: a large value + label paired with a secondary value + label.
+- Action buttons: filled primary, soft-filled secondaries. Not outlined — the reference's secondary is a fill.
+- A **compact status indicator only**: a slim single-line progress bar, no step numbers, no connecting nodes, no per-step labels. *The full labelled 5-step tracker was tried and removed — it occupied as much vertical height as the entire Attributes section to convey what the status pill beside it already conveys. `StatusPipeline` retains a `full` variant for Manager Override, where a transition is actually being made.*
+- Attributes grid (below).
+- The square visual (below).
+
+**Right zone — resolved, was "needs Justin's call":** a plain **avatar/photo
+placeholder**, not a cohort-comparison chart. Cohort Comparison is already on
+this screen as its own tab, so a chart in the hero would duplicate it.
+
+**Square sizing.** The zones are ≈58/42, but the square is **capped** (268px)
+rather than taking a raw 42%. At a full-bleed ~1700px viewport an uncapped
+42% produces a ~670px square that drags the card down and leaves a void
+beside it. The cap is tuned so the square and the left column measure equal.
+
+**Attributes** — 2×2 chip grid, one chip per target factor (role, capacity,
+location, discipline), four chips total. Sits inside the single card as an
+internal section, not as a separate box.
+  - **Corrected 26 Sept 2026.** This previously said "strict 4-column × 2-row chip grid", i.e. 8 cells. That was transcribed from the reference image, which carries 8 NFT traits, and was never reconciled with CLAUDE.md's locked factor list — exactly four, "only these". Eight cells and "one chip per target factor" could not both be true.
+  - Chip anatomy per the reference: muted label top-left, small **pill-shaped** percentage badge with a soft fill top-right, bold value below.
+  - The badge shows each factor's real multiplier read as a percentage (capacity 0.69 → 69%, role 0.95 → 95%). Location and discipline have **no** badge: they select which baseline applies rather than scaling it, so there is no percentage to show and none should be invented.
+
+**Lower area — one tab group, one panel at a time.** Tabs, in order:
+`Explanation` / `Personal context` / `Recent updates` / `Cohort comparison`,
+defaulting to Explanation.
+  - *Explanation and Personal context were permanent blocks in the original draft. They became tabs because the reference never shows more than one thing in this region, and as always-visible sections they roughly doubled the screen's height for content a manager reads once.*
+  - **Recent updates**: two-column history cards — timestamp + source-tag pill on the top line, bold headline, 2–3 line body. The tag is the audit actor, real data. Defaults to **2 entries**, matching the reference, with a "Show all N changes" reveal.
+  - Consecutive identical entries (same action *and* same detail) collapse. Only consecutive ones, so a genuine later repeat after some other change still reads as its own event.
+  - **Cohort comparison** lives here per the consolidation, never as a separate screen.
+
+**Nesting treatment.** Pieces nested inside the card — attribute chips,
+history cards — read through a soft fill plus a hint of elevation, **not** a
+border. A second boxed edge inside the card competes with the card's own.
+
+**Deliberately absent.** There is no caption line under the stat row. One was
+built and removed: location is an Attributes chip, the modelled figure is the
+stat row's secondary label (and the Explanation names it when there is no
+override), and the override reason is the body of its own history card. It
+restated three things rather than adding a fourth.
+
+**Still not designed:** the plain-language factor explanation text block the
+functional spec requires ("why this target differs from peers"). It now has a
+home — the Explanation tab — but the copy itself is still the engine's
+generated sentence, not designed content. No screenshot reference covers it.
 
 ### 3. Manager Override
 *No screenshot reference exists for this screen — functional requirements are locked, visual layout is not.*
@@ -101,32 +986,115 @@ Compiled from the screenshot-derived design pass, 24 Sept 2026. This is a compan
 - Footer: thin full-width rule, small caption left, page-index right. **Confirm before building:** the page-index element (e.g. "01/12") reads as a print/report artefact — decide if it's meaningful in an app context or should be dropped.
 
 ### 7. Division Comparison
-*Draft only — no screenshot reference, proposal to build from, not a locked spec.*
-- Same header treatment as Executive Summary, for visual continuity between the two sponsor-facing screens.
-- Row of division cards (Boston / Ireland / London / GITC), same visual weight as Executive Summary's small stat tiles but wider. Each card: division name + location tag, coverage ratio, forecast ratio (same green/amber/red gradient treatment as Executive Summary), confidence.
-- Click expands the card in place (not a new screen) into a nested row of team cards beneath it, one level down, same coverage/forecast/confidence trio at the same visual weight.
-- Reuses the Top Risks list component from Executive Summary, scoped to whichever division/team is expanded.
+**Built 27 Sept 2026.** Was marked "draft only, no screenshot reference" — built to
+this section as the brief, with two corrections recorded below. It replaced two bar
+charts above a dense 8-column table; each chart restated a figure now printed on the
+card it sat above, so both were dropped rather than restyled.
+
+- Same header treatment as Executive Summary (org name, one-line grey subtitle, single
+  line-icon right), for continuity between the two sponsor-facing screens.
+- **Row of division cards — three, not four.** This section previously listed them as
+  "Boston / Ireland / London / GITC". **Those are the four locations, not divisions.**
+  DES has three divisions (Design, Engineering, Science) and every one of them spans
+  all four locations, so the "division name + location tag" this section also asked for
+  cannot exist either — a division has no single location. Corrected to three division
+  cards with no location tag.
+- Each card sits on Grey 01 at `--radius-pa-card`, the weight of Executive Summary's
+  stat tiles but wider: division name, status pill, the forecast ratio as a
+  proportional bar whose **width is the ratio and hue is the risk status** (the same
+  green/amber/red gradient device as the Executive Summary hero), then coverage,
+  confidence, goal and headcount.
+- Clicking a card expands teams **in place** — one division open at a time. The team
+  cards render full-width beneath the whole row, not nested inside one grid cell: a
+  three-column grid cannot hold a second row under a single card without collapsing
+  the grid or squeezing the team cards into a third of the width.
+- Team cards carry the same trio at the same visual weight, plus their **DES-wide**
+  rank by absolute gap — computed across every team before nesting, so S2-M6's ranking
+  signal survives the grouping.
+- Top Risks (the Executive Summary component) renders beneath, **scoped** to the
+  expanded division and its teams via a `scopeKey` prop; with nothing expanded it shows
+  the full DES-wide list, exactly as Executive Summary does.
 
 ### 8. Scenario Workspace
-**Deliberate register break — applies to this screen only.** Monospace bracketed section labels (e.g. `[ N.04/11 ]`), dotted-grid background texture, thin full-width rule lines, isometric line-icons, single high-contrast accent colour on white/black. Do not let this register bleed into any other screen, and do not apply the pill/card language from other screens here.
-- Section pattern: bracketed index + chevron + label, thin rule extending full width from it, small pill action button top-right of the section.
-- Large two-line heading; a slash mark immediately before the first word and after the last word of the second line.
-- **4-column row = the four scenario examples** (not the four levers): "Raise the bar" (goal +5%), "Division B capacity dip" (capacity lever), "Team-wide stretch" (+10% population adjustment on a selected team), "Confidence check" (lowered confidence for a cohort). Baseline sits alongside as the default comparison state, not a fifth column.
-  - Each column: numbered label ("// 002"), 2-line description, segmented progress indicator (solid fill = active/complete, dotted = remaining), bold short label, isometric line-icon bottom-aligned.
-  - Active column is distinguished by colour only — number and label shift to accent colour, progress bar fully solid. No background fill or border change.
-- **Second block, two-column layout:**
-  - Left (~45%): dark terminal-style panel showing the selected scenario's config as a **human-readable structured diff** (e.g. `goal: £10.0m → £10.5m`, `capacity[Division B]: 0.85 → 0.78`) — styled in monospace/terminal aesthetic but is NOT real code. Corner tick-mark frame, filename-style label top-left, "Copy" pill top-right.
-  - Right (~55%): heading + button + vertical list of saved/named scenarios (including Baseline). Active item gets a short vertical accent bar + full-opacity text; inactive items are greyed with no accent bar and no visible description.
+**Register superseded 27 Sept 2026.** This section previously locked a deliberate
+register break for this screen only — monospace bracketed labels (`[ N.04/11 ]`),
+dotted-grid texture, thin rules, isometric line-icons, a dark terminal diff panel.
+That is **no longer what this screen is.** A reference screenshot was supplied on
+27 Sept with the explicit instruction that it is the design to replicate, not
+inspiration, and that it supersedes the engineering-console register. The screen
+now uses the same light card language as the rest of the app, which also removes
+the one place the design deliberately contradicted itself. The old register is
+kept nowhere — do not reintroduce it.
+
+- Two-line section heading: bold first line in Grey 04, lighter second line in
+  Grey 03, in brackets or as a subtitle (`Scenario Workspace / (Test before you
+  commit)`). Circular prev/next pair top-right of each section — forward is a
+  filled Dark Blue circle with a white arrow, back is a white circle with a thin
+  Grey 02 border.
+- **Row of four white cards = the four scenario examples** (not the four levers):
+  "Raise the bar" (goal +5%), "<Division> capacity dip" (capacity lever),
+  "Team-wide stretch" (+10% population adjustment), "Confidence check" (confidence
+  lowered for a division). Baseline sits in the saved row as the default
+  comparison state, never as a fifth numbered card.
+  - Each card: bold title, two-line grey description, and a rounded Grey 01 badge
+    bottom-left holding a single-weight line icon.
+  - Active card is distinguished by elevation only — a deeper shadow, no border
+    or fill change.
+- **Numbered pagination strip** beneath the row, sitting on a thin full-width
+  rule: `01`–`04`, active is a filled Dark Blue pill with white monospace text,
+  inactive are white pills with a thin border. Selecting a pill and clicking a
+  card are the same action.
+- **Saved scenarios row:** a horizontally-scrolling carousel of white cards using
+  the same card-and-arrow pattern, Baseline first, then each saved scenario with
+  its save date. The section's arrows scroll the rail rather than moving the
+  selection.
+- **Diff panel** below both rows, fed by whichever card is selected in either
+  row: one white card, two columns — "What changes" (the lever config as
+  `before → after`) and "What it does" (expected achievement, gap, confidence,
+  forecast ratio, same shape). Monospace for the figures, not for the labels. Not
+  a dark terminal, and not syntax-highlighted.
+  - The outcome column is **scoped to the lever's own group**, not fixed to
+    DES-wide — lever 4 never cascades to parent rollups, so a division-scoped
+    override reported at DES-wide reads as changing nothing at all. The column
+    header names the group it is showing.
+
+**Colour is mapped, never copied.** The reference's black is Dark Blue (#00172d),
+the darkest token in the PA palette; its card radius resolves to
+`--radius-pa-card` (16px), already inside the reference's 16-20px range. No hex
+was introduced for this screen.
 
 ---
 
-## Summary of what's still genuinely open
+## Summary of what was still genuinely open — all closed (28 Sept 2026)
 
-These need an answer (from Justin, or a proposal from Claude Code flagged as a judgement call, not a silent decision) before their screen can be built to the same standard as the rest:
+Every item on this list has since been answered. Kept as the record of how,
+rather than deleted, so nobody re-opens a question that already has a decision
+behind it.
 
-1. Individual Detail's right-hero visual (cohort chart vs. avatar)
-2. Individual Detail's plain-language explanation block — undesigned
-3. Manager Override — overall layout beyond the now-specified cross-check accordion (panel vs. standalone route, sign-off gate visual treatment)
-4. Mass Adjustment — full visual layout
-5. Bubble-network sizing/positioning logic on Overview & Population
-6. Executive Summary's page-index footer element — keep or drop
+1. ~~Individual Detail's right-hero visual (cohort chart vs. avatar)~~ —
+   **resolved 26 Sept:** avatar/photo placeholder. A chart would duplicate the
+   Cohort comparison tab already on the screen. The placeholder became the real
+   photograph at M5.
+2. ~~Individual Detail's plain-language explanation block~~ — **resolved 27
+   Sept:** stays as the engine's generated sentence. Confirmed as a decision,
+   not an omission; the copy cites the record's own factor values, which is
+   what it is for.
+3. ~~Manager Override's overall layout~~ — **resolved 26 Sept:** a modal over
+   Individual Detail rather than a standalone route, with the sign-off gate
+   using the amber "at risk" colour and explanatory copy rather than a plain
+   disabled button. `/system1/override/:id` still resolves, so inbound links
+   keep working.
+4. ~~Mass Adjustment's full visual layout~~ — **resolved 26 Sept:** built in
+   the established card language, population fed by the roster multi-select,
+   amber gate matching Manager Override. Refined to the benchmark at M2.
+5. ~~Bubble-network sizing/positioning on Overview & Population~~ —
+   **resolved 25 Sept:** uniform-size bubble per team, positioned by a
+   two-phase relaxation (spring-to-seed, then alternating separation and
+   keep-out until both constraints hold), with connectors trimmed to bubble
+   edges.
+6. ~~Executive Summary's page-index footer element~~ — **resolved 26 Sept:**
+   dropped. A print-report artefact with nothing to paginate against in a live
+   app.
+
+Nothing on the visual spec is open. What remains is process rather than
+design — see the branch's own state.

@@ -3,12 +3,14 @@ import type { Person } from '../data/types'
 import { computeRevenueCohortAverages } from '../engine/cohortAverages'
 import { combinedRevenueFor } from '../engine/revenueEngine'
 import { HBarChart } from '../../components/searchlight/HBarChart'
+import { formatMoney } from '../../shared/format'
+import { formatPercent } from '../../shared/format'
 
 function deltaLabel(value: number, baseline: number): string {
   if (baseline === 0) return ''
-  const pct = Math.round(((value - baseline) / baseline) * 100)
-  if (pct === 0) return 'in line with'
-  return pct > 0 ? `${pct}% above` : `${Math.abs(pct)}% below`
+  const pct = ((value - baseline) / baseline) * 100
+  if (Math.abs(pct) < 0.05) return 'in line with'
+  return pct > 0 ? `${formatPercent(pct)} above` : `${formatPercent(Math.abs(pct))} below`
 }
 
 /**
@@ -23,7 +25,7 @@ export function CohortComparisonPanel({ person }: { person: Person }) {
   const personValue = combinedRevenueFor(person)
 
   return (
-    <div className="rounded-xl border border-pa-grey-01 bg-pa-white p-4">
+    <div className="rounded-pa-card bg-pa-white shadow-pa-card p-4">
       <h2 className="font-pa-display text-sm font-semibold text-pa-grey-04">
         Cohort comparison — {person.division} / {person.team}
       </h2>
@@ -37,7 +39,7 @@ export function CohortComparisonPanel({ person }: { person: Person }) {
               key: 'person',
               label: `${person.name} (this person)`,
               value: personValue,
-              display: `£${Math.round(personValue)}k`,
+              display: formatMoney(personValue),
               fill: 'var(--color-pa-aqua-04)',
               testId: 'cohort-person-value',
             },
@@ -45,7 +47,7 @@ export function CohortComparisonPanel({ person }: { person: Person }) {
               key: 'team',
               label: `${person.team} team average`,
               value: averages.teamAverage,
-              display: `£${Math.round(averages.teamAverage)}k`,
+              display: formatMoney(averages.teamAverage),
               fill: 'var(--color-pa-aqua-03)',
               testId: 'cohort-team-value',
             },
@@ -53,7 +55,7 @@ export function CohortComparisonPanel({ person }: { person: Person }) {
               key: 'division',
               label: `${person.division} division average`,
               value: averages.divisionAverage,
-              display: `£${Math.round(averages.divisionAverage)}k`,
+              display: formatMoney(averages.divisionAverage),
               fill: 'var(--color-pa-grey-02)',
               testId: 'cohort-division-value',
             },
@@ -61,10 +63,10 @@ export function CohortComparisonPanel({ person }: { person: Person }) {
         />
       </div>
       <p className="mt-4 font-pa-body text-sm text-pa-grey-04">
-        <span className="font-pa-mono">£{personValue}k</span> is {deltaLabel(personValue, averages.teamAverage)} the{' '}
-        {person.team} team average (<span className="font-pa-mono">£{Math.round(averages.teamAverage)}k</span>), and{' '}
+        <span className="font-pa-mono">{formatMoney(personValue)}</span> is {deltaLabel(personValue, averages.teamAverage)} the{' '}
+        {person.team} team average (<span className="font-pa-mono">{formatMoney(averages.teamAverage)}</span>), and{' '}
         {deltaLabel(personValue, averages.divisionAverage)} the {person.division} division average (
-        <span className="font-pa-mono">£{Math.round(averages.divisionAverage)}k</span>).
+        <span className="font-pa-mono">{formatMoney(averages.divisionAverage)}</span>).
       </p>
     </div>
   )

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useSnapshotStore } from '../../store/snapshotStore'
 import { useSystem2Store } from '../../store/system2Store'
@@ -6,11 +6,13 @@ import { aggregate } from '../engine/aggregation'
 import { computeRiskStatuses } from '../engine/riskStatus'
 import type { RiskStatus } from '../engine/riskStatus'
 import { computeGoals } from '../engine/goals'
-import { round1, statusBadgeClass } from '../riskDisplay'
-import { CoverageTrack } from '../components/CoverageTrack'
+import {} from '../riskDisplay'
 import { RiskExceptionsSection } from '../components/RiskExceptionsSection'
-import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
 import { SketchDistribution } from '../../components/searchlight/SketchIllustrations'
+import { formatMoney } from '../../shared/format'
+import { formatPercent } from '../../shared/format'
+import { SectionHeading } from '../../components/searchlight/Section'
+import { AnimatedFigure } from '../../components/searchlight/AnimatedFigure'
 
 /**
  * S2-M4: the sponsor-facing front door — goal, coverage, forecast, gap,
@@ -33,40 +35,48 @@ import { SketchDistribution } from '../../components/searchlight/SketchIllustrat
  * screens. The hero status word keeps its own text-only colour helper below.
  */
 // The big hero status word, coloured by severity (text only, no chip).
-function execStatusWordColor(status: RiskStatus): string {
-  switch (status) {
-    case 'On track':
-      return 'text-pa-aqua-05'
-    case 'At risk':
-      return 'text-pa-apricot-04'
-    case 'Off track':
-      return 'text-pa-rose-04'
-    case 'Infeasible':
-      return 'text-pa-ingenuity-red'
-  }
-}
 
-function MetricCell({
+/**
+ * Stat tile, reference anatomy: a label, a small line icon, a large numeral,
+ * and a small grey caption beneath.
+ *
+ * The label carried a trailing full stop from the reference screenshot until
+ * 29 Sept 2026. These are labels, not sentences, so the punctuation went —
+ * across the whole screen, not just the tiles. Running prose on this screen
+ * keeps its full stops.
+ */
+function StatTile({
   label,
   value,
-  sub,
-  rule,
+  caption,
+  icon,
   testId,
+  valueColor,
 }: {
   label: string
   value: ReactNode
-  sub: string
-  rule: string
-  testId?: string
+  caption: string
+  icon: ReactNode
+  testId: string
+  /** Overrides the numeral's ink where the value itself carries meaning. */
+  valueColor?: string
 }) {
   return (
-    <div className="relative px-4 py-3">
-      <div className="absolute inset-x-0 top-0 h-0.5" style={{ background: rule }} />
-      <div className="font-pa-body text-[11px] font-medium uppercase tracking-wide text-pa-grey-03">{label}</div>
-      <div data-testid={testId} className="mt-1 font-pa-mono text-lg font-bold text-pa-grey-04">
+    /* Grey 01 for the same reason as the hero card: Grey wash is the page
+       colour, so a Grey-wash tile is invisible as a container. */
+    <div className="rounded-pa-card bg-pa-white px-6 py-5 shadow-pa-card">
+      <p className="font-pa-body text-sm font-semibold text-pa-grey-04">{label}</p>
+      <span className="mt-3 block text-pa-grey-03" aria-hidden="true">
+        {icon}
+      </span>
+      <p
+        data-testid={testId}
+        className="mt-3 font-pa-display text-4xl font-medium leading-none tracking-tight text-pa-grey-04"
+        style={valueColor ? { color: valueColor } : undefined}
+      >
         {value}
-      </div>
-      <div className="mt-0.5 font-pa-body text-[11px] text-pa-grey-03">{sub}</div>
+      </p>
+      <p className="mt-2 font-pa-body text-[11px] uppercase tracking-[0.1em] text-pa-grey-03">{caption}</p>
     </div>
   )
 }
@@ -81,26 +91,37 @@ export function ExecutiveSummary() {
   const goals = useMemo(() => computeGoals(rollups), [rollups])
   const riskStatuses = useMemo(() => computeRiskStatuses(records, rollups, goals), [records, rollups, goals])
 
-  const hasRecords = records.length > 0
-  const [loading, setLoading] = useState(hasRecords)
-  useEffect(() => {
-    if (!hasRecords) return
-    const timer = setTimeout(() => setLoading(false), 900)
-    return () => clearTimeout(timer)
-  }, [hasRecords])
+  /**
+   * Item 3: whether the top row shows proportions or the money behind them.
+   *
+   * It governs the NUMERALS only. The hero's proportional fill still scales by
+   * the forecast ratio and the goal-split pills keep their order, because the
+   * shapes encode the same relationships either way — swapping the units must
+   * not redraw the chart.
+   *
+   * The organisational goal itself and the gap line are absolute figures with
+   * no percentage counterpart, so they read the same in both modes rather than
+   * being converted into something they are not.
+   */
+  const [display, setDisplay] = useState<'percent' | 'actuals'>('percent')
+  const showActuals = display === 'actuals'
+
+  /* Declared with the other hooks, above the empty-state early return below —
+     a hook after a conditional return runs in a different order on the two
+     paths. */
 
   if (records.length === 0) {
     return (
       <section className="space-y-6">
         <div>
-          <h1 className="font-pa-display text-4xl font-semibold text-pa-grey-04">Executive summary</h1>
+          <h1 className="font-pa-display text-4xl font-semibold leading-[1.1] text-pa-grey-04">Executive summary</h1>
           <p className="mt-2 max-w-md font-pa-body text-sm text-pa-grey-03">
             Tells leadership whether DES is on track to hit its goal. Import an Approved snapshot from
             System 1 to get started — System 2 never reads System 1&apos;s live data directly.
           </p>
         </div>
 
-        <div className="rounded-lg border border-pa-grey-01 bg-pa-white p-4">
+        <div className="rounded-pa-card bg-pa-white shadow-pa-card p-4">
           <div className="font-pa-body text-xs text-pa-grey-03">Available to import (System 1&apos;s last export)</div>
           <div data-testid="s2-available-count" className="mt-1 font-pa-mono text-2xl font-bold tabular-nums text-pa-grey-04">
             {lastSnapshot ? lastSnapshot.recordCount : '—'}
@@ -119,7 +140,8 @@ export function ExecutiveSummary() {
           data-testid="s2-import-button"
           disabled={!lastSnapshot}
           onClick={() => lastSnapshot && importSnapshot(lastSnapshot)}
-          className="rounded-md bg-pa-aqua-05 px-3 py-1.5 font-pa-body text-sm font-medium text-pa-white hover:bg-pa-aqua-04 disabled:cursor-not-allowed disabled:opacity-40"
+          style={{ background: 'var(--color-pa-accent)', color: 'var(--color-pa-accent-ink)' }}
+          className="rounded-pa-chip px-4 py-2 font-pa-body text-sm font-semibold transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-40"
         >
           Import from System 1
         </button>
@@ -164,141 +186,319 @@ export function ExecutiveSummary() {
   const joinedDrivers =
     riskDrivers.length <= 1 ? (riskDrivers[0] ?? '') : `${riskDrivers.slice(0, -1).join(', ')} and ${riskDrivers[riskDrivers.length - 1]}`
 
+  /**
+   * The hero's gradient carries RISK STATUS, not a brand hue — the spec is
+   * explicit that the fill itself is the status indicator, which is where
+   * this departs from the reference's flat yellow. Saturated at the left,
+   * fading toward the goal edge, in the green/amber/red family.
+   */
+  const HERO: Record<RiskStatus, { gradient: string; onFill: string }> = {
+    'On track': {
+      gradient: 'var(--color-pa-lime-03), var(--color-pa-lime-01)',
+      onFill: 'var(--color-pa-grey-04)',
+    },
+    'At risk': {
+      gradient: 'var(--color-pa-apricot-03), var(--color-pa-apricot-01)',
+      onFill: 'var(--color-pa-grey-04)',
+    },
+    'Off track': {
+      gradient: 'var(--color-pa-rose-04), var(--color-pa-rose-01)',
+      onFill: 'var(--color-pa-white)',
+    },
+    Infeasible: {
+      gradient: 'var(--color-pa-ingenuity-red), var(--color-pa-rose-01)',
+      onFill: 'var(--color-pa-white)',
+    },
+  }
+  const hero = HERO[desWideRisk.status]
+
+  const forecastPct = desWideRisk.forecastRatio * 100
+  /** Goal split by division — the reference's two region pills, carrying our
+   *  own breakdown. Three, because DES has three divisions: the pill pattern
+   *  is the reference's, the count follows our data. */
+  const goalSplit = [...goals.byDivision.entries()]
+    .map(([division, value]) => ({ division, value, pct: goals.desWide > 0 ? (value / goals.desWide) * 100 : 0 }))
+    .sort((a, b) => b.pct - a.pct)
+
   return (
-    <section className="relative space-y-8">
+    <section className="relative">
       {/* Large, low-opacity distribution-curve motif behind the content
           column — texture, not a corner decoration. */}
-      <SketchDistribution className="pointer-events-none absolute left-1/2 top-16 -z-10 h-[420px] w-[860px] max-w-none -translate-x-1/2 opacity-[0.06]" />
+      <SketchDistribution className="pointer-events-none absolute left-1/2 top-24 -z-10 h-[560px] w-[1100px] max-w-none -translate-x-1/2 opacity-[0.16]" />
 
-      <div>
-        <h1 className="font-pa-display text-4xl font-semibold leading-tight text-pa-grey-04">Executive summary</h1>
-        <p className="mt-1 font-pa-body text-sm text-pa-grey-03">
-          {records.length} record{records.length === 1 ? '' : 's'} imported from System 1
-          {importedAt ? ` · ${importedAt}` : ''}.
-        </p>
-      </div>
+      {/*
+        Moved to the shared SectionHeading (28 Sept 2026). This was a small
+        bold org name over a grey subtitle — the treatment its own reference
+        screenshot set. That reference predates the design reset, and leaving
+        it would make this the one screen not on the benchmark heading. The
+        org name is kept; it is now the heading's first line.
+      */}
+      <header>
+        <SectionHeading first="Design, Engineering &amp; Science" second="Organisational operating summary" />
+      </header>
 
-      {loading ? (
-        <SearchlightLoader />
-      ) : (
-        <div className="animate-[pa-fade-in_500ms_ease-out] space-y-8">
-          {/* Hero: the status word large in its severity colour, no card, with
-              the plain-language risk sentence alongside it. */}
-          <div className="flex flex-wrap items-baseline gap-x-5 gap-y-2">
-            <span
-              data-testid="s2-exec-status-word"
-              data-status={desWideRisk.status}
-              className={`font-pa-display text-[40px] font-semibold leading-none ${execStatusWordColor(desWideRisk.status)}`}
-            >
-              {desWideRisk.status}
-            </span>
-            {desWideRisk.status === 'On track' ? (
-              <p data-testid="s2-exec-risk-statement" className="max-w-2xl font-pa-body text-base text-pa-grey-04">
-                On track to meet the £{round1(goal)}k goal — forecasting £{round1(expected)}k ({round1(coverage)}% coverage).
+      {(
+        <div className="animate-pa-fade">
+          {/* Generous vertical whitespace above the body — this screen should
+              feel calm and editorial, not dense. */}
+          <div className="grid gap-12 pb-20 pt-20 lg:grid-cols-[35fr_65fr] lg:gap-16">
+            {/* ---- Left: the organisational goal, as the dominant element ---- */}
+            <div>
+              <p className="font-pa-body text-sm font-semibold text-pa-grey-04">Organisational goal</p>
+              <p
+                className="mt-4 font-pa-display text-[5.5rem] font-medium leading-[0.95] tracking-tight text-pa-grey-04"
+              >
+                <AnimatedFigure testId="s2-exec-goal" value={goal} format={formatMoney} />
               </p>
-            ) : (
-              <p data-testid="s2-exec-risk-statement" className="max-w-2xl font-pa-body text-base text-pa-grey-04">
-                We risk missing the £{round1(goal)}k goal{gap > 0 ? ` by £${round1(gap)}k` : ''}
-                {joinedDrivers ? `, due to ${joinedDrivers}` : ''}.
+
+              <div className="mt-6 flex flex-wrap gap-2">
+                {goalSplit.map(({ division, pct, value }) => (
+                  <span
+                    key={division}
+                    data-testid="s2-exec-goal-split"
+                    className="rounded-pa-chip px-2.5 py-1 font-pa-body text-xs text-pa-grey-03"
+                    style={{ background: 'var(--color-pa-white)', boxShadow: 'var(--shadow-pa-card)' }}
+                  >
+                    {showActuals ? formatMoney(value) : formatPercent(pct)} {division}
+                  </span>
+                ))}
+              </div>
+
+              <p className="mt-6 max-w-sm font-pa-body text-sm leading-relaxed text-pa-grey-03">
+                Prior-year revenue plus 10%, computed per team and rolled up — never apportioned down from the
+                DES-wide figure. {formatMoney(goal)} across {records.length} approved records.
               </p>
-            )}
-          </div>
+            </div>
 
-          {/* Signature visualisation. */}
-          <CoverageTrack goal={goal} expected={expected} gap={gap} status={desWideRisk.status} />
+            {/* ---- Right: the signature gap/forecast visualisation ---- */}
+            <div className="space-y-4">
+              <div
+                data-testid="s2-exec-forecast-hero"
+                data-status={desWideRisk.status}
+                className="relative overflow-hidden rounded-pa-card"
+                /* Grey 01, not Grey wash: the page itself is Grey wash, so a
+                   Grey-wash card had no visible edge — the unfilled remainder
+                   vanished into the page and "Target FY26." read as though it
+                   had drifted outside the card when it was inside all along. */
+                style={{ background: 'var(--color-pa-white)', boxShadow: 'var(--shadow-pa-card)' }}
+              >
+                {/* Proportional fill: its WIDTH is the forecast ratio and its
+                    HUE is the risk status, so the one mark carries both. */}
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-y-0 left-0 w-full origin-left"
+                  style={{
+                    transform: `scaleX(${Math.min(forecastPct, 100) / 100})`,
+                    transition: 'transform var(--dur-pa-slow) var(--ease-pa-out)',
+                    backgroundImage: `linear-gradient(to right, ${hero.gradient})`,
+                  }}
+                />
+                <div className="relative flex items-start justify-between gap-6 px-7 pb-8 pt-6">
+                  {/*
+                    Text colour follows the fill it sits on, measured rather
+                    than assumed: Grey 04 on Ingenuity Red is 2.45:1, nowhere
+                    near AA. The red statuses therefore take white, and the
+                    label is set at 18px semibold so it qualifies as WCAG
+                    large text (3:1), where white-on-red reaches 3.9:1. The
+                    light statuses keep Grey 04, which clears AA comfortably.
+                  */}
+                  <div>
+                    <p className="font-pa-body text-lg font-semibold" style={{ color: hero.onFill }}>
+                      Forecast
+                    </p>
+                    {/*
+                      Item 2: the ratio and the money behind it are shown
+                      together, never one without the other — a forecast of 87%
+                      means nothing to a sponsor without the figure it is 87%
+                      of. The toggle decides which of the two leads; both stay
+                      on screen either way.
 
-          {/* One divided white surface — not four separate cards. */}
-          <div className="grid grid-cols-2 divide-x divide-y divide-pa-grey-01 overflow-hidden rounded-xl border border-pa-grey-01 bg-pa-white sm:grid-cols-4 sm:divide-y-0">
-            <MetricCell
-              label="Goal"
-              testId="s2-exec-goal"
-              value={<>£{round1(goal)}k</>}
-              sub="prior year revenue + 10%"
-              rule="var(--color-pa-grey-02)"
-            />
-            <MetricCell
-              label="Coverage"
-              testId="s2-exec-coverage"
-              value={`${round1(coverage)}%`}
-              sub="allocated targets vs goal"
-              rule="var(--color-pa-aqua-04)"
-            />
-            <MetricCell
-              label="Forecast"
-              testId="s2-exec-forecast"
-              value={`${round1(desWideRisk.forecastRatio * 100)}%`}
-              sub={`£${round1(expected)}k expected`}
-              rule="var(--color-pa-aqua-03)"
-            />
-            <MetricCell
-              label="Gap"
-              testId="s2-exec-gap"
-              value={
-                <span className={gap < 0 ? 'text-pa-lime-04' : gap > 0 ? 'text-pa-ingenuity-red' : undefined}>
-                  {gap >= 0 ? '−' : '+'}£{round1(Math.abs(gap))}k
-                </span>
-              }
-              sub={gap >= 0 ? 'shortfall vs goal' : 'surplus vs goal'}
-              rule={gap > 0 ? 'var(--color-pa-ingenuity-red)' : 'var(--color-pa-lime-03)'}
-            />
-          </div>
+                      Keyed on the mode so AnimatedFigure remounts instead of
+                      tweening across a change of unit — without it, switching
+                      would count from 87 to 13,700 as though the number had
+                      grown.
+                    */}
+                    <p
+                      data-testid="s2-exec-forecast"
+                      className="mt-3 font-pa-display text-5xl font-medium leading-none tracking-tight"
+                      style={{ color: hero.onFill }}
+                    >
+                      <AnimatedFigure
+                        key={display}
+                        value={showActuals ? expected : forecastPct}
+                        format={showActuals ? formatMoney : formatPercent}
+                      />
+                    </p>
+                    <p
+                      data-testid="s2-exec-forecast-secondary"
+                      className="mt-2 font-pa-body text-base font-medium"
+                      style={{ color: hero.onFill }}
+                    >
+                      {showActuals ? `${formatPercent(forecastPct)} of goal` : `${formatMoney(expected)} forecast`}
+                    </p>
+                    <p
+                      data-testid="s2-exec-gap"
+                      className="mt-2 font-pa-body text-sm font-medium"
+                      style={{ color: hero.onFill }}
+                    >
+                      {gap >= 0 ? '−' : '+'}{formatMoney(Math.abs(gap))} {gap >= 0 ? 'short of' : 'above'} goal
+                    </p>
+                  </div>
+                  <p className="shrink-0 font-pa-body text-sm text-pa-grey-03">Target FY26</p>
+                </div>
+              </div>
 
-          {/* Status + confidence line. */}
-          <div className="flex flex-wrap items-center gap-3">
-            <span
-              data-testid="s2-exec-status"
-              data-status={desWideRisk.status}
-              className={`inline-block rounded px-2 py-0.5 font-pa-body text-xs font-semibold ${statusBadgeClass(desWideRisk.status)}`}
-            >
-              {desWideRisk.status}
-            </span>
-            <span className="font-pa-body text-xs text-pa-grey-03">
-              confidence (simulated, illustrative only):{' '}
-              <span data-testid="s2-exec-confidence" className="font-pa-mono">
-                {desWideRisk.confidence}
-              </span>
-            </span>
-            {desWideRisk.concentrationFlagged && (
-              <span data-testid="s2-exec-concentration" className="font-pa-body text-xs text-pa-apricot-04">
-                concentration risk flagged
-              </span>
-            )}
-          </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <StatTile
+                  label="Coverage"
+                  testId="s2-exec-coverage"
+                  value={showActuals ? formatMoney(rollups.desWide.target) : formatPercent(coverage)}
+                  caption={showActuals ? 'Allocated targets, total' : 'Allocated targets vs goal'}
+                  icon={
+                    <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.4">
+                      <circle cx="10" cy="10" r="7" />
+                      <path d="M10 3a7 7 0 0 1 7 7h-7Z" fill="currentColor" stroke="none" />
+                    </svg>
+                  }
+                />
+                {/*
+                  Item 4: High takes --color-pa-risk-on-track, the same token
+                  StatusPill already uses for an On track risk status, so
+                  "good" is one colour across the app rather than a green
+                  invented here. It resolves to #2c8027 (Lime 04), which
+                  measures 4.96:1 on white and clears AA for normal text, let
+                  alone at this size.
 
-          <div>
-            <h2 className="font-pa-display text-base font-semibold text-pa-grey-04">Top risk drivers</h2>
-            <div className="mt-2 overflow-x-auto rounded-lg border border-pa-grey-01 bg-pa-white">
-              <table className="min-w-full divide-y divide-pa-grey-01 font-pa-body text-sm">
-                <thead className="bg-pa-grey-wash text-left text-xs font-medium uppercase tracking-wide text-pa-grey-03">
-                  <tr>
-                    <th className="px-3 py-2">Team</th>
-                    <th className="px-3 py-2 text-right">Gap</th>
-                    <th className="px-3 py-2">Status</th>
-                  </tr>
-                </thead>
-                <tbody data-testid="s2-exec-top-drivers">
-                  {topDrivers.map((driver) => (
-                    <tr key={driver.teamKey} data-testid="s2-exec-driver-row" className="border-t border-pa-grey-01">
-                      <td className="px-3 py-2 font-medium text-pa-grey-04">{driver.teamKey.replace('::', ' / ')}</td>
-                      <td className="px-3 py-2 text-right font-pa-mono tabular-nums text-pa-grey-04">
-                        {driver.gap >= 0 ? '−' : '+'}£{round1(Math.abs(driver.gap))}k
-                      </td>
-                      <td className="px-3 py-2">
-                        <span
-                          data-status={driver.status}
-                          className={`inline-block rounded px-2 py-0.5 text-xs font-semibold ${statusBadgeClass(driver.status)}`}
-                        >
-                          {driver.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                  Medium and Low keep the default ink deliberately. Only High
+                  was asked for, and coding all three would turn an
+                  explicitly illustrative figure into what looks like a
+                  measured traffic light.
+                */}
+                <StatTile
+                  label="Confidence"
+                  testId="s2-exec-confidence"
+                  value={desWideRisk.confidence}
+                  valueColor={
+                    desWideRisk.confidence === 'High' ? 'var(--color-pa-risk-on-track)' : undefined
+                  }
+                  caption="Simulated — illustrative only"
+                  icon={
+                    <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.4">
+                      <path d="M3 13.5 7 9l3.5 3L17 5.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M13 5.5h4v4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  }
+                />
+              </div>
+
+              {/* The plain-language risk sentence. It used to sit beside a
+                  large status word in the old hero; that hero is gone, but
+                  the sentence is the "why" behind the forecast and belongs
+                  with it rather than being dropped. */}
+              {desWideRisk.status === 'On track' ? (
+                <p data-testid="s2-exec-risk-statement" className="font-pa-body text-sm text-pa-grey-04">
+                  On track to meet the {formatMoney(goal)} goal — forecasting {formatMoney(expected)}.
+                </p>
+              ) : (
+                <p data-testid="s2-exec-risk-statement" className="font-pa-body text-sm text-pa-grey-04">
+                  <span data-testid="s2-exec-status" data-status={desWideRisk.status} className="font-semibold">
+                    {desWideRisk.status}
+                  </span>{' '}
+                  — we risk missing the {formatMoney(goal)} goal{gap > 0 ? ` by ${formatMoney(gap)}` : ''}
+                  {joinedDrivers ? `, due to ${joinedDrivers}` : ''}.
+                </p>
+              )}
+
+              {desWideRisk.concentrationFlagged && (
+                <p data-testid="s2-exec-concentration" className="font-pa-body text-xs text-pa-apricot-04">
+                  Concentration risk flagged.
+                </p>
+              )}
+
+              {/*
+                Item 3: the unit switch for this row, bottom-right of it. Sits
+                at the end of the right-hand column so it reads as a control
+                over what is above it rather than a page-level setting.
+
+                Styled as the location filter's chips on System 1's population
+                screen — accent fill for the live option — so a segmented
+                choice looks the same in both systems. Two real buttons with
+                aria-pressed rather than a checkbox: it picks between two
+                named options, not on/off.
+              */}
+              <div className="flex justify-end pt-2">
+                <div
+                  role="group"
+                  aria-label="Number format"
+                  className="inline-flex gap-1 rounded-pa-chip bg-pa-white p-1 shadow-pa-card"
+                >
+                  {([
+                    ['percent', 'Percentage'],
+                    ['actuals', 'Actuals'],
+                  ] as const).map(([mode, label]) => {
+                    const active = display === mode
+                    return (
+                      <button
+                        key={mode}
+                        type="button"
+                        data-testid="s2-exec-display-toggle"
+                        data-mode={mode}
+                        data-active={active ? 'true' : 'false'}
+                        aria-pressed={active}
+                        onClick={() => setDisplay(mode)}
+                        className={`rounded-full px-3 py-1.5 font-pa-body text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-grey-03 ${
+                          active
+                            ? 'bg-[var(--color-pa-accent)] text-[var(--color-pa-accent-ink)]'
+                            : 'text-pa-grey-04 hover:bg-pa-grey-01'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="border-t border-pa-grey-01 pt-6">
+          {/* Footer rule: caption left. The reference's right-hand page index
+              ("01 / 12") is deliberately dropped — a print-report artefact
+              with nothing to paginate against in a live app. */}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-pa-grey-01 pt-4">
+            <p className="font-pa-body text-[11px] uppercase tracking-[0.12em] text-pa-grey-03">
+              {records.length} record{records.length === 1 ? '' : 's'} imported from System 1
+              {importedAt ? ` · ${importedAt}` : ''}
+            </p>
+
+            {/*
+              The import control used to live ONLY inside the empty state's
+              early return. Seeding the store meant that block never rendered
+              again, which silently made the real import path unreachable —
+              the hand-off the demo is supposed to show. It lives here now, in
+              the populated state, so importing a fresh export is always one
+              click away.
+            */}
+            <button
+              type="button"
+              data-testid="s2-import-button"
+              disabled={!lastSnapshot}
+              onClick={() => lastSnapshot && importSnapshot(lastSnapshot)}
+              className="rounded-pa-chip border border-pa-grey-02 bg-pa-white px-3.5 py-1.5 font-pa-body text-[11px] font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-01 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {lastSnapshot
+                ? `Re-import from System 1 (${lastSnapshot.recordCount})`
+                : 'Nothing exported to import'}
+            </button>
+          </div>
+
+          <div className="space-y-8 pt-16">
+          {/*
+            "Top risk drivers" used to live here as its own card list, with
+            the risk/exception table directly beneath it over the same teams.
+            The spec calls for ONE Top Risks list; the two have been merged
+            into RiskExceptionsSection below, which now carries the gap and
+            status the cards provided plus the specific flags the table did.
+          */}
             <RiskExceptionsSection />
           </div>
         </div>

@@ -12,6 +12,7 @@ import { aggregate, type Rollup } from '../../system2/engine/aggregation'
 import { assessRisk, type RiskStatus } from '../../system2/engine/riskStatus'
 import type { OrgRecord } from '../../system2/data/types'
 import { getDivisionLiveState, getTeamLiveState, type System2LiveSnapshot } from '../../system2/bridge/liveOrgState'
+import { formatMoneyPrecise } from '../../shared/format'
 
 /**
  * Batch 3c: extends 3b's cross-check to Mass Adjustment. Two distinct
@@ -124,8 +125,8 @@ function computeGroupCheck(params: {
     status: passes ? 'pass' : 'fail',
     detail:
       beforeStatus === afterRisk.status
-        ? `${label} stays ${afterRisk.status}: £${beforeTotal}k → £${afterRollup.target}k.`
-        : `${label} moves from ${beforeStatus ?? 'no prior data'} to ${afterRisk.status}: £${beforeTotal}k → £${afterRollup.target}k.`,
+        ? `${label} stays ${afterRisk.status}: ${formatMoneyPrecise(beforeTotal)} → ${formatMoneyPrecise(afterRollup.target)}.`
+        : `${label} moves from ${beforeStatus ?? 'no prior data'} to ${afterRisk.status}: ${formatMoneyPrecise(beforeTotal)} → ${formatMoneyPrecise(afterRollup.target)}.`,
   }
 }
 

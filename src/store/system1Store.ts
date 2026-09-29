@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { SEED_PEOPLE } from '../system1/data/people'
 import { calculateModelledTarget } from '../system1/engine/targetingEngine'
+import { formatMoney } from '../shared/format'
 
 /**
  * System 1's shared store. Population data (src/system1/data/people.ts) is
@@ -43,14 +44,14 @@ export interface OverrideInfo {
  * flag, not a fresh recalculation against whatever System 2 says right now.
  */
 export interface SignOffCheckSummary {
-  status: 'pass' | 'fail'
+  status: 'pass' | 'fail' | 'note'
   detail: string
 }
 
 export interface SignOffAggregateGroup {
   key: string
   label: string
-  status: 'pass' | 'fail'
+  status: 'pass' | 'fail' | 'note'
   detail: string
 }
 
@@ -200,6 +201,17 @@ interface System1State {
   rejectSignOff: (personId: string, reason: string, reviewerLabel?: string) => void
   /** Loops rejectSignOff() across a whole mass-adjustment batch. */
   rejectSignOffBatch: (personIds: string[], reason: string, reviewerLabel?: string) => void
+
+  /**
+   * Roster multi-select from Overview & Population's team list state. Lives
+   * in the store, not in the screen, because its whole purpose is to survive
+   * navigation — CLAUDE.md has Mass Adjustment picking up this selection
+   * rather than owning a second population picker.
+   */
+  selectedPersonIds: string[]
+  togglePersonSelected: (personId: string) => void
+  setSelectedPersonIds: (personIds: string[]) => void
+  clearSelection: () => void
 }
 
 export const useSystem1Store = create<System1State>()(
@@ -207,8 +219,20 @@ export const useSystem1Store = create<System1State>()(
     (set, get) => ({
       targets: buildSeedTargets(),
       auditLog: [],
+      selectedPersonIds: [],
 
-      resetToSeed: () => set({ targets: buildSeedTargets(), auditLog: [] }),
+      resetToSeed: () => set({ targets: buildSeedTargets(), auditLog: [], selectedPersonIds: [] }),
+
+      togglePersonSelected: (personId) =>
+        set((state) => ({
+          selectedPersonIds: state.selectedPersonIds.includes(personId)
+            ? state.selectedPersonIds.filter((id) => id !== personId)
+            : [...state.selectedPersonIds, personId],
+        })),
+
+      setSelectedPersonIds: (personIds) => set({ selectedPersonIds: personIds }),
+
+      clearSelection: () => set({ selectedPersonIds: [] }),
 
       addAuditEntry: (entry) =>
         set((state) => ({
@@ -242,8 +266,8 @@ export const useSystem1Store = create<System1State>()(
           action: source === 'mass' ? 'Mass adjustment applied' : 'Override applied',
           detail:
             (type === 'percent'
-              ? `${value > 0 ? '+' : ''}${value}% → £${finalValue}k. Reason: ${reason}`
-              : `Set to £${finalValue}k. Reason: ${reason}`) +
+              ? `${value > 0 ? '+' : ''}${value}% → ${formatMoney(finalValue)}. Reason: ${reason}`
+              : `Set to ${formatMoney(finalValue)}. Reason: ${reason}`) +
             (requiresSignOff ? ' [Routed to Pending Sign-off by the real-time cross-check.]' : ''),
         })
       },
@@ -267,7 +291,7 @@ export const useSystem1Store = create<System1State>()(
           personId,
           actor: 'Manager',
           action: 'Override reverted',
-          detail: `Back to modelled £${existing.modelled}k. Reason: ${reason}`,
+          detail: `Back to modelled ${formatMoney(existing.modelled)}. Reason: ${reason}`,
         })
       },
 
@@ -373,7 +397,7 @@ export const useSystem1Store = create<System1State>()(
           personId,
           actor: reviewerLabel,
           action: 'Sign-off rejected',
-          detail: `Reverted to modelled £${existing.modelled}k. Reason: ${reason}`,
+          detail: `Reverted to modelled ${formatMoney(existing.modelled)}. Reason: ${reason}`,
         })
       },
 

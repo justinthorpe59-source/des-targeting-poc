@@ -1,120 +1,285 @@
-import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useMemo, useRef, useState } from 'react'
 import type { Division } from '../../system1/data/types'
 import { useSystem2Store } from '../../store/system2Store'
 import { useScenarioStore } from '../../store/scenarioStore'
-import { SavedScenariosPanel } from '../components/SavedScenariosPanel'
 import { aggregate } from '../engine/aggregation'
-import { computeRiskStatuses, type Confidence } from '../engine/riskStatus'
 import { computeGoals } from '../engine/goals'
+import { computeRiskStatuses, type Confidence } from '../engine/riskStatus'
 import { runScenario, type ScenarioLevers } from '../engine/scenario'
-import { round1, statusBadgeClass } from '../riskDisplay'
-import { KpiTile } from '../components/KpiTile'
-import { ScreenHeading } from '../../components/searchlight/ScreenHeading'
-import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
-import { SketchGrid } from '../../components/searchlight/SketchIllustrations'
-import { useInitialLoad } from '../../components/searchlight/useInitialLoad'
-
-const selectClass =
-  'rounded-md border border-pa-grey-02 bg-pa-white px-2 py-1.5 font-pa-body text-sm text-pa-grey-04 focus:border-pa-aqua-04 focus:outline-none'
-const inputClass =
-  'rounded-md border border-pa-grey-02 px-2 py-1.5 font-pa-body text-sm text-pa-grey-04 focus:border-pa-aqua-04 focus:outline-none'
-
-interface WorkspaceInputs {
-  goalEnabled: boolean
-  goal: number
-  capacityEnabled: boolean
-  capacityLevel: 'division' | 'team'
-  capacityDivision: Division | ''
-  capacityTeam: string
-  capacityPercent: number
-  populationEnabled: boolean
-  populationPercent: number
-  groupEnabled: boolean
-  groupLevel: 'desWide' | 'division' | 'team'
-  groupDivision: Division | ''
-  groupTeam: string
-  groupExpectedAchievementEnabled: boolean
-  groupExpectedAchievement: number
-  groupConfidenceEnabled: boolean
-  groupConfidence: Confidence
-}
-
-function defaultInputs(goal: number): WorkspaceInputs {
-  return {
-    goalEnabled: false,
-    goal,
-    capacityEnabled: false,
-    capacityLevel: 'division',
-    capacityDivision: '',
-    capacityTeam: '',
-    capacityPercent: 0,
-    populationEnabled: false,
-    populationPercent: 0,
-    groupEnabled: false,
-    groupLevel: 'division',
-    groupDivision: '',
-    groupTeam: '',
-    groupExpectedAchievementEnabled: false,
-    groupExpectedAchievement: 0,
-    groupConfidenceEnabled: false,
-    groupConfidence: 'Medium',
-  }
-}
-
-function leversFrom(inputs: WorkspaceInputs): ScenarioLevers {
-  const levers: ScenarioLevers = {}
-
-  if (inputs.goalEnabled) levers.goal = inputs.goal
-
-  if (inputs.capacityEnabled && inputs.capacityDivision) {
-    levers.capacityChange = {
-      scope:
-        inputs.capacityLevel === 'division'
-          ? { level: 'division', division: inputs.capacityDivision }
-          : { level: 'team', division: inputs.capacityDivision, team: inputs.capacityTeam },
-      multiplier: 1 + inputs.capacityPercent / 100,
-    }
-  }
-
-  if (inputs.populationEnabled && inputs.populationPercent !== 0) {
-    levers.populationAdjustmentPercent = inputs.populationPercent
-  }
-
-  if (inputs.groupEnabled && (inputs.groupExpectedAchievementEnabled || inputs.groupConfidenceEnabled)) {
-    const target =
-      inputs.groupLevel === 'desWide'
-        ? { level: 'desWide' as const }
-        : inputs.groupLevel === 'division'
-          ? { level: 'division' as const, division: inputs.groupDivision || undefined }
-          : { level: 'team' as const, division: inputs.groupDivision || undefined, team: inputs.groupTeam }
-
-    if (inputs.groupLevel === 'desWide' || inputs.groupDivision) {
-      levers.groupOverride = {
-        target,
-        expectedAchievement: inputs.groupExpectedAchievementEnabled ? inputs.groupExpectedAchievement : undefined,
-        confidence: inputs.groupConfidenceEnabled ? inputs.groupConfidence : undefined,
-      }
-    }
-  }
-
-  return levers
-}
+import { statusBadgeClass } from '../riskDisplay'
+import { SectionHeading } from '../../components/searchlight/Section'
+import { formatMoney, formatPercent } from '../../shared/format'
 
 /**
- * S2-M7: the four locked levers, computed as a non-committing "what if" —
- * never writes to system2Store. Local component state feeds the SAME real
- * engine functions (aggregate()/computeRiskStatuses(), via runScenario())
- * that every other System 2 screen uses on the real data, just with
- * hypothetical inputs. Baseline is always computed from the untouched real
- * records — including the goal (prior-year revenue x 1.1, from goals.ts),
- * pinned to the real records inside runScenario() so levers 2/3 never
- * silently drag it along with whatever they change. Searchlight design pass
- * added the loader, grid motif and token styling; all lever logic is
- * unchanged.
+ * S2-M7/M8 Scenario Workspace, rebuilt 27 Sept 2026 against the supplied
+ * reference screenshot.
+ *
+ * This screen previously carried the "engineering console" register locked
+ * in searchlight-visual-spec.md §8 (monospace bracketed labels, dotted grid,
+ * dark terminal diff panel). That register is superseded for this screen by
+ * explicit instruction: the reference's light card language is the design,
+ * and it brings Scenario Workspace back in line with the rest of the app
+ * rather than breaking away from it.
+ *
+ * Colour is not copied from the reference — it is mapped onto PA tokens.
+ * The reference's black is Dark Blue (#00172d), the darkest token in the
+ * palette; its card radius is --radius-pa-card (16px), already inside the
+ * reference's 16-20px range. No hex is invented here.
+ *
+ * Structure the reference contributes: a row of white cards over a numbered
+ * pagination strip, circular prev/next controls top-right of each section,
+ * and a second horizontally-scrolling card row beneath.
+ *
+ * The data boundary is unchanged: records come from system2Store (the
+ * imported Approved-only snapshot), never from System 1's live store, and
+ * runScenario() never writes anything back.
+ *
+ * react-bits was checked for the card-row/pagination pattern per the
+ * frontend-components skill. Its free tier is creative/animated widgets
+ * (Stepper, Dock, Carousel-as-motion-toy); none is a selectable card row
+ * with an external numbered indicator strip, so this is hand-built.
  */
+
+/* The reference's four scenario examples. Two of them name groups that do
+   not exist in this dataset, so they are bound to real ones here and
+   flagged rather than invented:
+     "Division B" -> Engineering (the second of Design/Engineering/Science)
+     "a cohort"   -> Design
+
+   Design is not an arbitrary pick for the confidence lever. Confidence is
+   simulated deterministically per group, and Engineering and Science both
+   already sit at Low — pointing the lever at either produced a card that
+   read "Low -> Low" and changed nothing. Design (Medium) is the only
+   division the lever can actually move. */
+const CAPACITY_DIP_DIVISION: Division = 'Engineering'
+const CONFIDENCE_DIVISION: Division = 'Design'
+const CAPACITY_DIP_MULTIPLIER = 0.9
+const POPULATION_STRETCH_PERCENT = 10
+const GOAL_RAISE_PERCENT = 5
+
+type IconName = 'bar' | 'dip' | 'stretch' | 'confidence'
+
+/** Simple stroke icons for the card badges — the reference's badge holds a
+    single-weight line glyph, so these are drawn rather than pulled from an
+    icon set with its own visual voice. */
+function Icon({ name }: { name: IconName }) {
+  const common = {
+    width: 20,
+    height: 20,
+    viewBox: '0 0 20 20',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.5,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+  }
+  switch (name) {
+    case 'bar':
+      return (
+        <svg {...common} aria-hidden="true">
+          <path d="M3 16h14" />
+          <path d="M6 16V9" />
+          <path d="M10 16V6" />
+          <path d="M14 16v-4" />
+          <path d="M12.5 4.5 14 3l1.5 1.5" />
+        </svg>
+      )
+    case 'dip':
+      return (
+        <svg {...common} aria-hidden="true">
+          <path d="M3 6l4 5 3-2 4 6" />
+          <path d="M17 15h-3.5" />
+          <path d="M15.5 17l-2-2 2-2" />
+        </svg>
+      )
+    case 'stretch':
+      return (
+        <svg {...common} aria-hidden="true">
+          <path d="M3 10h14" />
+          <path d="M5.5 7.5 3 10l2.5 2.5" />
+          <path d="M14.5 7.5 17 10l-2.5 2.5" />
+          <path d="M10 4v12" />
+        </svg>
+      )
+    case 'confidence':
+      return (
+        <svg {...common} aria-hidden="true">
+          <path d="M10 3l6 2.5v4c0 3.5-2.4 6.3-6 7.5-3.6-1.2-6-4-6-7.5v-4L10 3z" />
+          <path d="M7.5 10l1.8 1.8L13 8" />
+        </svg>
+      )
+  }
+}
+
+interface Preset {
+  id: string
+  index: string
+  title: string
+  blurb: string
+  icon: IconName
+  levers: ScenarioLevers
+}
+
+function presetsFor(baselineGoal: number): Preset[] {
+  return [
+    {
+      id: 'raise-the-bar',
+      index: '01',
+      title: 'Raise the bar',
+      blurb: `Lift the DES-wide organisational goal by ${GOAL_RAISE_PERCENT}% and see whether the forecast still reaches it.`,
+      icon: 'bar',
+      levers: { goal: Math.round(baselineGoal * (1 + GOAL_RAISE_PERCENT / 100)) },
+    },
+    {
+      id: 'capacity-dip',
+      index: '02',
+      title: `${CAPACITY_DIP_DIVISION} capacity dip`,
+      blurb: `Drop capacity utilisation across ${CAPACITY_DIP_DIVISION} by ${Math.round((1 - CAPACITY_DIP_MULTIPLIER) * 100)}% and watch it cascade into the rollups.`,
+      icon: 'dip',
+      levers: {
+        capacityChange: {
+          scope: { level: 'division', division: CAPACITY_DIP_DIVISION },
+          multiplier: CAPACITY_DIP_MULTIPLIER,
+        },
+      },
+    },
+    {
+      id: 'team-stretch',
+      index: '03',
+      title: 'Team-wide stretch',
+      /* The locked lever is population-wide and unfiltered — see
+         scenario.ts, lever 3. It is described honestly here rather than
+         claiming a team scope the engine does not implement. */
+      blurb: `Apply a +${POPULATION_STRETCH_PERCENT}% target uplift across every imported record, the way a mass adjustment would.`,
+      icon: 'stretch',
+      levers: { populationAdjustmentPercent: POPULATION_STRETCH_PERCENT },
+    },
+    {
+      id: 'confidence-check',
+      index: '04',
+      title: 'Confidence check',
+      blurb: `Force ${CONFIDENCE_DIVISION}'s confidence down to Low and see what that alone does to its risk status.`,
+      icon: 'confidence',
+      levers: {
+        groupOverride: {
+          target: { level: 'division', division: CONFIDENCE_DIVISION },
+          confidence: 'Low',
+        },
+      },
+    },
+  ]
+}
+
+interface DiffRow {
+  label: string
+  before: string
+  after: string
+}
+
+type OutcomeScope =
+  | { kind: 'desWide'; label: string }
+  | { kind: 'division'; division: Division; label: string }
+  | { kind: 'team'; key: string; label: string }
+
+/**
+ * Which group's numbers the outcome panel reports.
+ *
+ * Lever 4 never cascades to parent rollups, and that is locked behaviour —
+ * so a division-scoped confidence override is invisible at DES-wide. Fixing
+ * the panel to DES-wide made those scenarios read as doing nothing at all.
+ * The panel follows the lever's own scope instead, and says which group it
+ * is showing.
+ */
+function scopeFor(levers: ScenarioLevers): OutcomeScope {
+  const target = levers.groupOverride?.target
+  if (target) {
+    if (target.level === 'division') return { kind: 'division', division: target.division!, label: target.division! }
+    if (target.level === 'team')
+      return { kind: 'team', key: `${target.division}::${target.team}`, label: `${target.division} / ${target.team}` }
+  }
+  const scope = levers.capacityChange?.scope
+  if (scope) {
+    if (scope.level === 'division') return { kind: 'division', division: scope.division, label: scope.division }
+    return { kind: 'team', key: `${scope.division}::${scope.team}`, label: `${scope.division} / ${scope.team}` }
+  }
+  return { kind: 'desWide', label: 'DES-wide' }
+}
+
+function readScope(
+  scope: OutcomeScope,
+  result: Pick<ReturnType<typeof runScenario>, 'aggregation' | 'goals' | 'riskStatuses'>,
+  goalOverride?: number,
+) {
+  if (scope.kind === 'desWide') {
+    return {
+      rollup: result.aggregation.desWide,
+      goal: goalOverride ?? result.goals.desWide,
+      risk: result.riskStatuses.desWide,
+    }
+  }
+  if (scope.kind === 'division') {
+    return {
+      rollup: result.aggregation.byDivision.get(scope.division),
+      goal: result.goals.byDivision.get(scope.division),
+      risk: result.riskStatuses.byDivision.get(scope.division),
+    }
+  }
+  return {
+    rollup: result.aggregation.byTeam.get(scope.key),
+    goal: result.goals.byTeam.get(scope.key),
+    risk: result.riskStatuses.byTeam.get(scope.key),
+  }
+}
+
+/** Circular prev/next pair — filled Dark Blue for forward, outlined white
+    for back, exactly as the reference pairs them. */
+function NavArrows({
+  onPrev,
+  onNext,
+  testIdPrefix,
+  label,
+}: {
+  onPrev: () => void
+  onNext: () => void
+  testIdPrefix: string
+  label: string
+}) {
+  return (
+    <div className="flex shrink-0 items-center gap-3">
+      <button
+        type="button"
+        data-testid={`${testIdPrefix}-prev`}
+        onClick={onPrev}
+        aria-label={`Previous ${label}`}
+        className="flex h-12 w-12 items-center justify-center rounded-full border border-pa-grey-02 bg-pa-white text-pa-grey-04 transition-colors hover:bg-pa-grey-01 focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-grey-03"
+      >
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M16 10H4" />
+          <path d="M8.5 5.5 4 10l4.5 4.5" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        data-testid={`${testIdPrefix}-next`}
+        onClick={onNext}
+        aria-label={`Next ${label}`}
+        className="flex h-12 w-12 items-center justify-center rounded-full transition-opacity hover:opacity-85 focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-grey-03"
+        /* Accent + dark ink, never white ink: white on the accent measures
+           2.50:1 and fails AA. */
+        style={{ background: 'var(--color-pa-accent)', color: 'var(--color-pa-accent-ink)' }}
+      >
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M4 10h12" />
+          <path d="M11.5 5.5 16 10l-4.5 4.5" />
+        </svg>
+      </button>
+    </div>
+  )
+}
+
 export function ScenarioWorkspace() {
   const records = useSystem2Store((state) => state.records)
+  const savedScenarios = useScenarioStore((state) => state.scenarios)
   const saveScenario = useScenarioStore((state) => state.saveScenario)
 
   const baselineAggregation = useMemo(() => aggregate(records), [records])
@@ -124,463 +289,382 @@ export function ScenarioWorkspace() {
     [records, baselineAggregation, baselineGoals],
   )
 
-  const [inputs, setInputs] = useState<WorkspaceInputs>(() => defaultInputs(baselineGoals.desWide))
-  const [scenarioName, setScenarioName] = useState('')
-  const loading = useInitialLoad(records.length > 0)
+  const presets = useMemo(() => presetsFor(baselineGoals.desWide), [baselineGoals.desWide])
 
-  const levers = useMemo(() => leversFrom(inputs), [inputs])
-  const scenario = useMemo(() => runScenario(records, levers), [records, levers])
+  /* One selection drives the diff panel, whichever row it came from.
+     'baseline' is the default comparison state — it is selectable in the
+     saved row but is never one of the four numbered cards. */
+  const [selectedId, setSelectedId] = useState<string>(presets[0].id)
+  const [scenarioName, setScenarioName] = useState('')
+  const carouselRef = useRef<HTMLDivElement>(null)
+
+
+  const selectedPreset = presets.find((p) => p.id === selectedId)
+  const selectedSaved = savedScenarios.find((s) => s.id === selectedId)
+  /* Memoised: the `?? {}` fallback would otherwise be a fresh object every
+     render, so runScenario() below would never hit its cache. */
+  const selectedLevers = useMemo<ScenarioLevers>(
+    () => selectedPreset?.levers ?? selectedSaved?.levers ?? {},
+    [selectedPreset, selectedSaved],
+  )
+  const selectedLabel = selectedPreset?.title ?? selectedSaved?.name ?? 'Baseline'
+
+  const scenario = useMemo(() => runScenario(records, selectedLevers), [records, selectedLevers])
+
+  const configRows = useMemo<DiffRow[]>(() => {
+    const rows: DiffRow[] = []
+    const l = selectedLevers
+
+    if (l.goal !== undefined) {
+      rows.push({ label: 'Organisational goal', before: formatMoney(baselineGoals.desWide), after: formatMoney(l.goal) })
+    }
+    if (l.capacityChange) {
+      const { scope, multiplier } = l.capacityChange
+      const where = scope.level === 'division' ? scope.division : `${scope.division} / ${scope.team}`
+      rows.push({ label: `Capacity · ${where}`, before: '×1.00', after: `×${multiplier.toFixed(2)}` })
+    }
+    if (l.populationAdjustmentPercent) {
+      rows.push({
+        label: 'Target uplift · every record',
+        before: '+0%',
+        after: `${l.populationAdjustmentPercent > 0 ? '+' : ''}${l.populationAdjustmentPercent}%`,
+      })
+    }
+    if (l.groupOverride) {
+      const { target, expectedAchievement, confidence } = l.groupOverride
+      const where =
+        target.level === 'desWide'
+          ? 'DES-wide'
+          : target.level === 'division'
+            ? target.division!
+            : `${target.division} / ${target.team}`
+      if (confidence) {
+        const before: Confidence | undefined =
+          target.level === 'desWide'
+            ? baselineRisk.desWide.confidence
+            : target.level === 'division'
+              ? baselineRisk.byDivision.get(target.division!)?.confidence
+              : baselineRisk.byTeam.get(`${target.division}::${target.team}`)?.confidence
+        rows.push({ label: `Confidence · ${where}`, before: before ?? '—', after: confidence })
+      }
+      if (expectedAchievement !== undefined) {
+        rows.push({
+          label: `Expected achievement · ${where}`,
+          before: formatMoney(baselineAggregation.desWide.expectedAchievement),
+          after: formatMoney(expectedAchievement),
+        })
+      }
+    }
+    return rows
+  }, [selectedLevers, baselineGoals.desWide, baselineRisk, baselineAggregation])
+
+  const scope = useMemo(() => scopeFor(selectedLevers), [selectedLevers])
+
+  const before = useMemo(
+    () => readScope(scope, { aggregation: baselineAggregation, goals: baselineGoals, riskStatuses: baselineRisk }),
+    [scope, baselineAggregation, baselineGoals, baselineRisk],
+  )
+  const after = useMemo(() => readScope(scope, scenario, selectedLevers.goal), [scope, scenario, selectedLevers.goal])
+
+  /*
+   * A preset names a specific division (see the constants at the top), but an
+   * import can legitimately contain only some of the organisation — approve
+   * three people in Design and Engineering is simply absent. readScope then
+   * finds no rollup, outcomeRows comes back empty, and the status pill is
+   * conditional on a risk result, so the whole "What it does" column rendered
+   * blank with no explanation. Named here so the panel can say so.
+   */
+  const scopeMissingFromData = !before.rollup || !after.rollup
+
+  const outcomeRows = useMemo<DiffRow[]>(() => {
+    if (!before.rollup || !after.rollup || before.goal === undefined || after.goal === undefined) return []
+    return [
+      {
+        label: 'Expected achievement',
+        before: formatMoney(before.rollup.expectedAchievement),
+        after: formatMoney(after.rollup.expectedAchievement),
+      },
+      {
+        label: 'Gap to goal',
+        before: formatMoney(before.goal - before.rollup.expectedAchievement),
+        after: formatMoney(after.goal - after.rollup.expectedAchievement),
+      },
+      {
+        label: 'Confidence',
+        before: before.risk?.confidence ?? '—',
+        after: after.risk?.confidence ?? '—',
+      },
+      {
+        label: 'Forecast ratio',
+        before: formatPercent((before.risk?.forecastRatio ?? 0) * 100),
+        after: formatPercent((after.risk?.forecastRatio ?? 0) * 100),
+      },
+    ]
+  }, [before, after])
+
+  const stepPreset = (delta: number) => {
+    const currentIndex = presets.findIndex((p) => p.id === selectedId)
+    // A saved/baseline selection has no place in the preset row; step from
+    // the first card rather than nowhere.
+    const from = currentIndex === -1 ? 0 : currentIndex
+    const next = (from + delta + presets.length) % presets.length
+    setSelectedId(presets[next].id)
+  }
+
+  const scrollCarousel = (delta: number) => {
+    carouselRef.current?.scrollBy({ left: delta * 280, behavior: 'smooth' })
+  }
 
   if (records.length === 0) {
     return (
       <section className="space-y-4">
-        <ScreenHeading title="Scenario workspace">
-          Test a change and see the effect before committing to anything — nothing here is ever saved to
-          the imported snapshot.
-        </ScreenHeading>
-        <div className="rounded-lg border border-pa-grey-01 bg-pa-white p-4 font-pa-body text-sm text-pa-grey-03">
-          No snapshot imported yet.{' '}
-          <Link to="/system2/executive-summary" className="font-medium text-pa-aqua-05 underline">
-            Import from System 1
-          </Link>{' '}
-          on Executive summary first.
-        </div>
+        <SectionHeading first="Scenario workspace" second="Nothing imported yet" />
+        <p className="max-w-xl font-pa-body text-sm text-pa-grey-03">
+          Import an Approved-only snapshot from System 1 before testing a scenario against it.
+        </p>
       </section>
     )
   }
 
-  const divisions = [...baselineAggregation.byDivision.keys()]
-  const teamsForCapacityDivision = inputs.capacityDivision
-    ? [...baselineAggregation.byTeam.keys()]
-        .filter((key) => key.startsWith(`${inputs.capacityDivision}::`))
-        .map((key) => key.split('::')[1])
-    : []
-  const teamsForGroupDivision = inputs.groupDivision
-    ? [...baselineAggregation.byTeam.keys()]
-        .filter((key) => key.startsWith(`${inputs.groupDivision}::`))
-        .map((key) => key.split('::')[1])
-    : []
-
-  const baselineGoal = baselineGoals.desWide
-  const scenarioGoal = levers.goal ?? scenario.goals.desWide
-  const isTweaked = Object.keys(levers).length > 0
-
-  // The specific group a scoped lever targets, if any — shown as its own
-  // baseline-vs-scenario row beneath the DES-wide comparison.
-  const scopedGroupKey =
-    levers.capacityChange?.scope.level === 'team'
-      ? `${levers.capacityChange.scope.division}::${levers.capacityChange.scope.team}`
-      : levers.capacityChange?.scope.level === 'division'
-        ? levers.capacityChange.scope.division
-        : levers.groupOverride?.target.level === 'team'
-          ? `${levers.groupOverride.target.division}::${levers.groupOverride.target.team}`
-          : levers.groupOverride?.target.level === 'division'
-            ? levers.groupOverride.target.division
-            : null
-  const scopedIsTeam = scopedGroupKey?.includes('::') ?? false
-  const baselineScopedRollup = scopedGroupKey
-    ? scopedIsTeam
-      ? baselineAggregation.byTeam.get(scopedGroupKey)
-      : baselineAggregation.byDivision.get(scopedGroupKey as Division)
-    : undefined
-  const baselineScopedRisk = scopedGroupKey
-    ? scopedIsTeam
-      ? baselineRisk.byTeam.get(scopedGroupKey)
-      : baselineRisk.byDivision.get(scopedGroupKey as Division)
-    : undefined
-  const scenarioScopedRollup = scopedGroupKey
-    ? scopedIsTeam
-      ? scenario.aggregation.byTeam.get(scopedGroupKey)
-      : scenario.aggregation.byDivision.get(scopedGroupKey as Division)
-    : undefined
-  const scenarioScopedRisk = scopedGroupKey
-    ? scopedIsTeam
-      ? scenario.riskStatuses.byTeam.get(scopedGroupKey)
-      : scenario.riskStatuses.byDivision.get(scopedGroupKey as Division)
-    : undefined
+  const savedCards = [
+    { id: 'baseline', name: 'Baseline', meta: 'Untouched snapshot' },
+    ...savedScenarios.map((s) => ({
+      id: s.id,
+      name: s.name,
+      meta: new Date(s.savedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
+    })),
+  ]
 
   return (
-    <section className="relative space-y-6">
-      <SketchGrid className="pointer-events-none absolute right-0 top-8 -z-10 h-[320px] w-[440px] max-w-none opacity-[0.06]" />
+    <section className="space-y-20 pb-8">
+      {/* ---------- Scenario options ---------- */}
+      <div className="space-y-10">
+        <SectionHeading
+          first="Scenario workspace"
+          second="Test before you commit"
+          action={<NavArrows onPrev={() => stepPreset(-1)} onNext={() => stepPreset(1)} testIdPrefix="preset-nav" label="scenario" />}
+        />
 
-      <ScreenHeading title="Scenario workspace">
-        Test a change and see the effect before committing to anything — nothing here is ever saved to
-        the imported snapshot. Turn on any combination of the four levers below.
-      </ScreenHeading>
-
-      {loading ? (
-        <SearchlightLoader />
-      ) : (
-        <div className="animate-[pa-fade-in_500ms_ease-out] space-y-6">
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            {/* Lever 1: goal */}
-            <div className="rounded-xl border border-pa-grey-01 bg-pa-white p-4">
-              <label className="flex items-center gap-2 font-pa-body text-sm font-semibold text-pa-grey-04">
-                <input
-                  type="checkbox"
-                  data-testid="lever-goal-enabled"
-                  checked={inputs.goalEnabled}
-                  onChange={(e) => setInputs((prev) => ({ ...prev, goalEnabled: e.target.checked }))}
-                  className="accent-pa-aqua-04"
-                />
-                Change the organisational goal
-              </label>
-              <p className="mt-1 font-pa-body text-xs text-pa-grey-03">DES-wide only — divisions/teams keep their own prior-year-based goal.</p>
-              <input
-                type="number"
-                data-testid="lever-goal-value"
-                disabled={!inputs.goalEnabled}
-                value={inputs.goal}
-                onChange={(e) => setInputs((prev) => ({ ...prev, goal: Number(e.target.value) }))}
-                className={`${inputClass} mt-2 w-32 disabled:opacity-40`}
-              />
-              <span className="ml-2 font-pa-body text-xs text-pa-grey-03">£k (baseline: <span className="font-pa-mono">£{round1(baselineGoal)}k</span>)</span>
-            </div>
-
-            {/* Lever 2: capacity for a team/division */}
-            <div className="rounded-xl border border-pa-grey-01 bg-pa-white p-4">
-              <label className="flex items-center gap-2 font-pa-body text-sm font-semibold text-pa-grey-04">
-                <input
-                  type="checkbox"
-                  data-testid="lever-capacity-enabled"
-                  checked={inputs.capacityEnabled}
-                  onChange={(e) => setInputs((prev) => ({ ...prev, capacityEnabled: e.target.checked }))}
-                  className="accent-pa-aqua-04"
-                />
-                Change capacity for a team/division
-              </label>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <select
-                  data-testid="lever-capacity-level"
-                  disabled={!inputs.capacityEnabled}
-                  value={inputs.capacityLevel}
-                  onChange={(e) =>
-                    setInputs((prev) => ({ ...prev, capacityLevel: e.target.value as 'division' | 'team', capacityTeam: '' }))
-                  }
-                  className={`${selectClass} disabled:opacity-40`}
+        <div data-testid="preset-cards" className="pa-stagger grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {presets.map((preset) => {
+            const active = preset.id === selectedId
+            return (
+              <button
+                key={preset.id}
+                type="button"
+                data-testid="preset-card"
+                data-preset-id={preset.id}
+                data-active={active ? 'true' : 'false'}
+                onClick={() => setSelectedId(preset.id)}
+                className={`flex h-52 flex-col rounded-pa-card bg-pa-white p-6 text-left transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-grey-03 ${
+                  active
+                    ? 'shadow-pa-card-raised'
+                    : 'shadow-pa-card hover:shadow-pa-card-hover'
+                }`}
+              >
+                <span className="font-pa-display text-xl font-semibold leading-snug text-pa-grey-04">
+                  {preset.title}
+                </span>
+                <span className="mt-2 font-pa-body text-sm leading-snug text-pa-grey-03">{preset.blurb}</span>
+                <span
+                  aria-hidden="true"
+                  className="mt-auto flex h-11 w-11 items-center justify-center rounded-pa-chip border border-pa-grey-01 bg-pa-white text-pa-grey-04"
                 >
-                  <option value="division">Division</option>
-                  <option value="team">Team</option>
-                </select>
-                <select
-                  data-testid="lever-capacity-division"
-                  disabled={!inputs.capacityEnabled}
-                  value={inputs.capacityDivision}
-                  onChange={(e) =>
-                    setInputs((prev) => ({ ...prev, capacityDivision: e.target.value as Division, capacityTeam: '' }))
-                  }
-                  className={`${selectClass} disabled:opacity-40`}
-                >
-                  <option value="">Select…</option>
-                  {divisions.map((d) => (
-                    <option key={d} value={d}>
-                      {d}
-                    </option>
-                  ))}
-                </select>
-                {inputs.capacityLevel === 'team' && (
-                  <select
-                    data-testid="lever-capacity-team"
-                    disabled={!inputs.capacityEnabled || !inputs.capacityDivision}
-                    value={inputs.capacityTeam}
-                    onChange={(e) => setInputs((prev) => ({ ...prev, capacityTeam: e.target.value }))}
-                    className={`${selectClass} disabled:opacity-40`}
-                  >
-                    <option value="">Select…</option>
-                    {teamsForCapacityDivision.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                <input
-                  type="number"
-                  data-testid="lever-capacity-percent"
-                  disabled={!inputs.capacityEnabled}
-                  value={inputs.capacityPercent}
-                  onChange={(e) => setInputs((prev) => ({ ...prev, capacityPercent: Number(e.target.value) }))}
-                  className={`${inputClass} w-20 disabled:opacity-40`}
-                />
-                <span className="font-pa-body text-xs text-pa-grey-03">% capacity change</span>
-              </div>
-            </div>
+                  <Icon name={preset.icon} />
+                </span>
+              </button>
+            )
+          })}
+        </div>
 
-            {/* Lever 3: population-wide target adjustment */}
-            <div className="rounded-xl border border-pa-grey-01 bg-pa-white p-4">
-              <label className="flex items-center gap-2 font-pa-body text-sm font-semibold text-pa-grey-04">
-                <input
-                  type="checkbox"
-                  data-testid="lever-population-enabled"
-                  checked={inputs.populationEnabled}
-                  onChange={(e) => setInputs((prev) => ({ ...prev, populationEnabled: e.target.checked }))}
-                  className="accent-pa-aqua-04"
-                />
-                Population-wide target adjustment
-              </label>
-              <p className="mt-1 font-pa-body text-xs text-pa-grey-03">Unfiltered — applies to every imported record.</p>
-              <input
-                type="number"
-                data-testid="lever-population-percent"
-                disabled={!inputs.populationEnabled}
-                value={inputs.populationPercent}
-                onChange={(e) => setInputs((prev) => ({ ...prev, populationPercent: Number(e.target.value) }))}
-                className={`${inputClass} mt-2 w-24 disabled:opacity-40`}
-              />
-              <span className="ml-2 font-pa-body text-xs text-pa-grey-03">% target change</span>
-            </div>
+        {/* Numbered strip on a full-width rule, as the reference draws it. */}
+        <div className="relative flex items-center gap-3">
+          <div aria-hidden="true" className="absolute inset-x-0 top-1/2 h-px border border-pa-grey-01 bg-pa-white" />
+          {presets.map((preset) => {
+            const active = preset.id === selectedId
+            return (
+              <button
+                key={preset.id}
+                type="button"
+                data-testid="preset-pagination"
+                data-preset-id={preset.id}
+                data-active={active ? 'true' : 'false'}
+                onClick={() => setSelectedId(preset.id)}
+                aria-label={`Scenario ${preset.index}: ${preset.title}`}
+                className={`relative rounded-pa-chip px-5 py-2.5 font-pa-mono text-sm font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-grey-03 ${
+                  active ? '' : 'border border-pa-grey-02 bg-pa-white text-pa-grey-04 hover:bg-pa-grey-01'
+                }`}
+                style={
+                  active
+                    ? { background: 'var(--color-pa-accent)', color: 'var(--color-pa-accent-ink)' }
+                    : undefined
+                }
+              >
+                {preset.index}
+              </button>
+            )
+          })}
+        </div>
+      </div>
 
-            {/* Lever 4: expected achievement / confidence override for a selected group */}
-            <div className="rounded-xl border border-pa-grey-01 bg-pa-white p-4">
-              <label className="flex items-center gap-2 font-pa-body text-sm font-semibold text-pa-grey-04">
-                <input
-                  type="checkbox"
-                  data-testid="lever-group-enabled"
-                  checked={inputs.groupEnabled}
-                  onChange={(e) => setInputs((prev) => ({ ...prev, groupEnabled: e.target.checked }))}
-                  className="accent-pa-aqua-04"
-                />
-                Override expected achievement/confidence for a group
-              </label>
-              <p className="mt-1 font-pa-body text-xs text-pa-grey-03">That group&apos;s own row only — never cascades to its parent.</p>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <select
-                  data-testid="lever-group-level"
-                  disabled={!inputs.groupEnabled}
-                  value={inputs.groupLevel}
-                  onChange={(e) =>
-                    setInputs((prev) => ({
-                      ...prev,
-                      groupLevel: e.target.value as 'desWide' | 'division' | 'team',
-                      groupDivision: '',
-                      groupTeam: '',
-                    }))
-                  }
-                  className={`${selectClass} disabled:opacity-40`}
-                >
-                  <option value="desWide">DES-wide</option>
-                  <option value="division">Division</option>
-                  <option value="team">Team</option>
-                </select>
-                {inputs.groupLevel !== 'desWide' && (
-                  <select
-                    data-testid="lever-group-division"
-                    disabled={!inputs.groupEnabled}
-                    value={inputs.groupDivision}
-                    onChange={(e) =>
-                      setInputs((prev) => ({ ...prev, groupDivision: e.target.value as Division, groupTeam: '' }))
-                    }
-                    className={`${selectClass} disabled:opacity-40`}
-                  >
-                    <option value="">Select…</option>
-                    {divisions.map((d) => (
-                      <option key={d} value={d}>
-                        {d}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                {inputs.groupLevel === 'team' && (
-                  <select
-                    data-testid="lever-group-team"
-                    disabled={!inputs.groupEnabled || !inputs.groupDivision}
-                    value={inputs.groupTeam}
-                    onChange={(e) => setInputs((prev) => ({ ...prev, groupTeam: e.target.value }))}
-                    className={`${selectClass} disabled:opacity-40`}
-                  >
-                    <option value="">Select…</option>
-                    {teamsForGroupDivision.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
-              <div className="mt-2 flex flex-wrap items-center gap-3">
-                <label className="flex items-center gap-1 font-pa-body text-xs text-pa-grey-03">
-                  <input
-                    type="checkbox"
-                    data-testid="lever-group-ea-enabled"
-                    disabled={!inputs.groupEnabled}
-                    checked={inputs.groupExpectedAchievementEnabled}
-                    onChange={(e) => setInputs((prev) => ({ ...prev, groupExpectedAchievementEnabled: e.target.checked }))}
-                    className="accent-pa-aqua-04"
-                  />
-                  Expected achievement
-                  <input
-                    type="number"
-                    data-testid="lever-group-ea-value"
-                    disabled={!inputs.groupEnabled || !inputs.groupExpectedAchievementEnabled}
-                    value={inputs.groupExpectedAchievement}
-                    onChange={(e) => setInputs((prev) => ({ ...prev, groupExpectedAchievement: Number(e.target.value) }))}
-                    className={`${inputClass} w-24 disabled:opacity-40`}
-                  />
-                  £k
-                </label>
-                <label className="flex items-center gap-1 font-pa-body text-xs text-pa-grey-03">
-                  <input
-                    type="checkbox"
-                    data-testid="lever-group-confidence-enabled"
-                    disabled={!inputs.groupEnabled}
-                    checked={inputs.groupConfidenceEnabled}
-                    onChange={(e) => setInputs((prev) => ({ ...prev, groupConfidenceEnabled: e.target.checked }))}
-                    className="accent-pa-aqua-04"
-                  />
-                  Confidence
-                  <select
-                    data-testid="lever-group-confidence-value"
-                    disabled={!inputs.groupEnabled || !inputs.groupConfidenceEnabled}
-                    value={inputs.groupConfidence}
-                    onChange={(e) => setInputs((prev) => ({ ...prev, groupConfidence: e.target.value as Confidence }))}
-                    className={`${selectClass} disabled:opacity-40`}
-                  >
-                    <option value="High">High</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Low">Low</option>
-                  </select>
-                </label>
-              </div>
-            </div>
+      {/* ---------- Saved scenarios ---------- */}
+      <div className="space-y-8">
+        <SectionHeading
+          first="Saved scenarios"
+          second="Baseline and the ones you save"
+          action={<NavArrows onPrev={() => scrollCarousel(-1)} onNext={() => scrollCarousel(1)} testIdPrefix="saved-nav" label="saved scenario" />}
+        />
+
+        <div
+          ref={carouselRef}
+          data-testid="saved-carousel"
+          className="flex snap-x gap-5 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {savedCards.map((card) => {
+            const active = card.id === selectedId
+            return (
+              <button
+                key={card.id}
+                type="button"
+                data-testid="saved-card"
+                data-scenario-id={card.id}
+                data-active={active ? 'true' : 'false'}
+                onClick={() => setSelectedId(card.id)}
+                className={`flex h-36 w-64 shrink-0 snap-start flex-col justify-end rounded-pa-card bg-pa-white p-5 text-left transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-grey-03 ${
+                  active
+                    ? 'shadow-pa-card-raised'
+                    : 'shadow-pa-card hover:shadow-pa-card-hover'
+                }`}
+              >
+                <span className="font-pa-body text-xs text-pa-grey-03">{card.meta}</span>
+                <span className="mt-1 font-pa-display text-lg font-semibold leading-snug text-pa-grey-04">
+                  {card.name}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Save is kept from S2-M8: without it the saved row can never hold
+            anything but Baseline, and the "reopened later, shows the same
+            result" signal would have nothing to run against. */}
+        <div className="flex flex-wrap items-center gap-3">
+          <input
+            data-testid="scenario-name-input"
+            value={scenarioName}
+            onChange={(e) => setScenarioName(e.target.value)}
+            placeholder={`Name this scenario (${selectedLabel})`}
+            className="w-72 rounded-pa-chip border border-pa-grey-02 bg-pa-white px-4 py-2.5 font-pa-body text-sm text-pa-grey-04 focus:border-pa-aqua-04 focus:outline-none"
+          />
+          <button
+            type="button"
+            data-testid="scenario-save-button"
+            disabled={scenarioName.trim().length === 0 || configRows.length === 0}
+            onClick={() => {
+              saveScenario(scenarioName.trim(), selectedLevers)
+              setScenarioName('')
+            }}
+            className="rounded-pa-chip px-5 py-2.5 font-pa-body text-sm font-semibold transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-40"
+            style={{ background: 'var(--color-pa-accent)', color: 'var(--color-pa-accent-ink)' }}
+          >
+            Save scenario
+          </button>
+        </div>
+      </div>
+
+      {/* ---------- Diff panel ---------- */}
+      {/*
+        Keyed on the selection so switching preset re-runs the entrance: the
+        panel's content is entirely replaced, and a cross-fade makes that read
+        as "this is now showing something else" rather than as figures
+        flickering in place.
+      */}
+      <div
+        key={selectedId}
+        data-testid="scenario-diff"
+        data-selected-id={selectedId}
+        className="animate-pa-fade rounded-pa-card bg-pa-white p-8 shadow-pa-card"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="font-pa-body text-xs font-bold uppercase tracking-[0.14em] text-pa-grey-03">
+              Baseline → Scenario
+            </p>
+            <p data-testid="diff-title" className="mt-1 font-pa-display text-2xl font-semibold text-pa-grey-04">
+              {selectedLabel}
+            </p>
           </div>
-
-          {isTweaked && (
-            <button
-              type="button"
-              onClick={() => setInputs(defaultInputs(baselineGoals.desWide))}
-              className="rounded-md border border-pa-grey-02 px-3 py-1.5 font-pa-body text-sm font-medium text-pa-grey-04 hover:bg-pa-grey-01"
+          {after.risk && (
+            <span
+              data-testid="diff-status"
+              data-scope={scope.label}
+              className={`rounded-pa-chip px-3 py-1.5 font-pa-body text-xs font-semibold ${statusBadgeClass(after.risk.status)}`}
             >
-              Reset scenario
-            </button>
+              {scope.label} · {after.risk.status}
+            </span>
           )}
+        </div>
+
+        <div className="mt-8 grid gap-10 lg:grid-cols-2">
+          <div>
+            <p className="font-pa-body text-xs font-bold uppercase tracking-[0.14em] text-pa-grey-03">
+              What changes
+            </p>
+            {configRows.length === 0 ? (
+              <p data-testid="diff-no-levers" className="mt-4 font-pa-body text-sm text-pa-grey-03">
+                No levers applied — this is the untouched imported snapshot.
+              </p>
+            ) : (
+              <dl data-testid="diff-config-rows" className="mt-4">
+                {configRows.map((row) => (
+                  <div
+                    key={row.label}
+                    data-testid="diff-config-row"
+                    className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-pa-grey-01 py-3 last:border-0"
+                  >
+                    <dt className="font-pa-body text-sm text-pa-grey-04">{row.label}</dt>
+                    <dd className="font-pa-mono text-sm text-pa-grey-04">
+                      <span className="text-pa-grey-03">{row.before}</span>
+                      <span className="px-2 text-pa-grey-02">→</span>
+                      <span className="font-bold">{row.after}</span>
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+          </div>
 
           <div>
-            <h2 className="font-pa-display text-sm font-semibold text-pa-grey-04">DES-wide: baseline vs scenario</h2>
-            <div className="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <div className="font-pa-body text-xs font-semibold uppercase tracking-wide text-pa-grey-03">Baseline</div>
-                <div className="grid grid-cols-2 gap-2">
-                  <KpiTile label="Goal" value={`£${round1(baselineGoal)}k`} />
-                  <KpiTile
-                    label="Forecast"
-                    value={`${round1(baselineRisk.desWide.forecastRatio * 100)}%`}
-                    sub={`£${round1(baselineAggregation.desWide.expectedAchievement)}k expected`}
-                  />
-                </div>
-                <span
-                  data-testid="baseline-status"
-                  data-status={baselineRisk.desWide.status}
-                  className={`inline-block rounded px-2 py-0.5 text-xs font-semibold ${statusBadgeClass(baselineRisk.desWide.status)}`}
+            <p className="font-pa-body text-xs font-bold uppercase tracking-[0.14em] text-pa-grey-03">
+              What it does · {scope.label}
+            </p>
+            {scopeMissingFromData && (
+              <p data-testid="diff-scope-missing" className="mt-4 font-pa-body text-sm text-pa-grey-03">
+                <span className="font-semibold text-pa-grey-04">{scope.label}</span> isn&apos;t in the imported
+                snapshot, so this scenario has nothing to act on. Import a snapshot that includes it to see the
+                effect.
+              </p>
+            )}
+            <dl data-testid="diff-outcome-rows" className="mt-4">
+              {outcomeRows.map((row) => (
+                <div
+                  key={row.label}
+                  data-testid="diff-outcome-row"
+                  data-label={row.label}
+                  className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-pa-grey-01 py-3 last:border-0"
                 >
-                  {baselineRisk.desWide.status}
-                </span>
-              </div>
-              <div className="space-y-2 rounded-xl border border-pa-grey-02 bg-pa-grey-wash p-2">
-                <div className="font-pa-body text-xs font-semibold uppercase tracking-wide text-pa-grey-03">Scenario</div>
-                <div className="grid grid-cols-2 gap-2">
-                  <KpiTile label="Goal" value={`£${round1(scenarioGoal)}k`} />
-                  <KpiTile
-                    label="Forecast"
-                    value={`${round1(scenario.riskStatuses.desWide.forecastRatio * 100)}%`}
-                    sub={`£${round1(scenario.aggregation.desWide.expectedAchievement)}k expected`}
-                  />
+                  <dt className="font-pa-body text-sm text-pa-grey-04">{row.label}</dt>
+                  <dd className="font-pa-mono text-sm text-pa-grey-04">
+                    <span className="text-pa-grey-03">{row.before}</span>
+                    <span className="px-2 text-pa-grey-02">→</span>
+                    <span className="font-bold">{row.after}</span>
+                  </dd>
                 </div>
-                <span
-                  data-testid="scenario-status"
-                  data-status={scenario.riskStatuses.desWide.status}
-                  className={`inline-block rounded px-2 py-0.5 text-xs font-semibold ${statusBadgeClass(scenario.riskStatuses.desWide.status)}`}
-                >
-                  {scenario.riskStatuses.desWide.status}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {scopedGroupKey && baselineScopedRollup && baselineScopedRisk && scenarioScopedRollup && scenarioScopedRisk && (
-            <div>
-              <h2 className="font-pa-display text-sm font-semibold text-pa-grey-04">
-                {scopedGroupKey.replace('::', ' / ')}: baseline vs scenario
-              </h2>
-              <div className="mt-2 overflow-x-auto rounded-lg border border-pa-grey-01 bg-pa-white">
-                <table className="min-w-full divide-y divide-pa-grey-01 font-pa-body text-sm">
-                  <thead className="bg-pa-grey-wash text-left text-xs font-medium uppercase tracking-wide text-pa-grey-03">
-                    <tr>
-                      <th className="px-3 py-2"></th>
-                      <th className="px-3 py-2 text-right">Target</th>
-                      <th className="px-3 py-2 text-right">Expected achievement</th>
-                      <th className="px-3 py-2 text-right">Forecast</th>
-                      <th className="px-3 py-2">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="border-t border-pa-grey-01" data-testid="scoped-baseline-row">
-                      <td className="px-3 py-2 font-medium text-pa-grey-03">Baseline</td>
-                      <td className="px-3 py-2 text-right font-pa-mono tabular-nums text-pa-grey-04">£{round1(baselineScopedRollup.target)}k</td>
-                      <td className="px-3 py-2 text-right font-pa-mono tabular-nums text-pa-grey-04">
-                        £{round1(baselineScopedRollup.expectedAchievement)}k
-                      </td>
-                      <td className="px-3 py-2 text-right font-pa-mono tabular-nums text-pa-grey-04">
-                        {round1(baselineScopedRisk.forecastRatio * 100)}%
-                      </td>
-                      <td className="px-3 py-2">
-                        <span className={`inline-block rounded px-2 py-0.5 text-xs font-semibold ${statusBadgeClass(baselineScopedRisk.status)}`}>
-                          {baselineScopedRisk.status}
-                        </span>
-                      </td>
-                    </tr>
-                    <tr className="border-t border-pa-grey-01 bg-pa-grey-wash" data-testid="scoped-scenario-row">
-                      <td className="px-3 py-2 font-medium text-pa-grey-03">Scenario</td>
-                      <td className="px-3 py-2 text-right font-pa-mono tabular-nums text-pa-grey-04">£{round1(scenarioScopedRollup.target)}k</td>
-                      <td className="px-3 py-2 text-right font-pa-mono tabular-nums text-pa-grey-04">
-                        £{round1(scenarioScopedRollup.expectedAchievement)}k
-                      </td>
-                      <td className="px-3 py-2 text-right font-pa-mono tabular-nums text-pa-grey-04">
-                        {round1(scenarioScopedRisk.forecastRatio * 100)}%
-                      </td>
-                      <td className="px-3 py-2">
-                        <span className={`inline-block rounded px-2 py-0.5 text-xs font-semibold ${statusBadgeClass(scenarioScopedRisk.status)}`}>
-                          {scenarioScopedRisk.status}
-                        </span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          <div className="rounded-xl border border-pa-grey-01 bg-pa-white p-4">
-            <h2 className="font-pa-display text-sm font-semibold text-pa-grey-04">Save this scenario</h2>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <input
-                type="text"
-                data-testid="scenario-name-input"
-                placeholder="Scenario name…"
-                value={scenarioName}
-                onChange={(e) => setScenarioName(e.target.value)}
-                className={`${inputClass} w-64`}
-              />
-              <button
-                type="button"
-                data-testid="scenario-save-button"
-                disabled={!isTweaked || scenarioName.trim().length === 0}
-                onClick={() => {
-                  saveScenario(scenarioName.trim(), levers)
-                  setScenarioName('')
-                }}
-                className="rounded-md bg-pa-aqua-05 px-3 py-1.5 font-pa-body text-sm font-medium text-pa-white hover:bg-pa-aqua-04 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                Save scenario
-              </button>
-            </div>
-
-            <div className="mt-4 border-t border-pa-grey-01 pt-4">
-              <SavedScenariosPanel />
-            </div>
-
+              ))}
+            </dl>
           </div>
         </div>
-      )}
+      </div>
     </section>
   )
 }

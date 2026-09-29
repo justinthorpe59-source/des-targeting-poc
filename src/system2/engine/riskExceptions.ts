@@ -2,6 +2,7 @@ import type { AggregationResult, Rollup } from './aggregation'
 import type { RiskAssessment, RiskStatusResult } from './riskStatus'
 import type { ScenarioLevers } from './scenario'
 import type { SavedScenario } from '../../store/scenarioStore'
+import { formatPercent } from '../../shared/format'
 
 /**
  * S2-M9: same shape as System 1's exceptions.ts — one shared detector, a
@@ -119,7 +120,7 @@ function evaluateGroup(
         groupKey,
         level,
         type: 'low-confidence-high-reliance',
-        detail: `Low confidence but responsible for ${Math.round(share * 100)}% of DES-wide expected achievement`,
+        detail: `Low confidence but responsible for ${formatPercent(share * 100)} of DES-wide expected achievement`,
       })
     }
   }
@@ -127,12 +128,12 @@ function evaluateGroup(
   if (risk.forecastRatio < LARGE_GAP_RATIO_THRESHOLD) {
     const tested = savedScenarios.some((s) => leversTargetGroup(s.levers, level, groupKey))
     if (!tested) {
-      const belowPct = Math.round((1 - risk.forecastRatio) * 100)
+      const belowPct = formatPercent((1 - risk.forecastRatio) * 100)
       flags.push({
         groupKey,
         level,
         type: 'large-unexplained-gap',
-        detail: `forecast is ${belowPct}% below goal, and no saved scenario has targeted this group yet`,
+        detail: `forecast is ${belowPct} below goal, and no saved scenario has targeted this group yet`,
       })
     }
   }

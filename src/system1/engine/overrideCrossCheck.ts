@@ -6,6 +6,8 @@ import { assessRisk, type RiskStatus } from '../../system2/engine/riskStatus'
 import { CAPACITY_UTILISATION_RANGE, TEAM_HISTORICAL_TREND_RANGE, type OrgRecord } from '../../system2/data/types'
 import { mulberry32, randRange, seedFromId } from '../../system2/engine/prng'
 import { getDivisionLiveState, getTeamLiveState, type System2LiveSnapshot } from '../../system2/bridge/liveOrgState'
+import { formatMoney, formatMoneyPrecise, formatPercent } from '../../shared/format'
+import { formatSignedPercent } from '../../shared/format'
 
 /** Same mapping buildSnapshot.ts uses for the real export — a 1-based ladder index, so a hypothetical record's shape matches what a real snapshot record would carry. */
 function gradeToSnapshotCode(grade: Grade): number {
@@ -88,7 +90,25 @@ export function buildHypotheticalOrgRecord(person: Person, hypotheticalTarget: n
   }
 }
 
-export type CheckStatus = 'pass' | 'fail'
+/**
+ * 'note' added 29 Sept 2026.
+ *
+ * The team and org checks used to test the group's AMBIENT status — is this
+ * team/org currently compliant — rather than the override's own effect. With
+ * DES-wide deliberately Off track in the seeded data, that condition was
+ * permanently true, so sign-off fired for all 60 people at +1% exactly as it
+ * did at +30% and the direct-apply path was unreachable. A gate that always
+ * fires discriminates nothing.
+ *
+ * The checks now test REGRESSION: does this change move the group into a
+ * worse status band. An override inside an already-Infeasible team passes,
+ * because it is not the thing that made the team Infeasible.
+ *
+ * 'note' keeps that context visible without gating on it: the group was
+ * already non-compliant, this change did not worsen it, here is the state you
+ * are working inside. It never forces sign-off.
+ */
+export type CheckStatus = 'pass' | 'fail' | 'note'
 
 export interface TeamCheckResult {
   status: CheckStatus
@@ -196,7 +216,7 @@ export function runOverrideCrossCheck(input: OverrideCrossCheckInput): OverrideC
       percentChange,
       requiresSignOff: isDrasticChange,
       signOffReasons: isDrasticChange
-        ? [`Drastic percentage change: ${percentChange > 0 ? '+' : ''}${round1(percentChange * 100)}%, over the ±${LARGE_ADJUSTMENT_THRESHOLD * 100}% threshold.`]
+        ? [`Drastic percentage change: ${formatSignedPercent(percentChange * 100)}, over the ±${LARGE_ADJUSTMENT_THRESHOLD * 100}% threshold.`]
         : [],
     }
   }
@@ -221,9 +241,13 @@ export function runOverrideCrossCheck(input: OverrideCrossCheckInput): OverrideC
   // check 3's explicit "push from on-track into worse" wording below). A
   // team moving On track -> At risk is still a pass here; only landing in
   // Off track/Infeasible fails it.
-  const teamPasses = isCompliant(teamAfterRisk.status)
+  /* Regression, not ambient status. A team already Off track or Infeasible
+     before this change is reported as a note, not a failure — the override
+     did not put it there. */
+  const teamRegressed = teamBeforeStatus !== null && STATUS_SEVERITY[teamAfterRisk.status] > STATUS_SEVERITY[teamBeforeStatus]
+  const teamAlreadyNonCompliant = teamBeforeStatus !== null && !isCompliant(teamBeforeStatus)
   const team: TeamCheckResult = {
-    status: teamPasses ? 'pass' : 'fail',
+    status: teamRegressed ? 'fail' : teamAlreadyNonCompliant ? 'note' : 'pass',
     division: person.division,
     team: person.team,
     beforeHeadcount: teamBefore?.rollup.headcount ?? 0,
@@ -234,9 +258,9 @@ export function runOverrideCrossCheck(input: OverrideCrossCheckInput): OverrideC
     afterStatus: teamAfterRisk.status,
     afterCoveragePct: round1(teamAfterRisk.forecastRatio * 100),
     detail:
-      teamBeforeStatus && !isCompliant(teamBeforeStatus)
-        ? `Team total moves from £${teamBefore?.rollup.target ?? 0}k to £${teamAfterRollup.target}k — team remains ${teamAfterRisk.status} (already non-compliant before this change).`
-        : `Team total moves from £${teamBefore?.rollup.target ?? 0}k to £${teamAfterRollup.target}k, ${round1(teamAfterRisk.forecastRatio * 100)}% coverage — ${teamBeforeStatus ?? 'no prior data'} → ${teamAfterRisk.status}.`,
+      teamAlreadyNonCompliant
+        ? `Team total moves from ${formatMoneyPrecise(teamBefore?.rollup.target ?? 0)} to ${formatMoneyPrecise(teamAfterRollup.target)} — team was already ${teamBeforeStatus} before this change, and this does not worsen it.`
+        : `Team total moves from ${formatMoneyPrecise(teamBefore?.rollup.target ?? 0)} to ${formatMoneyPrecise(teamAfterRollup.target)}, ${formatPercent(teamAfterRisk.forecastRatio * 100)} coverage — ${teamBeforeStatus ?? 'no prior data'} → ${teamAfterRisk.status}.`,
   }
 
   // ---- Division ripple (display-only, see file header) ----
@@ -264,8 +288,8 @@ export function runOverrideCrossCheck(input: OverrideCrossCheckInput): OverrideC
     afterCoveragePct: round1(divisionAfterRisk.forecastRatio * 100),
     detail:
       divisionBeforeStatus === divisionAfterRisk.status
-        ? `Division total stays £${divisionBefore?.rollup.target ?? 0}k → £${divisionAfterRollup.target}k, still ${divisionAfterRisk.status}.`
-        : `Division total moves £${divisionBefore?.rollup.target ?? 0}k → £${divisionAfterRollup.target}k — ${divisionBeforeStatus ?? 'no prior data'} → ${divisionAfterRisk.status}.`,
+        ? `Division total stays ${formatMoneyPrecise(divisionBefore?.rollup.target ?? 0)} → ${formatMoneyPrecise(divisionAfterRollup.target)}, still ${divisionAfterRisk.status}.`
+        : `Division total moves ${formatMoneyPrecise(divisionBefore?.rollup.target ?? 0)} → ${formatMoneyPrecise(divisionAfterRollup.target)} — ${divisionBeforeStatus ?? 'no prior data'} → ${divisionAfterRisk.status}.`,
   }
 
   // ---- Check 2: level-cohort norms ----
@@ -284,7 +308,7 @@ export function runOverrideCrossCheck(input: OverrideCrossCheckInput): OverrideC
     detail:
       cohortAverage === null
         ? `No other ${person.grade} records to compare against — nothing to check.`
-        : `Proposed revenue £${proposedRevenue}k is ${round1(deviationPct! * 100)}% ${proposedRevenue >= cohortAverage ? 'above' : 'below'} the ${person.grade} cohort average of £${Math.round(cohortAverage)}k (${cohortPeers.length} peer${cohortPeers.length === 1 ? '' : 's'}).`,
+        : `Proposed revenue ${formatMoney(proposedRevenue)} is ${formatPercent(deviationPct! * 100)} ${proposedRevenue >= cohortAverage ? 'above' : 'below'} the ${person.grade} cohort average of ${formatMoney(cohortAverage)} (${cohortPeers.length} peer${cohortPeers.length === 1 ? '' : 's'}).`,
   }
 
   // ---- Check 3: org goal integrity ----
@@ -294,9 +318,13 @@ export function runOverrideCrossCheck(input: OverrideCrossCheckInput): OverrideC
   const goal = snapshot.org.goal
   const orgAfterRisk = assessRisk(orgAfterRollup, orgAfterRecords, 'DES-wide', goal)
   const orgBeforeStatus = snapshot.org.risk.status
-  const orgPasses = stillSensible(orgBeforeStatus, orgAfterRisk.status)
+  /* Same change as the team check. stillSensible()'s first clause was
+     isCompliant(after), which DES-wide never satisfies in the seeded data, so
+     the no-regression clause beneath it was never reached. */
+  const orgRegressed = STATUS_SEVERITY[orgAfterRisk.status] > STATUS_SEVERITY[orgBeforeStatus]
+  const orgAlreadyNonCompliant = !isCompliant(orgBeforeStatus)
   const org: OrgCheckResult = {
-    status: orgPasses ? 'pass' : 'fail',
+    status: orgRegressed ? 'fail' : orgAlreadyNonCompliant ? 'note' : 'pass',
     goal,
     beforeTotal: snapshot.org.rollup.target,
     afterTotal: orgAfterRollup.target,
@@ -306,17 +334,18 @@ export function runOverrideCrossCheck(input: OverrideCrossCheckInput): OverrideC
     afterStatus: orgAfterRisk.status,
     detail:
       orgBeforeStatus === orgAfterRisk.status
-        ? `Org forecast stays ${orgAfterRisk.status} against the £${goal}k goal (£${round1(orgAfterRollup.expectedAchievement)}k expected achievement).`
-        : `Org forecast moves from ${orgBeforeStatus} to ${orgAfterRisk.status} against the £${goal}k goal (£${round1(snapshot.org.rollup.expectedAchievement)}k → £${round1(orgAfterRollup.expectedAchievement)}k expected achievement).`,
+        ? `Org forecast was already ${orgAfterRisk.status} against the ${formatMoney(goal)} goal (${formatMoney(orgAfterRollup.expectedAchievement)} expected achievement), and this does not worsen it.`
+        : `Org forecast moves from ${orgBeforeStatus} to ${orgAfterRisk.status} against the ${formatMoney(goal)} goal (${formatMoneyPrecise(snapshot.org.rollup.expectedAchievement)} → ${formatMoneyPrecise(orgAfterRollup.expectedAchievement)} expected achievement).`,
   }
 
   const signOffReasons: string[] = []
+  /* Only 'fail' routes to sign-off. 'note' is context, not a gate. */
   if (team.status === 'fail') signOffReasons.push(`Team total check failed: ${team.detail}`)
   if (cohort.status === 'fail') signOffReasons.push(`Level-cohort norm check failed: ${cohort.detail}`)
   if (org.status === 'fail') signOffReasons.push(`Org goal integrity check failed: ${org.detail}`)
   if (isDrasticChange) {
     signOffReasons.push(
-      `Drastic percentage change: ${percentChange > 0 ? '+' : ''}${round1(percentChange * 100)}%, over the ±${LARGE_ADJUSTMENT_THRESHOLD * 100}% threshold.`,
+      `Drastic percentage change: ${formatSignedPercent(percentChange * 100)}, over the ±${LARGE_ADJUSTMENT_THRESHOLD * 100}% threshold.`,
     )
   }
 
