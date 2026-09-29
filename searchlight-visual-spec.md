@@ -761,6 +761,92 @@ read oddly.
 
 ---
 
+## OPEN DECISION — what the sign-off cross-checks should test (29 Sept 2026)
+
+Finding B from the journey run. **Nothing implemented; this is the options
+write-up.**
+
+### What is actually happening
+
+Two of the three checks test the group's **ambient status**, not the override's
+effect. `isCompliant(status)` passes only On track or At risk:
+
+- **Team check** — `isCompliant(teamAfter)`. Fails whenever the team lands
+  Off track or Infeasible, whether or not the change caused it. The code knows:
+  it has a dedicated message reading *"already non-compliant before this
+  change"*, and still fails.
+- **Org check** — `stillSensible(before, after)`, whose first clause is
+  `isCompliant(after)`. DES-wide is Off track by design, so that clause is
+  false for everyone and the no-regression clause below it is never reached.
+
+Measured across all 60 people, at four override sizes:
+
+| Override | Team fails | Cohort fails | Org fails | Routes to sign-off |
+| --- | --- | --- | --- | --- |
+| +1% | 30 | 0 | **60** | **60 / 60** |
+| +5% | 30 | 0 | **60** | **60 / 60** |
+| +15% | 30 | 5 | **60** | **60 / 60** |
+| +30% | 29 | 45 | **60** | **60 / 60** |
+
+The org check fires for everyone at every size. The team check fires for the
+30 people in Studio North, Platform and Delivery at every size. **Only the
+cohort check responds to the size of the change** — 0 at +5%, 45 at +30% —
+which is what a marginal check looks like, and a useful model.
+
+**Fixing only the org check is not enough.** The team check would still route
+30 of 60 people to sign-off regardless of what they changed.
+
+Worth noting the ±20% drastic-change trigger is independent and already
+catches large moves, so the group checks do not need to police size.
+
+### Option 1 — Regression only: did *this change* make the group worse?
+
+Replace `isCompliant(after)` with a band-regression test in both checks: fail
+only if the change moves the group into a worse status band.
+
+- **For** — smallest change, directly answers what the gate is for, and keeps
+  the existing statuses as the vocabulary. An override inside an Infeasible
+  team passes if it does not make things worse, which is the sponsor-legible
+  reading.
+- **Against** — bands are coarse. A group already Infeasible can be worsened
+  repeatedly without ever tripping a band change: death by a thousand cuts. The
+  gate would go quiet in exactly the situation that most needs attention.
+
+### Option 2 — Materiality: a threshold on the group's forecast ratio
+
+Fail if the change moves the group's forecast ratio down by more than a locked
+number of percentage points, regardless of band.
+
+- **For** — continuous rather than banded, so it has no thousand-cuts blind
+  spot; scales naturally from one person to a mass adjustment; sits beside the
+  existing 25% and ±20% thresholds as a peer.
+- **Against** — introduces a new locked figure that has to be defended, and
+  CLAUDE.md's thresholds are meant to be few. Needs calibration against the
+  real data, the way `GROWTH_RATE_RANGE` did, or it will be arbitrary.
+
+### Option 3 — Keep the ambient test, but as information rather than a gate
+
+Split the result into three states instead of two: **pass**, **fail**
+(a regression this change caused), and **note** (the group was already
+non-compliant — shown, explained, but does not force sign-off).
+
+- **For** — loses no information. A manager still sees "you are operating
+  inside an Infeasible team", which is genuinely worth knowing, but it stops
+  being the reason every override needs a signature. The accordion already
+  renders per-check status, so it is a third badge rather than new structure.
+- **Against** — the most UI work of the three, and it needs a real answer to
+  "what if the team is Infeasible *and* this change makes it worse" — which
+  means it probably wants Option 1 or 2 underneath it anyway.
+
+### Recommendation, if one is wanted
+
+Option 1 for the regression logic with Option 3's third state for the ambient
+condition, and Option 2 held in reserve if the thousand-cuts gap turns out to
+matter. Whatever is chosen must change **both** the team and org checks, or
+the direct-apply path stays closed for half the population.
+
+---
+
 ## System 1 — Individual Targeting
 
 ### 1. Overview & Population
