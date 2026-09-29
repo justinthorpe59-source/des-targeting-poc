@@ -50,7 +50,7 @@ const SYSTEM_2_LINKS = [
  * white: white on the accent measures 2.50:1 and fails AA.
  */
 const screenLinkClass = ({ isActive }: { isActive: boolean }) =>
-  `rounded-pa-chip px-3 py-1.5 font-pa-body text-sm font-medium transition-colors ${
+  `rounded-pa-chip px-4 py-2.5 font-pa-body text-base font-semibold transition-colors ${
     isActive
       ? 'bg-[var(--color-pa-accent)] text-[var(--color-pa-accent-ink)]'
       : 'text-pa-grey-03 hover:bg-pa-grey-01 hover:text-pa-grey-04'
@@ -60,7 +60,7 @@ const screenLinkClass = ({ isActive }: { isActive: boolean }) =>
    of which happens to be current. It takes a neutral fill so it does not
    compete with the active screen for the eye. */
 const systemLinkClass = ({ isActive }: { isActive: boolean }) =>
-  `rounded-pa-chip px-3 py-1.5 font-pa-body text-xs font-semibold uppercase tracking-wide transition-colors ${
+  `rounded-pa-chip px-4 py-2.5 font-pa-body text-sm font-semibold uppercase tracking-wide transition-colors ${
     isActive ? 'border border-pa-grey-01 bg-pa-white text-pa-grey-04' : 'text-pa-grey-03 hover:text-pa-grey-04'
   }`
 
@@ -73,9 +73,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-pa-white text-pa-grey-04">
-      <header className="border-b border-pa-grey-01 bg-pa-white">
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 px-8 py-3">
-          <span className="font-pa-display text-lg font-semibold tracking-tight text-pa-grey-04">Searchlight</span>
+      <header className="bg-pa-white">
+        <div className="flex flex-wrap items-center gap-x-7 gap-y-3 px-8 py-5">
+          <span className="font-pa-display text-2xl font-semibold tracking-tight text-pa-grey-04">Searchlight</span>
 
           <nav aria-label="System" className="flex gap-1">
             <NavLink to="/system1" className={systemLinkClass}>
@@ -98,9 +98,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             <NavLink
               to="/system1/exceptions"
               title={`${openExceptions} open exception${openExceptions === 1 ? '' : 's'}`}
-              className="relative flex h-8 w-8 items-center justify-center rounded-full text-pa-grey-03 transition-colors hover:bg-pa-grey-01 hover:text-pa-grey-04"
+              className="relative flex h-11 w-11 items-center justify-center rounded-full text-pa-grey-03 transition-colors hover:bg-pa-grey-01 hover:text-pa-grey-04"
             >
-              <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+              <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
                 <path d="M10 2.5a4.5 4.5 0 0 0-4.5 4.5v3L4 13h12l-1.5-3V7A4.5 4.5 0 0 0 10 2.5Z" strokeLinejoin="round" />
                 <path d="M8 15.5a2 2 0 0 0 4 0" strokeLinecap="round" />
               </svg>
@@ -108,7 +108,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <span
                   data-testid="nav-exception-count"
                   aria-hidden="true"
-                  className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 font-pa-mono text-[10px] font-bold text-pa-dark-blue"
+                  className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 font-pa-mono text-[11px] font-bold text-pa-dark-blue"
                   style={{ background: 'var(--color-pa-apricot-03)' }}
                 >
                   {openExceptions}
@@ -122,14 +122,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             <button
               type="button"
               onClick={resetAllDemoData}
-              className="rounded-pa-chip border border-pa-grey-02 px-3 py-1.5 font-pa-body text-xs font-medium text-pa-grey-04 transition-colors hover:bg-pa-grey-01"
+              className="rounded-pa-chip border border-pa-grey-02 px-4 py-2.5 font-pa-body text-sm font-medium text-pa-grey-04 transition-colors hover:bg-pa-grey-01"
             >
               Reset demo data
             </button>
 
             <span
               title="Demo user — this POC has no real sign-in"
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-pa-grey-01 bg-pa-white font-pa-mono text-xs font-bold text-pa-grey-04"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-pa-grey-01 bg-pa-white font-pa-mono text-sm font-bold text-pa-grey-04"
             >
               JT
             </span>
