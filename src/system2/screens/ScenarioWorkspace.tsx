@@ -7,8 +7,6 @@ import { computeGoals } from '../engine/goals'
 import { computeRiskStatuses, type Confidence } from '../engine/riskStatus'
 import { runScenario, type ScenarioLevers } from '../engine/scenario'
 import { statusBadgeClass } from '../riskDisplay'
-import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
-import { useInitialLoad } from '../../components/searchlight/useInitialLoad'
 import { SectionHeading } from '../../components/searchlight/Section'
 import { formatMoney, formatPercent } from '../../shared/format'
 
@@ -300,7 +298,6 @@ export function ScenarioWorkspace() {
   const [scenarioName, setScenarioName] = useState('')
   const carouselRef = useRef<HTMLDivElement>(null)
 
-  const loading = useInitialLoad(records.length > 0)
 
   const selectedPreset = presets.find((p) => p.id === selectedId)
   const selectedSaved = savedScenarios.find((s) => s.id === selectedId)
@@ -418,8 +415,6 @@ export function ScenarioWorkspace() {
     carouselRef.current?.scrollBy({ left: delta * 280, behavior: 'smooth' })
   }
 
-  if (loading) return <SearchlightLoader />
-
   if (records.length === 0) {
     return (
       <section className="space-y-4">
@@ -473,7 +468,7 @@ export function ScenarioWorkspace() {
                 <span className="mt-2 font-pa-body text-sm leading-snug text-pa-grey-03">{preset.blurb}</span>
                 <span
                   aria-hidden="true"
-                  className="mt-auto flex h-11 w-11 items-center justify-center rounded-pa-chip bg-pa-grey-01 text-pa-grey-04"
+                  className="mt-auto flex h-11 w-11 items-center justify-center rounded-pa-chip border border-pa-grey-01 bg-pa-white text-pa-grey-04"
                 >
                   <Icon name={preset.icon} />
                 </span>
@@ -484,7 +479,7 @@ export function ScenarioWorkspace() {
 
         {/* Numbered strip on a full-width rule, as the reference draws it. */}
         <div className="relative flex items-center gap-3">
-          <div aria-hidden="true" className="absolute inset-x-0 top-1/2 h-px bg-pa-grey-01" />
+          <div aria-hidden="true" className="absolute inset-x-0 top-1/2 h-px border border-pa-grey-01 bg-pa-white" />
           {presets.map((preset) => {
             const active = preset.id === selectedId
             return (

@@ -1,6 +1,16 @@
 @import "tailwindcss";
 
 /*
+ * Base type size, 29 Sept 2026. Raised from the browser default of 16px.
+ * Set at the root so the whole rem-based scale — every text size and every
+ * Tailwind spacing step — grows together, rather than bumping individual
+ * elements and leaving the layout rhythm behind.
+ */
+html {
+  font-size: 18px;
+}
+
+/*
  * Searchlight design tokens — PA design-system palette, shared directly as
  * hex values (the full token package isn't wired up yet). Kept as Tailwind
  * v4 @theme entries so they compile to real CSS custom properties
@@ -18,12 +28,30 @@
 @theme {
   --color-pa-dark-blue: #00172d;
   --color-pa-logo-grey: #7c8b9a;
-  --color-pa-grey-wash: #f9fafc;
+  /*
+   * Repointed to pure white, 29 Sept 2026. This token WAS the page background
+   * (#f9fafc) and the source of the grey under the top nav — the thing that
+   * kept coming back because it was only ever overridden per screen. Changing
+   * it here turns the page and all eight surfaces that reference it white in
+   * one move. The name is kept so nothing has to be renamed; it now means
+   * "the page ground", which is white.
+   */
+  --color-pa-grey-wash: #ffffff;
   --color-pa-white: #ffffff;
   --color-pa-ingenuity-red: #f62b44;
 
-  --color-pa-grey-04: #36465a;
-  --color-pa-grey-03: #64778a;
+  /*
+   * Text ramp, reset 29 Sept 2026. Headings and body were rendering in
+   * #36465a and #64778a — a mid blue-grey that read as washed out. Primary
+   * text is now near-black and secondary is the old primary, which is a
+   * genuinely dark grey rather than a light one.
+   *
+   * Changed at the token rather than per element: `text-pa-grey-04` is
+   * primary and `text-pa-grey-03` is supplementary across ~500 usages, so
+   * remapping the two values moves every one of them at once.
+   */
+  --color-pa-grey-04: #111111;
+  --color-pa-grey-03: #36465a;
   --color-pa-grey-02: #a2b3c9;
   --color-pa-grey-01: #e8ecf2;
 

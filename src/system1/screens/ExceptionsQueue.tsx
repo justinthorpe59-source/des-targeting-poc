@@ -196,7 +196,7 @@ function SignOffActions({
               type="button"
               data-testid={`${testIdPrefix}-show-reject`}
               onClick={() => setRejecting(true)}
-              className="rounded-full bg-pa-grey-01 px-4 py-2 font-pa-body text-xs font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-02/60"
+              className="rounded-full border border-pa-grey-01 bg-pa-white px-4 py-2 font-pa-body text-xs font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-02/60"
             >
               Reject
             </button>
@@ -216,7 +216,7 @@ function SignOffActions({
             <button
               type="button"
               onClick={() => setRejecting(false)}
-              className="rounded-full bg-pa-grey-01 px-4 py-2 font-pa-body text-xs font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-02/60"
+              className="rounded-full border border-pa-grey-01 bg-pa-white px-4 py-2 font-pa-body text-xs font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-02/60"
             >
               Cancel
             </button>
@@ -353,7 +353,7 @@ export function ExceptionsQueue() {
                   type="button"
                   data-testid="batch-show-all"
                   onClick={() => setShowAllInBatch((v) => !v)}
-                  className="mt-3 rounded-full bg-pa-grey-01 px-3.5 py-1.5 font-pa-body text-xs font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-02/60"
+                  className="mt-3 rounded-full border border-pa-grey-01 bg-pa-white px-3.5 py-1.5 font-pa-body text-xs font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-02/60"
                 >
                   {showAllInBatch ? 'Show fewer' : `Show all ${rows.length}`}
                 </button>
@@ -492,7 +492,7 @@ export function ExceptionsQueue() {
               className={`rounded-full px-3.5 py-1.5 font-pa-body text-xs font-semibold transition-colors ${
                 active
                   ? 'bg-[var(--color-pa-accent)] text-[var(--color-pa-accent-ink)]'
-                  : 'bg-pa-grey-01 text-pa-grey-04 hover:bg-pa-grey-02/60'
+                  : 'border border-pa-grey-01 bg-pa-white text-pa-grey-04 hover:bg-pa-grey-02/60'
               }`}
             >
               {opt === 'All' ? 'All types' : TYPE_LABELS[opt]}

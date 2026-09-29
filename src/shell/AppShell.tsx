@@ -61,7 +61,7 @@ const screenLinkClass = ({ isActive }: { isActive: boolean }) =>
    compete with the active screen for the eye. */
 const systemLinkClass = ({ isActive }: { isActive: boolean }) =>
   `rounded-pa-chip px-3 py-1.5 font-pa-body text-xs font-semibold uppercase tracking-wide transition-colors ${
-    isActive ? 'bg-pa-grey-01 text-pa-grey-04' : 'text-pa-grey-03 hover:text-pa-grey-04'
+    isActive ? 'border border-pa-grey-01 bg-pa-white text-pa-grey-04' : 'text-pa-grey-03 hover:text-pa-grey-04'
   }`
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -72,7 +72,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const openExceptions = detectExceptions({ people: SEED_PEOPLE, targets }).size
 
   return (
-    <div className="min-h-screen bg-pa-grey-wash text-pa-grey-04">
+    <div className="min-h-screen bg-pa-white text-pa-grey-04">
       <header className="border-b border-pa-grey-01 bg-pa-white">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 px-8 py-3">
           <span className="font-pa-display text-lg font-semibold tracking-tight text-pa-grey-04">Searchlight</span>
@@ -129,7 +129,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
             <span
               title="Demo user — this POC has no real sign-in"
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-pa-grey-01 font-pa-mono text-xs font-bold text-pa-grey-04"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-pa-grey-01 bg-pa-white font-pa-mono text-xs font-bold text-pa-grey-04"
             >
               JT
             </span>

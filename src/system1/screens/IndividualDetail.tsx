@@ -9,9 +9,7 @@ import { StatusPipeline } from '../components/StatusPipeline'
 import { CohortComparisonPanel } from '../components/CohortComparisonPanel'
 import { StatusPill } from '../../components/searchlight/StatusPill'
 import { ManagerOverrideModal } from './ManagerOverride'
-import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
 import { SketchDistribution } from '../../components/searchlight/SketchIllustrations'
-import { useInitialLoad } from '../../components/searchlight/useInitialLoad'
 import { formatPercent } from '../../shared/format'
 import { PersonAvatar, PersonHeroImage } from '../components/PersonAvatar'
 
@@ -75,7 +73,7 @@ function AttributeChip({
           <span
             data-testid={`${testId}-badge`}
             className="shrink-0 rounded-full px-2 py-0.5 font-pa-mono text-[11px] font-semibold"
-            style={{ background: 'var(--color-pa-grey-01)', color: 'var(--color-pa-grey-03)' }}
+            style={{ background: 'var(--color-pa-white)', border: '1px solid var(--color-pa-grey-01)', color: 'var(--color-pa-grey-03)' }}
           >
             {badge}
           </span>
@@ -100,7 +98,6 @@ export function IndividualDetail() {
   const auditLog = useSystem1Store((state) => state.auditLog)
   const proposeRecord = useSystem1Store((state) => state.proposeRecord)
   const approveRecord = useSystem1Store((state) => state.approveRecord)
-  const loading = useInitialLoad(true)
   // Declared before the not-found early return below: a hook after a
   // conditional return changes hook order between renders.
   const [detailTab, setDetailTab] = useState<DetailTab>('explanation')
@@ -166,9 +163,7 @@ export function IndividualDetail() {
         </Link>
       </div>
 
-      {loading ? (
-        <SearchlightLoader />
-      ) : (
+      {(
         <div className="animate-[pa-fade-in_500ms_ease-out] space-y-10">
           {/*
             Hero card — two zones per searchlight-visual-spec.md and the
@@ -290,7 +285,7 @@ export function IndividualDetail() {
                     type="button"
                     data-testid="detail-open-override"
                     onClick={() => setOverrideOpen(true)}
-                    className="rounded-full bg-pa-grey-01 px-4 py-2 font-pa-body text-xs font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-02/60"
+                    className="rounded-full border border-pa-grey-01 bg-pa-white px-4 py-2 font-pa-body text-xs font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-02/60"
                   >
                     Override / what-if
                   </button>
@@ -301,7 +296,7 @@ export function IndividualDetail() {
                       setDetailTab('cohort')
                       document.getElementById('detail-tab-cohort')?.scrollIntoView({ block: 'center' })
                     }}
-                    className="rounded-full bg-pa-grey-01 px-4 py-2 font-pa-body text-xs font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-02/60"
+                    className="rounded-full border border-pa-grey-01 bg-pa-white px-4 py-2 font-pa-body text-xs font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-02/60"
                   >
                     Compare to cohort
                   </button>
@@ -474,7 +469,7 @@ export function IndividualDetail() {
                 >
                   <div className="flex items-center justify-between gap-3">
                     <span className="font-pa-mono text-xs text-pa-grey-02">No activity yet</span>
-                    <span className="rounded-full bg-pa-grey-01 px-2.5 py-1 font-pa-body text-[11px] font-semibold text-pa-grey-03">
+                    <span className="rounded-full border border-pa-grey-01 bg-pa-white px-2.5 py-1 font-pa-body text-[11px] font-semibold text-pa-grey-03">
                       —
                     </span>
                   </div>
@@ -528,7 +523,7 @@ export function IndividualDetail() {
                   type="button"
                   data-testid="detail-history-toggle"
                   onClick={() => setShowAllHistory((v) => !v)}
-                  className="mt-5 rounded-full bg-pa-grey-01 px-4 py-2 font-pa-body text-xs font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-02/60"
+                  className="mt-5 rounded-full border border-pa-grey-01 bg-pa-white px-4 py-2 font-pa-body text-xs font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-02/60"
                 >
                   {showAllHistory
                     ? 'Show fewer'

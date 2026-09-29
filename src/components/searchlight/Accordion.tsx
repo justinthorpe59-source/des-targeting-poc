@@ -92,7 +92,7 @@ export function Accordion({
                    row used to be a Grey 01 pill), so the circle is tinted in
                    both — a white circle on a white row has no edge at all. */
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-pa-body text-lg leading-none text-pa-grey-04 transition-colors"
-                style={{ background: 'var(--color-pa-grey-01)' }}
+                style={{ background: 'var(--color-pa-white)', border: '1px solid var(--color-pa-grey-01)' }}
               >
                 {isOpen ? '×' : '+'}
               </span>

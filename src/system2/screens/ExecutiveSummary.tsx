@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import type { ReactNode } from 'react'
 import { useSnapshotStore } from '../../store/snapshotStore'
 import { useSystem2Store } from '../../store/system2Store'
@@ -8,7 +8,6 @@ import type { RiskStatus } from '../engine/riskStatus'
 import { computeGoals } from '../engine/goals'
 import {} from '../riskDisplay'
 import { RiskExceptionsSection } from '../components/RiskExceptionsSection'
-import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
 import { SketchDistribution } from '../../components/searchlight/SketchIllustrations'
 import { formatMoney } from '../../shared/format'
 import { formatPercent } from '../../shared/format'
@@ -81,14 +80,6 @@ export function ExecutiveSummary() {
   const rollups = useMemo(() => aggregate(records), [records])
   const goals = useMemo(() => computeGoals(rollups), [rollups])
   const riskStatuses = useMemo(() => computeRiskStatuses(records, rollups, goals), [records, rollups, goals])
-
-  const hasRecords = records.length > 0
-  const [loading, setLoading] = useState(hasRecords)
-  useEffect(() => {
-    if (!hasRecords) return
-    const timer = setTimeout(() => setLoading(false), 900)
-    return () => clearTimeout(timer)
-  }, [hasRecords])
 
   if (records.length === 0) {
     return (
@@ -217,11 +208,7 @@ export function ExecutiveSummary() {
         <SectionHeading first="Design, Engineering &amp; Science" second="Organisational operating summary" />
       </header>
 
-      {loading ? (
-        <div className="py-24">
-          <SearchlightLoader />
-        </div>
-      ) : (
+      {(
         <div className="animate-[pa-fade-in_500ms_ease-out]">
           {/* Generous vertical whitespace above the body — this screen should
               feel calm and editorial, not dense. */}

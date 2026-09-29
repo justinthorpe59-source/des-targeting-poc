@@ -341,7 +341,7 @@ export function ManagerOverrideModal({
             data-testid="override-modal-close"
             onClick={onClose}
             aria-label="Close"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-pa-grey-01 font-pa-body text-lg leading-none text-pa-grey-04 transition-colors hover:bg-pa-grey-02/60"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-pa-grey-01 bg-pa-white font-pa-body text-lg leading-none text-pa-grey-04 transition-colors hover:bg-pa-grey-02/60"
           >
             ×
           </button>

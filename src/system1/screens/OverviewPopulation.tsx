@@ -10,13 +10,14 @@ import { buildSnapshot } from '../engine/buildSnapshot'
 import { finalTargetFor } from '../engine/finalTarget'
 import { combinedRevenueFor } from '../engine/revenueEngine'
 import { StatusPill } from '../../components/searchlight/StatusPill'
-import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
 import { SketchNetwork } from '../../components/searchlight/SketchIllustrations'
-import { useInitialLoad } from '../../components/searchlight/useInitialLoad'
 import { formatMoney, formatFlatPercent } from '../../shared/format'
 import { calculateRevenue } from '../engine/revenueEngine'
 import { Block, SectionHeading } from '../../components/searchlight/Section'
 import { PersonAvatar } from '../components/PersonAvatar'
+
+/** id -> person, for the bubble network, which carries ids only. */
+const PEOPLE_BY_ID = new Map(SEED_PEOPLE.map((p) => [p.id, p]))
 
 const STATUS_ORDER: TargetStatus[] = ['Modelled', 'Adjusted', 'Pending Sign-off', 'Proposed', 'Approved']
 
@@ -256,28 +257,32 @@ function layoutNetwork(nodes: TeamNode[]) {
 }
 
 /**
- * A blank placeholder for one team member. Deliberately generic — no photo,
- * no initials, no text. Real headshots replace these later; until then it
- * reads as "a person" without inventing an identity.
+ * One team member in the bubble network, showing their actual photograph.
+ *
+ * These were blank grey circles with a generic person glyph, carrying the
+ * comment "real headshots replace these later" — this is later. The face
+ * comes from the same PersonAvatar assignment every other screen uses, so a
+ * person is the same face here as on their card, their detail page and the
+ * queue.
  */
-function MemberBubble({ x, y }: { x: number; y: number }) {
+function MemberBubble({ x, y, person }: { x: number; y: number; person: Person }) {
   return (
     <span
       aria-hidden="true"
       data-testid="member-bubble"
-      className="absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-pa-grey-02"
+      data-person-id={person.id}
+      className="absolute -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full"
       style={{
         left: `${(x / VIEW_W) * 100}%`,
         top: `${(y / VIEW_H) * 100}%`,
         width: `${(MEMBER_SIZE / VIEW_W) * 100}%`,
         aspectRatio: '1',
-        background: 'var(--color-pa-grey-01)',
       }}
     >
-      <svg viewBox="0 0 24 24" className="h-1/2 w-1/2" fill="none" stroke="var(--color-pa-grey-02)" strokeWidth="1.9">
-        <circle cx="12" cy="9" r="3.6" />
-        <path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6" strokeLinecap="round" />
-      </svg>
+      {/* Sized to fill its positioned parent rather than taking a pixel size:
+          the bubble's width is a percentage of the network's viewBox, so it
+          scales with the container. */}
+      <PersonAvatar person={person} size={MEMBER_SIZE} className="h-full w-full" />
     </span>
   )
 }
@@ -356,7 +361,7 @@ function TeamBubbleNetwork({
       </svg>
 
       {members.map((m) => (
-        <MemberBubble key={m.personId} x={m.x} y={m.y} />
+        <MemberBubble key={m.personId} x={m.x} y={m.y} person={PEOPLE_BY_ID.get(m.personId)!} />
       ))}
       {nodes.map((node, i) => (
         <TeamPill
@@ -480,7 +485,7 @@ function PersonCard({
              stronger of the two actions against the outlined Notes, so the
              hierarchy inside the card survives; the accent is spent once on
              this screen, on "Mass adjust selected". */
-          className="flex-1 rounded-full bg-pa-grey-01 px-3 py-1.5 font-pa-body text-xs font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-02/50"
+          className="flex-1 rounded-full border border-pa-grey-01 bg-pa-white px-3 py-1.5 font-pa-body text-xs font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-02/50"
         >
           View
         </button>
@@ -626,7 +631,6 @@ export function OverviewPopulation() {
   const togglePersonSelected = useSystem1Store((state) => state.togglePersonSelected)
   const setSelectedPersonIds = useSystem1Store((state) => state.setSelectedPersonIds)
   const navigate = useNavigate()
-  const loading = useInitialLoad(true)
 
   const [locationFilter, setLocationFilter] = useState<LocationFilter>(ALL_LOCATIONS)
   const [openTeamKey, setOpenTeamKey] = useState<string | null>(null)
@@ -703,9 +707,7 @@ export function OverviewPopulation() {
     <section className="relative space-y-10">
       <SketchNetwork className="pointer-events-none absolute left-1/2 top-24 -z-10 h-[520px] w-[900px] max-w-none -translate-x-1/2 opacity-[0.05]" />
 
-      {loading ? (
-        <SearchlightLoader />
-      ) : (
+      {(
         <div className="animate-[pa-fade-in_500ms_ease-out] space-y-20">
           <System2SyncStrip />
 

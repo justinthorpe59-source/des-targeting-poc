@@ -6,9 +6,7 @@ import { computeRiskStatuses, type RiskStatus } from '../engine/riskStatus'
 import { computeGoals } from '../engine/goals'
 import {statusBadgeClass} from '../riskDisplay'
 import { RiskExceptionsSection } from '../components/RiskExceptionsSection'
-import { SearchlightLoader } from '../../components/searchlight/SearchlightLoader'
 import { SketchScatter } from '../../components/searchlight/SketchIllustrations'
-import { useInitialLoad } from '../../components/searchlight/useInitialLoad'
 import { formatMoney, formatPercent } from '../../shared/format'
 import { SectionHeading } from '../../components/searchlight/Section'
 
@@ -101,7 +99,6 @@ export function DivisionComparison() {
   const rollups = useMemo(() => aggregate(records), [records])
   const goals = useMemo(() => computeGoals(rollups), [rollups])
   const riskStatuses = useMemo(() => computeRiskStatuses(records, rollups, goals), [records, rollups, goals])
-  const loading = useInitialLoad(records.length > 0)
   const [expanded, setExpanded] = useState<string | null>(null)
 
   // Every team, ranked DES-wide by absolute gap — the former Team
@@ -142,7 +139,7 @@ export function DivisionComparison() {
         <header>
           <SectionHeading first="Design, Engineering &amp; Science" second="Division comparison" />
         </header>
-        <div className="rounded-pa-card bg-pa-grey-01 p-6 font-pa-body text-sm text-pa-grey-03">
+        <div className="rounded-pa-card border border-pa-grey-01 bg-pa-white p-6 font-pa-body text-sm text-pa-grey-03">
           No snapshot imported yet.{' '}
           <Link to="/system2/executive-summary" className="font-semibold text-pa-grey-04 underline">
             Import from System 1
@@ -171,11 +168,7 @@ export function DivisionComparison() {
         </p>
       </header>
 
-      {loading ? (
-        <div className="py-24">
-          <SearchlightLoader />
-        </div>
-      ) : (
+      {(
         <div className="animate-[pa-fade-in_500ms_ease-out] space-y-10 pb-16 pt-16">
           <div data-testid="s2-division-comparison-rows" className="grid gap-5 lg:grid-cols-3">
             {divisionRows.map(({ division, rollup, risk, goal, coverage, teamCount }) => {

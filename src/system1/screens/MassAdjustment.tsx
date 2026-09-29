@@ -173,7 +173,7 @@ export function MassAdjustment() {
                   type="button"
                   data-testid="mass-clear-selection"
                   onClick={clearSelection}
-                  className="rounded-full bg-pa-grey-01 px-3.5 py-1.5 font-pa-body text-xs font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-02/60"
+                  className="rounded-full border border-pa-grey-01 bg-pa-white px-3.5 py-1.5 font-pa-body text-xs font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-02/60"
                 >
                   Clear selection
                 </button>
@@ -306,7 +306,7 @@ export function MassAdjustment() {
                   type="button"
                   data-testid="mass-show-all"
                   onClick={() => setShowAllRows((v) => !v)}
-                  className="mt-4 rounded-full bg-pa-grey-01 px-4 py-2 font-pa-body text-xs font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-02/60"
+                  className="mt-4 rounded-full border border-pa-grey-01 bg-pa-white px-4 py-2 font-pa-body text-xs font-semibold text-pa-grey-04 transition-colors hover:bg-pa-grey-02/60"
                 >
                   {showAllRows ? 'Show fewer' : `Show all ${preview.length}`}
                 </button>
