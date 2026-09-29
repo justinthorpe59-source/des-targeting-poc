@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { SEED_PEOPLE } from '../system1/data/people'
 import { useSystem1Store } from '../store/system1Store'
 import { detectExceptions } from '../system1/engine/exceptions'
-import { resetAllDemoData } from '../store/resetAll'
+import { resetAllDemoData, restartDemo } from '../store/resetAll'
 
 /**
  * Searchlight global navigation. Per searchlight-visual-spec.md: a top
@@ -58,10 +58,16 @@ const screenLinkClass = ({ isActive }: { isActive: boolean }) =>
 
 /* The system switcher is structural, not an emphasis moment — two peers, one
    of which happens to be current. It takes a neutral fill so it does not
-   compete with the active screen for the eye. */
+   compete with the active screen for the eye.
+ *
+ * The selected outline is Grey 04 (#111111), the palette's near-black and the
+ * same token every heading uses — no new hex was introduced for it. It was
+ * Grey 01, a very light grey that barely read as an outline at all. The
+ * unselected peer deliberately keeps no border and Grey 03 text, so the two
+ * are told apart by outline-vs-none as well as by weight of ink. */
 const systemLinkClass = ({ isActive }: { isActive: boolean }) =>
   `rounded-pa-chip px-4 py-2.5 font-pa-body text-sm font-semibold uppercase tracking-wide transition-colors ${
-    isActive ? 'border border-pa-grey-01 bg-pa-white text-pa-grey-04' : 'text-pa-grey-03 hover:text-pa-grey-04'
+    isActive ? 'border border-pa-grey-04 bg-pa-white text-pa-grey-04' : 'text-pa-grey-03 hover:text-pa-grey-04'
   }`
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -74,8 +80,38 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-pa-white text-pa-grey-04">
       <header className="bg-pa-white">
-        <div className="flex flex-wrap items-center gap-x-7 gap-y-3 px-8 py-5">
-          <span className="font-pa-display text-2xl font-semibold tracking-tight text-pa-grey-04">Searchlight</span>
+        {/* gap-x-5, tightened from gap-x-7 to pay for the PA mark's ~63px.
+            Without it the utilities group wrapped to a second row at 1280,
+            a width it cleared before the mark was added. */}
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-3 px-8 py-5">
+          {/* Brand lockup: the PA mark and the proposition name read as one
+              unit, so they sit in their own tighter gap-3 rather than the
+              bar's gap-x-7 — which also shifts the rest of the nav right to
+              make room. The asset is public/pa-logo.png, the real PA mark
+              already in the repo; nothing was fabricated. */}
+          <div className="flex items-center gap-3">
+            <img src="/pa-logo.png" alt="PA" data-testid="nav-pa-logo" className="h-10 w-auto" />
+
+            {/*
+              Clicking the wordmark restarts the whole POC — data back to seed
+              AND back to the splash. A button rather than a link because it
+              performs an action; it keeps the wordmark's exact typography and
+              adds only a focus ring, so it still reads as a wordmark.
+
+              Only the Searchlight wordmark does this, not the PA mark beside
+              it: PA's logo is corporate identity, and wiring a destructive
+              reset to it would be a surprising place to put one.
+            */}
+            <button
+              type="button"
+              onClick={restartDemo}
+              data-testid="nav-restart"
+              title="Restart the demo — resets all data and returns to the splash"
+              className="rounded-pa-chip font-pa-display text-2xl font-semibold tracking-tight text-pa-grey-04 focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-grey-03 focus-visible:ring-offset-2"
+            >
+              Searchlight
+            </button>
+          </div>
 
           <nav aria-label="System" className="flex gap-1">
             <NavLink to="/system1" className={systemLinkClass}>
@@ -131,7 +167,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               title="Demo user — this POC has no real sign-in"
               className="flex h-11 w-11 items-center justify-center rounded-full border border-pa-grey-01 bg-pa-white font-pa-mono text-sm font-bold text-pa-grey-04"
             >
-              JT
+              AN
             </span>
           </div>
         </div>

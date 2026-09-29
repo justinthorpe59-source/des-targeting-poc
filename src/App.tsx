@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from './shell/AppShell'
 import { SplashScreen } from './components/searchlight/SplashScreen'
+import { rememberSplashSeen, splashAlreadySeen } from './shared/splashSession'
 import { System1Root } from './system1/System1Root'
 import { OverviewPopulation } from './system1/screens/OverviewPopulation'
 import { IndividualDetail } from './system1/screens/IndividualDetail'
@@ -13,37 +14,14 @@ import { DivisionComparison } from './system2/screens/DivisionComparison'
 import { ScenarioWorkspace } from './system2/screens/ScenarioWorkspace'
 
 /**
- * Once per browsing session, not once per page load. sessionStorage is
- * exactly that boundary: it survives a refresh and internal navigation in
- * the same tab, and starts empty in a new tab or window — so the splash
- * greets a freshly-opened POC and then stays out of the way.
+ * The splash shows once per browsing session, not once per page load — see
+ * `shared/splashSession` for why sessionStorage is the right boundary.
  *
- * It is also untouched by "Reset demo data", which clears the four zustand
- * stores and nothing else. A reset mid-demo puts the data back without
- * throwing the presenter out to the splash.
- *
- * Wrapped because a browser with site data blocked throws on access, and a
- * splash is not worth a blank application over. If it throws, the splash
- * simply shows each load.
+ * It is untouched by "Reset demo data", which clears the four zustand stores
+ * and nothing else, so a reset mid-demo puts the data back without throwing
+ * the presenter out to the splash. The shell's Searchlight wordmark is the
+ * control that deliberately does both.
  */
-const SPLASH_KEY = 'searchlight:splash-seen'
-
-function splashAlreadySeen(): boolean {
-  try {
-    return window.sessionStorage.getItem(SPLASH_KEY) === 'true'
-  } catch {
-    return false
-  }
-}
-
-function rememberSplashSeen(): void {
-  try {
-    window.sessionStorage.setItem(SPLASH_KEY, 'true')
-  } catch {
-    /* Ignored — see above. */
-  }
-}
-
 export default function App() {
   const [showSplash, setShowSplash] = useState(() => !splashAlreadySeen())
 
