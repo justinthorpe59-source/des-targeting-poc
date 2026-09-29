@@ -141,7 +141,7 @@ export function RiskExceptionsSection({ scopeKey }: { scopeKey?: string } = {}) 
           Nothing flagged right now.
         </p>
       ) : (
-        <div data-testid="s2-exceptions-rows" className="flex flex-col gap-2">
+        <div data-testid="s2-exceptions-rows" className="pa-stagger flex flex-col gap-2">
           {rows.map((row) => (
             <div
               key={row.groupKey}

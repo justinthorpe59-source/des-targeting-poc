@@ -270,7 +270,7 @@ export function MassAdjustment() {
                 These are the target values that will be written — not a separate revenue figure.
               </p>
 
-              <div data-testid="mass-preview-rows" className="mt-4 flex flex-col gap-2">
+              <div data-testid="mass-preview-rows" className="pa-stagger mt-4 flex flex-col gap-2">
                 {visibleRows.map(({ person, before, after }) => (
                   <div
                     key={person.id}

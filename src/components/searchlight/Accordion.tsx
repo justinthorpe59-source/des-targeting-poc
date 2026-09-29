@@ -47,7 +47,7 @@ export function Accordion({
   if (items.length === 0) return null
 
   return (
-    <div data-testid={testId} className="flex flex-col gap-3">
+    <div data-testid={testId} className="pa-stagger flex flex-col gap-3">
       {items.map((item) => {
         const isOpen = openId === item.id
         const panelId = `${baseId}-${item.id}-panel`

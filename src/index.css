@@ -157,52 +157,174 @@ html {
   --shadow-pa-card-raised: 0 6px 24px rgba(0, 0, 0, 0.14);
   --shadow-pa-modal: 0 24px 64px rgba(0, 0, 0, 0.24);
 
+  /*
+   * ---------------------------------------------------------------------
+   * Motion system, 29 Sept 2026
+   * ---------------------------------------------------------------------
+   * Three curves and three durations, used everywhere. A hover on a button
+   * and a hover on a card resolve to the same numbers, because both read
+   * these tokens rather than picking their own.
+   *
+   *   out     entrances and anything arriving — decelerates into place
+   *   inout   state changes on something already on screen
+   *   settle  a single soft overshoot, for things that physically land
+   *           (the population bubbles). Used sparingly; overshoot
+   *           everywhere is what makes an interface feel like a toy.
+   *
+   * Durations are deliberately short. This is a tool people open every day,
+   * and the second viewing of an animation is the one that matters.
+   */
+  /*
+   * Tailwind's own transition-* utilities default to 150ms/ease-in-out. Every
+   * `transition-colors` and `transition-shadow` already in the components
+   * would otherwise sit outside this system and run on their own numbers, so
+   * the defaults are repointed at the tokens. One system, whether a component
+   * uses a utility class or a token directly.
+   */
+  --default-transition-duration: 120ms;
+  --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --ease-pa-out: cubic-bezier(0.2, 0, 0, 1);
+  --ease-pa-inout: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-pa-settle: cubic-bezier(0.34, 1.25, 0.64, 1);
+
+  --dur-pa-fast: 120ms;
+  --dur-pa-medium: 220ms;
+  --dur-pa-slow: 360ms;
+
+  --animate-pa-rise: pa-rise var(--dur-pa-medium) var(--ease-pa-out) both;
+  --animate-pa-fade: pa-fade var(--dur-pa-medium) var(--ease-pa-out) both;
+  --animate-pa-scale-in: pa-scale-in var(--dur-pa-medium) var(--ease-pa-out) both;
+  --animate-pa-settle: pa-settle var(--dur-pa-slow) var(--ease-pa-settle) both;
+
   --font-pa-body: 'Manrope', ui-sans-serif, system-ui, sans-serif;
   --font-pa-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
   --font-pa-mono: 'Space Mono', ui-monospace, 'SFMono-Regular', monospace;
 }
 
-/* Searchlight-beam sweep for loading/thinking states (Executive Summary M0). */
-@keyframes pa-searchlight-rotate {
-  0%,
-  100% {
-    transform: rotate(-30deg);
+/*
+ * Only transform and opacity are animated anywhere below — no width, height,
+ * top/left or margin — so nothing here triggers layout or paint thrash.
+ */
+
+/* The standard entrance: content arriving from slightly below. */
+@keyframes pa-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes pa-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Modals and popovers: a small scale so they read as arriving toward you. */
+@keyframes pa-scale-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/*
+ * The population bubbles. They keep their centring translate through the
+ * whole animation — dropping it mid-keyframe is what makes a positioned
+ * element jump to its corner.
+ */
+@keyframes pa-settle {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.72); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/*
+ * Staggered list/grid entrance. Applied to a container; children rise in
+ * sequence. Capped at ten steps — past that a stagger stops reading as
+ * rhythm and starts reading as a wait, which is the opposite of the point.
+ */
+.pa-stagger > * { animation: var(--animate-pa-rise); }
+.pa-stagger > *:nth-child(1)  { animation-delay: 0ms; }
+.pa-stagger > *:nth-child(2)  { animation-delay: 30ms; }
+.pa-stagger > *:nth-child(3)  { animation-delay: 60ms; }
+.pa-stagger > *:nth-child(4)  { animation-delay: 90ms; }
+.pa-stagger > *:nth-child(5)  { animation-delay: 120ms; }
+.pa-stagger > *:nth-child(6)  { animation-delay: 150ms; }
+.pa-stagger > *:nth-child(7)  { animation-delay: 180ms; }
+.pa-stagger > *:nth-child(8)  { animation-delay: 210ms; }
+.pa-stagger > *:nth-child(9)  { animation-delay: 240ms; }
+.pa-stagger > *:nth-child(n+10) { animation-delay: 270ms; }
+
+/*
+ * Interactive feel, set once rather than per component. Press is opacity
+ * rather than scale: several controls in this app are absolutely positioned
+ * with a centring translate, and a scale utility would overwrite it.
+ */
+@layer base {
+  button,
+  a,
+  [role='button'],
+  summary {
+    transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+    transition-duration: var(--dur-pa-fast);
+    transition-timing-function: var(--ease-pa-inout);
   }
-  50% {
-    transform: rotate(30deg);
+
+  button:active,
+  a:active,
+  [role='button']:active {
+    opacity: 0.82;
+  }
+
+  /* Status and risk pills: a state change should register, not blink. */
+  [data-status],
+  [data-state] {
+    transition-property: background-color, color, border-color;
+    transition-duration: var(--dur-pa-medium);
+    transition-timing-function: var(--ease-pa-inout);
   }
 }
 
-@keyframes pa-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+/*
+ * A bubble in the population network. Hover composes with the centring
+ * translate rather than replacing it.
+ */
+.pa-team-pill {
+  transition: transform var(--dur-pa-fast) var(--ease-pa-inout);
+}
+.pa-team-pill:hover {
+  transform: translate(-50%, -50%) scale(1.04);
 }
 
-/* Bubble entrance for the Population clusters — a gentle scale-in, staggered
-   per bubble via an inline animation-delay. */
-@keyframes pa-pop-in {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.6);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
+.pa-bubble {
+  transition: transform var(--dur-pa-fast) var(--ease-pa-inout);
+}
+.pa-bubble:hover {
+  transform: translate(-50%, -50%) scale(1.12);
+  z-index: 5;
 }
 
+/*
+ * Reduced motion. Durations collapse AND the transforms are neutralised —
+ * zeroing the duration alone still leaves an element starting from its
+ * offset position, which can flash. Opacity is kept at 1 so nothing
+ * disappears for someone who has asked for less movement.
+ */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .pa-stagger > *,
+  [class*='animate-pa-'] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .pa-bubble:hover,
+  .pa-team-pill:hover {
+    transform: translate(-50%, -50%);
   }
 }

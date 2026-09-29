@@ -137,7 +137,15 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="px-8 py-10">{children}</main>
+      {/*
+        Page transition. Keyed on the pathname so React remounts the subtree
+        on navigation and the entrance animation replays — a considered
+        arrival rather than an instant cut, and short enough not to sit
+        between the user and the screen they asked for.
+      */}
+      <main key={location.pathname} className="animate-pa-rise px-8 py-10">
+        {children}
+      </main>
     </div>
   )
 }

@@ -265,18 +265,22 @@ function layoutNetwork(nodes: TeamNode[]) {
  * person is the same face here as on their card, their detail page and the
  * queue.
  */
-function MemberBubble({ x, y, person }: { x: number; y: number; person: Person }) {
+function MemberBubble({ x, y, person, index }: { x: number; y: number; person: Person; index: number }) {
   return (
     <span
       aria-hidden="true"
       data-testid="member-bubble"
       data-person-id={person.id}
-      className="absolute -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full"
+      className="pa-bubble absolute -translate-x-1/2 -translate-y-1/2 animate-pa-settle overflow-hidden rounded-full"
       style={{
         left: `${(x / VIEW_W) * 100}%`,
         top: `${(y / VIEW_H) * 100}%`,
         width: `${(MEMBER_SIZE / VIEW_W) * 100}%`,
         aspectRatio: '1',
+        /* Staggered by index so the cluster settles as a group rather than
+           snapping in as one block. Capped so a large team does not make the
+           last bubble arrive noticeably late. */
+        animationDelay: `${Math.min(index, 12) * 25}ms`,
       }}
     >
       {/* Sized to fill its positioned parent rather than taking a pixel size:
@@ -316,7 +320,7 @@ function TeamPill({
       data-team-key={teamKey}
       onClick={onOpen}
       style={{ left: `${(x / VIEW_W) * 100}%`, top: `${(y / VIEW_H) * 100}%` }}
-      className="absolute z-10 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border border-pa-grey-01 bg-pa-white px-6 py-3 font-pa-body text-base font-semibold text-pa-grey-04 shadow-pa-card-hover transition-transform duration-200 ease-out hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-grey-03 focus-visible:ring-offset-2"
+      className="absolute z-10 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border border-pa-grey-01 bg-pa-white px-6 py-3 font-pa-body text-base font-semibold text-pa-grey-04 shadow-pa-card-hover pa-team-pill transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-grey-03 focus-visible:ring-offset-2"
     >
       {team}
     </button>
@@ -360,8 +364,8 @@ function TeamBubbleNetwork({
         ))}
       </svg>
 
-      {members.map((m) => (
-        <MemberBubble key={m.personId} x={m.x} y={m.y} person={PEOPLE_BY_ID.get(m.personId)!} />
+      {members.map((m, i) => (
+        <MemberBubble key={m.personId} x={m.x} y={m.y} index={i} person={PEOPLE_BY_ID.get(m.personId)!} />
       ))}
       {nodes.map((node, i) => (
         <TeamPill
@@ -708,7 +712,7 @@ export function OverviewPopulation() {
       <SketchNetwork className="pointer-events-none absolute left-1/2 top-24 -z-10 h-[520px] w-[900px] max-w-none -translate-x-1/2 opacity-[0.05]" />
 
       {(
-        <div className="animate-[pa-fade-in_500ms_ease-out] space-y-20">
+        <div className="animate-pa-fade space-y-20">
           <System2SyncStrip />
 
           {/* Headline metrics */}
@@ -909,7 +913,7 @@ export function OverviewPopulation() {
               ) : (
                 <div
                   data-testid="roster-grid"
-                  className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                  className="pa-stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
                 >
                   {roster.map((person) => {
                     const target = targets[person.id]

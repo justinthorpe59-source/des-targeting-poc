@@ -445,7 +445,7 @@ export function ScenarioWorkspace() {
           action={<NavArrows onPrev={() => stepPreset(-1)} onNext={() => stepPreset(1)} testIdPrefix="preset-nav" label="scenario" />}
         />
 
-        <div data-testid="preset-cards" className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div data-testid="preset-cards" className="pa-stagger grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {presets.map((preset) => {
             const active = preset.id === selectedId
             return (
@@ -573,10 +573,17 @@ export function ScenarioWorkspace() {
       </div>
 
       {/* ---------- Diff panel ---------- */}
+      {/*
+        Keyed on the selection so switching preset re-runs the entrance: the
+        panel's content is entirely replaced, and a cross-fade makes that read
+        as "this is now showing something else" rather than as figures
+        flickering in place.
+      */}
       <div
+        key={selectedId}
         data-testid="scenario-diff"
         data-selected-id={selectedId}
-        className="rounded-pa-card bg-pa-white p-8 shadow-pa-card"
+        className="animate-pa-fade rounded-pa-card bg-pa-white p-8 shadow-pa-card"
       >
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>

@@ -9,6 +9,7 @@ import { RiskExceptionsSection } from '../components/RiskExceptionsSection'
 import { SketchScatter } from '../../components/searchlight/SketchIllustrations'
 import { formatMoney, formatPercent } from '../../shared/format'
 import { SectionHeading } from '../../components/searchlight/Section'
+import { AnimatedFigure } from '../../components/searchlight/AnimatedFigure'
 
 /**
  * S2-M5/M6: coverage, forecast, confidence and status side by side across
@@ -57,15 +58,19 @@ function ForecastBar({ ratio, status, testId }: { ratio: number; status: RiskSta
       >
         <div
           aria-hidden="true"
-          className="absolute inset-y-0 left-0 transition-[width] duration-700 ease-out"
+          /* scaleX rather than width: the bar is laid out once at full
+             width and only transformed, so a changing ratio never triggers
+             layout. */
+          className="absolute inset-y-0 left-0 w-full origin-left"
           style={{
-            width: `${Math.min(pct, 100)}%`,
+            transform: `scaleX(${Math.min(pct, 100) / 100})`,
+            transition: 'transform var(--dur-pa-slow) var(--ease-pa-out)',
             backgroundImage: `linear-gradient(to right, ${STATUS_GRADIENT[status]})`,
           }}
         />
       </div>
       <p className="mt-2 font-pa-display text-3xl font-medium leading-none tracking-tight text-pa-grey-04">
-        <span data-testid={testId}>{formatPercent(pct)}</span>
+        <AnimatedFigure testId={testId} value={pct} format={formatPercent} />
       </p>
       <p className="mt-1 font-pa-body text-[11px] uppercase tracking-[0.1em] text-pa-grey-03">Forecast</p>
     </div>
@@ -169,8 +174,8 @@ export function DivisionComparison() {
       </header>
 
       {(
-        <div className="animate-[pa-fade-in_500ms_ease-out] space-y-10 pb-16 pt-16">
-          <div data-testid="s2-division-comparison-rows" className="grid gap-5 lg:grid-cols-3">
+        <div className="animate-pa-fade space-y-10 pb-16 pt-16">
+          <div data-testid="s2-division-comparison-rows" className="pa-stagger grid gap-5 lg:grid-cols-3">
             {divisionRows.map(({ division, rollup, risk, goal, coverage, teamCount }) => {
               const isOpen = expanded === division
               return (
@@ -252,7 +257,7 @@ export function DivisionComparison() {
                 Teams in {expanded} — rank is DES-wide by absolute gap
               </p>
 
-              <div data-testid="s2-team-drilldown-rows" className="grid gap-5 lg:grid-cols-2">
+              <div data-testid="s2-team-drilldown-rows" className="pa-stagger grid gap-5 lg:grid-cols-2">
                 {expandedTeams.map(({ teamKey, rollup, risk, goal, gap, rank }) => (
                   <div
                     key={teamKey}

@@ -12,6 +12,7 @@ import { SketchDistribution } from '../../components/searchlight/SketchIllustrat
 import { formatMoney } from '../../shared/format'
 import { formatPercent } from '../../shared/format'
 import { SectionHeading } from '../../components/searchlight/Section'
+import { AnimatedFigure } from '../../components/searchlight/AnimatedFigure'
 
 /**
  * S2-M4: the sponsor-facing front door — goal, coverage, forecast, gap,
@@ -209,7 +210,7 @@ export function ExecutiveSummary() {
       </header>
 
       {(
-        <div className="animate-[pa-fade-in_500ms_ease-out]">
+        <div className="animate-pa-fade">
           {/* Generous vertical whitespace above the body — this screen should
               feel calm and editorial, not dense. */}
           <div className="grid gap-12 pb-20 pt-20 lg:grid-cols-[35fr_65fr] lg:gap-16">
@@ -217,10 +218,9 @@ export function ExecutiveSummary() {
             <div>
               <p className="font-pa-body text-sm font-semibold text-pa-grey-04">Organisational goal.</p>
               <p
-                data-testid="s2-exec-goal"
                 className="mt-4 font-pa-display text-[5.5rem] font-medium leading-[0.95] tracking-tight text-pa-grey-04"
               >
-                {formatMoney(goal)}
+                <AnimatedFigure testId="s2-exec-goal" value={goal} format={formatMoney} />
               </p>
 
               <div className="mt-6 flex flex-wrap gap-2">
@@ -258,9 +258,10 @@ export function ExecutiveSummary() {
                     HUE is the risk status, so the one mark carries both. */}
                 <div
                   aria-hidden="true"
-                  className="absolute inset-y-0 left-0 transition-[width] duration-700 ease-out"
+                  className="absolute inset-y-0 left-0 w-full origin-left"
                   style={{
-                    width: `${Math.min(forecastPct, 100)}%`,
+                    transform: `scaleX(${Math.min(forecastPct, 100) / 100})`,
+                    transition: 'transform var(--dur-pa-slow) var(--ease-pa-out)',
                     backgroundImage: `linear-gradient(to right, ${hero.gradient})`,
                   }}
                 />
@@ -282,7 +283,7 @@ export function ExecutiveSummary() {
                       className="mt-3 font-pa-display text-5xl font-medium leading-none tracking-tight"
                       style={{ color: hero.onFill }}
                     >
-                      {formatPercent(forecastPct)}
+                      <AnimatedFigure value={forecastPct} format={formatPercent} />
                     </p>
                     <p
                       data-testid="s2-exec-gap"

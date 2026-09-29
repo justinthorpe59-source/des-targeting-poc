@@ -164,7 +164,7 @@ export function IndividualDetail() {
       </div>
 
       {(
-        <div className="animate-[pa-fade-in_500ms_ease-out] space-y-10">
+        <div className="animate-pa-fade space-y-10">
           {/*
             Hero card — two zones per searchlight-visual-spec.md and the
             reference: left ~58% identity + data, right ~42% a large square
