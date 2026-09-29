@@ -199,7 +199,19 @@ export function DivisionComparison() {
                   }}
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <p className="font-pa-body text-sm font-semibold text-pa-grey-04">{division}.</p>
+                    {/*
+                      The trailing full stop is gone (it read as a bullet at
+                      the old size), and the name is now set as a heading
+                      rather than a label: font-pa-display at text-xl, the
+                      family every other headline on the screen uses. Was
+                      font-pa-body text-sm.
+                    */}
+                    <p
+                      data-testid="s2-division-comparison-title"
+                      className="font-pa-display text-xl font-semibold leading-tight tracking-tight text-pa-grey-04"
+                    >
+                      {division}
+                    </p>
                     <span
                       data-testid="s2-division-comparison-status"
                       data-status={risk.status}
@@ -269,7 +281,7 @@ export function DivisionComparison() {
                     <div className="flex items-start justify-between gap-3">
                       <p className="font-pa-body text-sm font-semibold text-pa-grey-04">
                         <span className="mr-2 font-pa-mono text-xs font-normal text-pa-grey-03">#{rank}</span>
-                        {teamKey.replace('::', ' / ')}.
+                        {teamKey.replace('::', ' / ')}
                       </p>
                       <span
                         data-testid="s2-team-drilldown-status"
@@ -280,7 +292,10 @@ export function DivisionComparison() {
                       </span>
                     </div>
 
-                    {/* Same trio, same visual weight as the division card. */}
+                    {/* Same trio, same visual weight as the division card —
+                        below the title, which stays at label size on purpose:
+                        a team sits under a division, and matching the enlarged
+                        division heading here would flatten that. */}
                     <div className="mt-5">
                       <ForecastBar ratio={risk.forecastRatio} status={risk.status} />
                     </div>

@@ -123,6 +123,16 @@ export function PersonAvatar({
  * differ. Falls back to the original placeholder glyph for the 28 people
  * without a photograph, so the hero never becomes an empty hole.
  */
+/**
+ * The Individual Detail hero.
+ *
+ * Portrait 2:3, not square. The photographs are 426x640 natives (the
+ * full-size originals were deliberately stripped from git history, so this IS
+ * the source resolution — there is nothing larger to go back to). A square
+ * crop is therefore limited by the 426px width, which capped a sharp hero at
+ * 426px; the native portrait shape uses every pixel there is and gives ~3.8x
+ * the area of the old 268px square without resampling anything.
+ */
 export function PersonHeroImage({ person, className = '' }: { person: Person; className?: string }) {
   const src = photoFor(person.id)
 
@@ -132,7 +142,7 @@ export function PersonHeroImage({ person, className = '' }: { person: Person; cl
         data-testid="detail-hero-visual"
         data-has-photo="false"
         aria-hidden="true"
-        className={`flex aspect-square w-full items-center justify-center rounded-pa-card ${className}`}
+        className={`flex aspect-[2/3] w-full items-center justify-center rounded-pa-card ${className}`}
         style={{ background: 'var(--color-pa-grey-01)' }}
       >
         <svg viewBox="0 0 24 24" className="h-2/5 w-2/5" fill="none" stroke="var(--color-pa-grey-02)" strokeWidth="1.4">
@@ -151,7 +161,7 @@ export function PersonHeroImage({ person, className = '' }: { person: Person; cl
       data-testid="detail-hero-visual"
       data-has-photo="true"
       loading="lazy"
-      className={`aspect-square w-full rounded-pa-card object-cover object-top ${className}`}
+      className={`aspect-[2/3] w-full rounded-pa-card object-cover object-top ${className}`}
     />
   )
 }

@@ -191,8 +191,27 @@ export function IndividualDetail() {
             surfaces.
           */}
           <div className="overflow-hidden rounded-pa-card bg-pa-white shadow-pa-card">
-            <div className="grid gap-10 p-8 lg:grid-cols-[58fr_42fr]">
-              {/* ---- Left zone: identity + data ---- */}
+            {/*
+              Picture LEFT, spanning the identity and stat rows; actions and
+              the progress pipeline reflow beneath it across the full width,
+              rather than being covered by it.
+
+              The column is capped at 426px because that is the photographs'
+              native width — see PersonHeroImage. Going wider would upscale
+              every face, which is the exact defect the 640px regeneration was
+              done to fix.
+            */}
+            <div className="grid gap-8 p-8 lg:grid-cols-[minmax(0,426px)_1fr]">
+              {/* max-w matches the 426px native width. Below lg the grid
+                  collapses to one column, and without the cap the picture
+                  stretched to the full 756px — 1.77x upscaled, and it pushed
+                  the name most of a screen further down. */}
+              <PersonHeroImage person={person} className="w-full max-w-[426px]" />
+
+              {/* Everything else stacks to the right of the picture and flows
+                  around it. Top-aligned on purpose: justify-between was tried
+                  and pushed the stat row ~500px below the name, because the
+                  picture is far taller than the text beside it. */}
               <div className="flex flex-col">
                 {/* identity row */}
                 <div className="flex items-center gap-3">
@@ -307,15 +326,6 @@ export function IndividualDetail() {
                 </div>
               </div>
 
-              {/* ---- Right zone: large square visual ---- */}
-              {/* Capped: the spec calls for a full-width hero, but at a
-                  full-bleed 1700px the 42% zone becomes a ~670px square that
-                  drags the whole card down. Trimmed again once Explanation
-                  and Personal context moved into the tabs — with the left
-                  column that much shorter, the previous 340px square left an
-                  obvious void beneath the content. */}
-              {/* The real photograph now, where the placeholder glyph was. */}
-              <PersonHeroImage person={person} className="ml-auto max-w-[268px]" />
             </div>
 
             {target.status === 'Pending Sign-off' && (
