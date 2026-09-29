@@ -58,9 +58,23 @@ const VIEW_H = 820
 
 const MEMBER_SIZE = 60
 const MEMBER_GAP = 9
-/** Half-extents of a team's name pill, used as a keep-out box. */
-const PILL_HALF_W = 82
-const PILL_HALF_H = 23
+/**
+ * Half-extents of a team's name pill, used as a keep-out box so avatars leave
+ * a hole for the label to sit in.
+ *
+ * Measured off the rendered pills in viewBox units, not estimated: the six
+ * come out 71–99 half-wide and 33 half-high. These were 82 and 23, so the box
+ * was short on every pill vertically and on both "Studio …" names
+ * horizontally, which is why avatars grazed the label's edges.
+ *
+ * The widest is used for all of them rather than a per-team measurement: the
+ * layout runs in a useMemo before anything is rendered, so the real text width
+ * is not available to it, and a slightly generous hole around a short name is
+ * a far better failure than a long name sitting under a face. Re-measure if
+ * the pill's padding or type size changes.
+ */
+const PILL_HALF_W = 99
+const PILL_HALF_H = 33
 
 const GOLDEN = Math.PI * (3 - Math.sqrt(5))
 
@@ -320,7 +334,19 @@ function TeamPill({
       data-team-key={teamKey}
       onClick={onOpen}
       style={{ left: `${(x / VIEW_W) * 100}%`, top: `${(y / VIEW_H) * 100}%` }}
-      className="absolute z-10 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border border-pa-grey-01 bg-pa-white px-6 py-3 font-pa-body text-base font-semibold text-pa-grey-04 shadow-pa-card-hover pa-team-pill transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-grey-03 focus-visible:ring-offset-2"
+      /*
+       * Hover and press are colour, never position — see .pa-team-pill. The
+       * accent fill with accent ink is the same pair the nav's active screen
+       * and the location filter's selected chip already use, so "this one is
+       * live" looks the same wherever it appears. White on the accent measures
+       * 2.50:1 and fails AA, which is why the ink token exists.
+       *
+       * :active holds the same fill rather than introducing a third look. The
+       * pill has no lingering selected state to show because clicking it swaps
+       * the whole network for that team's roster — the pill is gone by the time
+       * a selected style could read.
+       */
+      className="pa-team-pill absolute z-10 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border border-pa-grey-01 bg-pa-white px-6 py-3 font-pa-body text-base font-semibold text-pa-grey-04 shadow-pa-card-hover hover:border-[var(--color-pa-accent)] hover:bg-[var(--color-pa-accent)] hover:text-[var(--color-pa-accent-ink)] active:border-[var(--color-pa-accent)] active:bg-[var(--color-pa-accent)] active:text-[var(--color-pa-accent-ink)] focus:outline-none focus-visible:ring-2 focus-visible:ring-pa-grey-03 focus-visible:ring-offset-2"
     >
       {team}
     </button>
@@ -731,7 +757,22 @@ export function OverviewPopulation() {
 
   return (
     <section className="relative space-y-10">
-      <SketchNetwork className="pointer-events-none absolute left-1/2 top-24 -z-10 h-[520px] w-[900px] max-w-none -translate-x-1/2 opacity-[0.05]" />
+      {/*
+        The connective-node sketch behind the top of the screen. Enlarged from
+        520x900 and lifted from 0.05 to 0.16 opacity: at 5% on white the strokes
+        resolved to roughly #fbfcfd, which is not a faint diagram so much as no
+        diagram at all.
+
+        Still background by construction, not by being invisible — -z-10 and
+        pointer-events-none keep it behind and inert, and the metric cards'
+        white fill occludes it where they overlap. It sits well above the team
+        network, so it never lands behind the bubbles or pills.
+
+        The SVG's viewBox is 240x220, so it letterboxes inside this box rather
+        than stretching; growing the box also thickens the strokes in
+        proportion, which is most of the legibility gain.
+      */}
+      <SketchNetwork className="pointer-events-none absolute left-1/2 top-24 -z-10 h-[720px] w-[1200px] max-w-none -translate-x-1/2 opacity-[0.16]" />
 
       {(
         <div className="animate-pa-fade space-y-20">

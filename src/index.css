@@ -195,7 +195,15 @@ html {
   --animate-pa-rise: pa-rise var(--dur-pa-medium) var(--ease-pa-out) both;
   --animate-pa-fade: pa-fade var(--dur-pa-medium) var(--ease-pa-out) both;
   --animate-pa-scale-in: pa-scale-in var(--dur-pa-medium) var(--ease-pa-out) both;
-  --animate-pa-settle: pa-settle var(--dur-pa-slow) var(--ease-pa-settle) both;
+  /* `backwards`, not `both`. A filling animation outranks any later rule, so
+     `both` left pa-settle's closing `scale(1)` clamped on every bubble for
+     good and the .pa-bubble:hover scale never applied at all — measured as an
+     identity matrix under the pointer. `backwards` still covers the staggered
+     delay (bubbles wait at the `from` frame rather than flashing in at full
+     size), and once the animation ends the element simply returns to its base
+     style, which is already opacity 1 and no transform — the same place the
+     closing frame put it, but without holding the property hostage. */
+  --animate-pa-settle: pa-settle var(--dur-pa-slow) var(--ease-pa-settle) backwards;
 
   --font-pa-body: 'Manrope', ui-sans-serif, system-ui, sans-serif;
   --font-pa-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
@@ -225,13 +233,24 @@ html {
 }
 
 /*
- * The population bubbles. They keep their centring translate through the
- * whole animation — dropping it mid-keyframe is what makes a positioned
- * element jump to its corner.
+ * The population bubbles. Scale ONLY — the centring must not be repeated here.
+ *
+ * This used to read `translate(-50%, -50%) scale(...)`, on the reasoning that
+ * dropping the centring mid-keyframe would fling a positioned element to its
+ * corner. That was true under Tailwind v3, where `-translate-x-1/2` compiled
+ * into `transform`. Tailwind v4 emits the separate `translate` property
+ * instead, so the two no longer share a channel: they compose automatically,
+ * and repeating the centring in `transform` applied it TWICE.
+ *
+ * Because the animation is declared `both`, its final frame kept applying,
+ * which left every bubble parked half its own size up and to the left of where
+ * the layout put it — measured at -26px, -26px on a 51px bubble. The pills sat
+ * correctly, so each cluster looked shifted and its pill looked off-centre.
+ * One keyframe, all six clusters.
  */
 @keyframes pa-settle {
-  from { opacity: 0; transform: translate(-50%, -50%) scale(0.72); }
-  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  from { opacity: 0; transform: scale(0.72); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
 /*
@@ -282,21 +301,36 @@ html {
 }
 
 /*
- * A bubble in the population network. Hover composes with the centring
- * translate rather than replacing it.
+ * The team pill in the population network.
+ *
+ * It does NOT move on hover — no transform at all. It used to take
+ * `translate(-50%, -50%) scale(1.04)`, which stacked on Tailwind v4's separate
+ * `translate` property and threw the pill 86px left and 29px up: half its own
+ * size, not a 4% nudge. The label slid out from under the pointer, which could
+ * drop the hover and flicker.
+ *
+ * Feedback is colour instead, which the component owns (accent fill, the same
+ * pair the nav's active screen uses). Position is now fixed by construction
+ * rather than by a transform that happens to cancel out.
  */
 .pa-team-pill {
-  transition: transform var(--dur-pa-fast) var(--ease-pa-inout);
-}
-.pa-team-pill:hover {
-  transform: translate(-50%, -50%) scale(1.04);
+  transition:
+    background-color var(--dur-pa-fast) var(--ease-pa-inout),
+    border-color var(--dur-pa-fast) var(--ease-pa-inout),
+    color var(--dur-pa-fast) var(--ease-pa-inout),
+    box-shadow var(--dur-pa-fast) var(--ease-pa-inout);
 }
 
+/*
+ * A bubble in the population network. Scale only, for the same reason the
+ * keyframe above carries scale only — the centring lives on `translate` and
+ * composes on its own.
+ */
 .pa-bubble {
   transition: transform var(--dur-pa-fast) var(--ease-pa-inout);
 }
 .pa-bubble:hover {
-  transform: translate(-50%, -50%) scale(1.12);
+  transform: scale(1.12);
   z-index: 5;
 }
 
@@ -323,8 +357,13 @@ html {
     transform: none !important;
   }
 
-  .pa-bubble:hover,
-  .pa-team-pill:hover {
-    transform: translate(-50%, -50%);
+  /* Neutralise the hover scale. `none`, not `translate(-50%, -50%)` — the
+     centring is on the `translate` property and must be left alone; writing it
+     back into `transform` here would double it, the same defect this block was
+     meant to guard against. The pill needs no entry: it no longer transforms
+     at all, and its colour feedback is worth keeping for someone who has asked
+     only for less movement. */
+  .pa-bubble:hover {
+    transform: none;
   }
 }

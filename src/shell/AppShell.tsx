@@ -155,12 +155,17 @@ export function AppShell({ children }: { children: ReactNode }) {
               </span>
             </NavLink>
 
+            {/* "Reset", not "Reset demo data" — the long label was the single
+                widest thing in the bar and was what pushed the utilities group
+                onto a second row at 1280. The title carries the full meaning
+                now the label is short. */}
             <button
               type="button"
               onClick={resetAllDemoData}
+              title="Reset all demo data back to the seeded dataset"
               className="rounded-pa-chip border border-pa-grey-02 px-4 py-2.5 font-pa-body text-sm font-medium text-pa-grey-04 transition-colors hover:bg-pa-grey-01"
             >
-              Reset demo data
+              Reset
             </button>
 
             <span
