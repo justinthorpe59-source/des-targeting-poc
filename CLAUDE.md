@@ -235,15 +235,67 @@ Each entry below includes its **acceptance signal**.
 
 ## Design direction — Searchlight
 
-This section did not previously exist in this file — it captures decisions made in a separate design working session and is being recorded here for the first time (25 Sept 2026).
+**Rewritten 29 Sept 2026.** The original entry (25 Sept) described an
+Aqua-led system with a searchlight-beam loading animation. Both are gone. What
+follows is the direction as actually built; the history is in
+`searchlight-visual-spec.md`'s dated entries.
 
 - **Proposition name:** Searchlight.
-- **Overall feel:** clean, crisp, and clear; uses PA's own design-system colours and typography (token file shared directly with Claude Code in this repo, not reproduced here — confirm the token file's location/name before building and flag if it can't be found rather than inventing values).
-- **Motion:** a searchlight-beam-like sweep, fluid and organic — reserved specifically for loading/thinking states and screen transitions. Not a general decorative device used elsewhere.
-- **Data visualisation:** mostly standard, trustworthy charts (bar/line); a small number of signature custom visualisations reserved for key moments only (e.g. Executive Summary's gap/forecast figure). A plain donut/gauge does not count as a "signature visualisation" — this was tried and explicitly rejected.
-- **Illustration:** hand-sketchy, academic-paper-style technical diagrams (network graphs, distribution curves, scatter plots, grid/matrix patterns) used subtly and sparingly in the background only, never as a hero/foreground element. Redraw in PA's actual colour tokens — do not carry over any warm/vintage colouring from style references used during design exploration.
-- **Full screen-by-screen visual spec:** see `searchlight-visual-spec.md` in the repo root. It covers the shared component system (navigation, card/chip radius hierarchy, the status pill component, the accordion component used by both Exceptions Queue and Manager Override, typography roles) plus per-screen structure for all 8 consolidated screens, an explicit list of rejected patterns from a prior failed design pass, and a list of what's still genuinely undesigned and needs a decision before it can be built.
-- **Verification requirement:** after building each screen's visual pass, take a screenshot and compare it line-by-line against that screen's section in `searchlight-visual-spec.md` — colour, type, spacing, layout, and the specific content mappings called out there. Report deviations explicitly rather than silently approximating. This replaces relying on taste-skill/emil-design-eng to drive the design — use those only as a final checklist, not as the thing generating decisions.
+- **Overall feel:** white-dominant, in the Apple/Google register. White is the
+  page, white is the card. Depth comes from **shadows and hairlines, never
+  from colour blocking** — there is no grey page ground and no grey panel
+  anywhere in the app.
+- **Colour:** one accent, `--color-pa-accent` (`#f3809e`, which is Rose 03
+  from the PA palette — no hex was invented). It is spent only on primary
+  actions and the active/selected state, and covers **0.07%–0.71% of page
+  area** per screen. If a screen reads pink, the direction has been applied
+  wrongly. Everything structural — navigation, dividers, icons, avatars,
+  focus rings, elevation — is white or neutral grey.
+  - **White text on the accent fails AA at 2.50:1.** Accent fills take
+    `--color-pa-accent-ink`. Accent on white is also 2.50:1, so a selected
+    state can never be a 1px pink line; it needs a fill or a thicker mark.
+  - Semantic colour is untouched by all of the above: risk statuses
+    (green/amber/red), workflow states, and flag categories still carry
+    meaning in their fill.
+- **Type:** root font-size **18px**, so the whole rem-based scale — text and
+  Tailwind spacing alike — grows together. Primary text and all headings are
+  near-black (`#111111`); supplementary text is a genuinely dark grey
+  (`#36465a`). Both are set at the token level: `text-pa-grey-04` is primary,
+  `text-pa-grey-03` is supplementary, across the whole app.
+- **Motion:** **no loading animation.** The searchlight-beam sweep and the
+  artificial load delay were removed entirely on 29 Sept — `SearchlightLoader`
+  and `useInitialLoad` are deleted, not merely unused. Screens render
+  immediately. Motion is now limited to a short fade-in and shadow/opacity
+  transitions on hover.
+- **Imagery:** every person is pictured. One component, `PersonAvatar`, owns
+  the treatment everywhere — circle, 1:1 crop, `object-top`, hairline ring, at
+  32px (queue rows), 44px (modal), 56px (roster and identity) and 268px
+  (Individual Detail hero). 32 photographs cover 60 people; assignment is
+  ordered by division/team/id so **no two people in the same team share a
+  face**.
+- **Data visualisation:** standard, trustworthy marks. A signature treatment
+  is reserved for key moments — Executive Summary's forecast hero, where the
+  fill's *width* is the ratio and its *hue* is the risk status. A plain
+  donut/gauge was tried and explicitly rejected.
+- **Illustration:** hand-sketchy, academic-paper-style diagrams (network
+  graphs, distribution curves, scatter plots) in the background only, at very
+  low opacity, never as a hero element. In PA tokens — no warm/vintage
+  colouring from exploration references.
+- **Layout benchmark:** Scenario Workspace. Its rhythm (`space-y-20` between
+  blocks, `space-y-10` within), two-line 4xl heading, and card padding
+  (p-8 panel / p-6 grid / p-5 small, `gap-5`) are the app-wide standard,
+  extracted into `src/components/searchlight/Section.tsx`.
+- **Full screen-by-screen visual spec:** `searchlight-visual-spec.md` in the
+  repo root — the shared component system, per-screen structure for all 8
+  screens, rejected patterns, and dated entries recording every decision and
+  what each superseded.
+- **Verification requirement:** after building a screen, verify by
+  **measurement, not by eye** — computed styles, bounding boxes, and
+  independent recomputation of any figure shown. That is what has caught the
+  real defects here: contrast failures, a 12px card misalignment, an upscaled
+  hero image, two Aqua buttons a read-through had declared done, and a
+  preview that disagreed with what it applied. Screenshot afterwards to
+  confirm intent, and report deviations rather than silently approximating.
 
 ---
 
