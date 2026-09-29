@@ -369,6 +369,16 @@ export function ScenarioWorkspace() {
   )
   const after = useMemo(() => readScope(scope, scenario, selectedLevers.goal), [scope, scenario, selectedLevers.goal])
 
+  /*
+   * A preset names a specific division (see the constants at the top), but an
+   * import can legitimately contain only some of the organisation — approve
+   * three people in Design and Engineering is simply absent. readScope then
+   * finds no rollup, outcomeRows comes back empty, and the status pill is
+   * conditional on a risk result, so the whole "What it does" column rendered
+   * blank with no explanation. Named here so the panel can say so.
+   */
+  const scopeMissingFromData = !before.rollup || !after.rollup
+
   const outcomeRows = useMemo<DiffRow[]>(() => {
     if (!before.rollup || !after.rollup || before.goal === undefined || after.goal === undefined) return []
     return [
@@ -626,6 +636,13 @@ export function ScenarioWorkspace() {
             <p className="font-pa-body text-xs font-bold uppercase tracking-[0.14em] text-pa-grey-03">
               What it does · {scope.label}
             </p>
+            {scopeMissingFromData && (
+              <p data-testid="diff-scope-missing" className="mt-4 font-pa-body text-sm text-pa-grey-03">
+                <span className="font-semibold text-pa-grey-04">{scope.label}</span> isn&apos;t in the imported
+                snapshot, so this scenario has nothing to act on. Import a snapshot that includes it to see the
+                effect.
+              </p>
+            )}
             <dl data-testid="diff-outcome-rows" className="mt-4">
               {outcomeRows.map((row) => (
                 <div
